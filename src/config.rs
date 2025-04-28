@@ -1,5 +1,4 @@
 use clap::Parser;
-use log::Level::Warn;
 
 #[derive(Parser, Debug)]
 #[command(name = "IP-Hacker", version, about)]
@@ -62,7 +61,7 @@ pub struct Config {
 }
 
 pub fn default_config(config: Config) -> Config {
-    let config = if config.provider
+    if config.provider
         || config.ip
         || config.asn
         || config.isp
@@ -109,7 +108,5 @@ pub fn default_config(config: Config) -> Config {
             no_color: config.no_color,
             set_ip: config.set_ip,
         }
-    };
-
-    config
+    }
 }

@@ -6,7 +6,6 @@ use crate::config::Config;
 use crate::ip_check::ip_result::IpResult;
 use crate::ip_check::script::*;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 use tokio::sync::mpsc;
 
@@ -16,13 +15,13 @@ pub trait IpCheck {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult>; // 本机 IP 或者指定 IP (不一定每一个 Provider 都支持)
 }
 
-pub async fn check_all(config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
+pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
     let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> =
         vec![Box::new(ip_checking::IpChecking)];
 
     let (tx, mut rx) = mpsc::channel(100);
 
-    let time = tokio::time::Instant::now();
+    let _time = tokio::time::Instant::now();
 
     for provider in provider_list {
         let tx = tx.clone();
@@ -35,7 +34,7 @@ pub async fn check_all(config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
     drop(tx);
 
     let mut results = vec![];
-    while let Some(mut result) = rx.recv().await {
+    while let Some(result) = rx.recv().await {
         results.extend(result);
     }
     results

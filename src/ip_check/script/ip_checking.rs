@@ -1,9 +1,8 @@
 use crate::ip_check::IpCheck;
-use crate::ip_check::ip_result::{AS, Coordinates, IpResult, Region, Risk, RiskTag};
+use crate::ip_check::ip_result::{AS, Coordinates, IpResult, Region};
 use crate::ip_check::script::{create_reqwest_client, failed_ip_result};
 use async_trait::async_trait;
-use log::{debug, trace};
-use reqwest::{Client, header};
+use reqwest::header;
 use std::net::IpAddr;
 use std::str::FromStr;
 
@@ -33,7 +32,7 @@ impl IpCheck for IpChecking {
 
                 let text = text.trim();
 
-                let Ok(ip) = IpAddr::from_str(&text) else {
+                let Ok(ip) = IpAddr::from_str(text) else {
                     return failed_ip_result("IpCheck.ing");
                 };
                 get_ipcheck_ing_info(ip).await
@@ -55,14 +54,14 @@ impl IpCheck for IpChecking {
 
                 let text = text.trim();
 
-                let Ok(ip) = IpAddr::from_str(&text) else {
+                let Ok(ip) = IpAddr::from_str(text) else {
                     return failed_ip_result("IpCheck.ing");
                 };
                 get_ipcheck_ing_info(ip).await
             });
 
             let mut results = Vec::new();
-            if let Ok(result) =  handle_v4.await {
+            if let Ok(result) = handle_v4.await {
                 results.push(result);
             }
             if let Ok(result) = handle_v6.await {
@@ -111,7 +110,7 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     let region = if let Some(region) = json.get("region") {
         if let Some(region) = region.as_str() {
             region.to_string()
-        }else {
+        } else {
             return failed_ip_result("IpCheck.ing");
         }
     } else {
@@ -130,7 +129,10 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
 
     let asn = if let Some(asn) = json.get("asn") {
         if let Some(asn) = asn.as_str() {
-            asn.to_string().replace("AS", "").parse::<u32>().unwrap_or(0)
+            asn.to_string()
+                .replace("AS", "")
+                .parse::<u32>()
+                .unwrap_or(0)
         } else {
             return failed_ip_result("IpCheck.ing");
         }

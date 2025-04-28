@@ -6,10 +6,10 @@ use prettytable::{Attr, Cell, Row, Table, color, format};
 pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &config::Config) -> Table {
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
-    table.set_titles(Row::new(make_table_cells(&config)));
+    table.set_titles(Row::new(make_table_cells(config)));
 
     for ip_result in ip_results_vec {
-        if let Some(row) = make_table_row(ip_result.clone(), &config) {
+        if let Some(row) = make_table_row(ip_result.clone(), config) {
             table.add_row(row);
         }
     }
@@ -187,11 +187,7 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
             } else {
                 "N/A".to_string()
             },
-            if let Some(tags) = risk.tags {
-                tags
-            } else {
-                vec![]
-            },
+            risk.tags.unwrap_or_default()
         )
     } else {
         ("N/A".to_string(), vec![])
