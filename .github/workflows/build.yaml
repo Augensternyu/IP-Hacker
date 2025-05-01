@@ -254,7 +254,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos
+          name: macos-amd64
           path: target/release/IP-Hacker
       - name: Rename Binary
         run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-amd64
@@ -291,7 +291,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos
+          name: macos-arm64
           path: target/release/IP-Hacker
       - name: Rename Binary
         run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-arm64
