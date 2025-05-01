@@ -1,5 +1,5 @@
 use crate::ip_check::IpCheck;
-use crate::ip_check::ip_result::IpCheckError::NoError;
+use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
     AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
     parse_ip_error_ip_result, request_error_ip_result,
@@ -164,28 +164,20 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     };
 
     let lat = if let Some(lat) = json.get("latitude") {
-        if let Some(lat) = lat.as_f64() {
-            Some(lat.to_string())
-        } else {
-            None
-        }
+        lat.as_f64().map(|lat| lat.to_string())
     } else {
         None
     };
 
     let lon = if let Some(lng) = json.get("longitude") {
-        if let Some(lng) = lng.as_f64() {
-            Some(lng.to_string())
-        } else {
-            None
-        }
+        lng.as_f64().map(|lng| lng.to_string())
     } else {
         None
     };
 
     IpResult {
         success: true,
-        error: NoError,
+        error: No,
         provider: "Maxmind".to_string(),
         ip: Some(ip),
         autonomous_system: Some(AS {

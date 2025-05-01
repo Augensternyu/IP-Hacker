@@ -1,23 +1,21 @@
-use crate::ip_check::ip_result::IpCheckError::{
-    CreateReqwestClientError, JsonParseError, ParseIPError, RequestError,
-};
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
+use crate::ip_check::ip_result::IpCheckError::{CreateReqwestClient, JsonParse, ParseIP, Request};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum IpCheckError {
     #[default]
-    NoError,
-    JsonParseError(String),
-    RequestError(String),
-    ParseIPError(String),
-    CreateReqwestClientError,
+    No,
+    JsonParse(String),
+    Request(String),
+    ParseIP(String),
+    CreateReqwestClient,
 }
 
 pub fn json_parse_error_ip_result(provider: &str, message: &str) -> IpResult {
     IpResult {
         success: false,
-        error: JsonParseError(message.to_string()),
+        error: JsonParse(message.to_string()),
         provider: provider.to_string(),
         ip: None,
         autonomous_system: None,
@@ -29,7 +27,7 @@ pub fn json_parse_error_ip_result(provider: &str, message: &str) -> IpResult {
 pub fn request_error_ip_result(provider: &str, message: &str) -> IpResult {
     IpResult {
         success: false,
-        error: RequestError(message.to_string()),
+        error: Request(message.to_string()),
         provider: provider.to_string(),
         ip: None,
         autonomous_system: None,
@@ -41,7 +39,7 @@ pub fn request_error_ip_result(provider: &str, message: &str) -> IpResult {
 pub fn parse_ip_error_ip_result(provider: &str, message: &str) -> IpResult {
     IpResult {
         success: false,
-        error: ParseIPError(message.to_string()),
+        error: ParseIP(message.to_string()),
         provider: provider.to_string(),
         ip: None,
         autonomous_system: None,
@@ -53,7 +51,7 @@ pub fn parse_ip_error_ip_result(provider: &str, message: &str) -> IpResult {
 pub fn create_reqwest_client_error(provider: &str) -> IpResult {
     IpResult {
         success: false,
-        error: CreateReqwestClientError,
+        error: CreateReqwestClient,
         provider: provider.to_string(),
         ip: None,
         autonomous_system: None,

@@ -2,6 +2,7 @@ mod ip_result;
 mod script;
 pub mod table;
 
+use std::fmt::{Display, Formatter};
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::*;
@@ -45,7 +46,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
                 warn!(
                     "{} check failed, message: {}",
                     result_single.provider,
-                    result_single.error.to_string()
+                    result_single.error
                 );
             }
         }
@@ -53,16 +54,16 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
     results
 }
 
-impl IpCheckError {
-    fn to_string(&self) -> String {
+impl Display for IpCheckError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            IpCheckError::NoError => {
-                String::from("Why would you include a NoError in a failed request?")
+            IpCheckError::No => {
+                write!(f, "Why would you include a NoError in a failed request?")
             }
-            IpCheckError::JsonParseError(message) => String::from(format!("Json: {}", message)),
-            IpCheckError::RequestError(message) => String::from(format!("Request: {}", message)),
-            IpCheckError::ParseIPError(message) => String::from(format!("Parse IP: {}", message)),
-            IpCheckError::CreateReqwestClientError => String::from("Create Reqwest Client Error"),
+            IpCheckError::JsonParse(message) => write!(f, "Json: {}", message),
+            IpCheckError::Request(message) => write!(f, "Request: {}", message),
+            IpCheckError::ParseIP(message) => write!(f, "Request: {}", message),
+            IpCheckError::CreateReqwestClient => write!(f, "Create Reqwest Client Error"),
         }
     }
 }
