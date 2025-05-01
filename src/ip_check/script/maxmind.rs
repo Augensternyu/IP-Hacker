@@ -10,64 +10,64 @@ use reqwest::header;
 use std::net::IpAddr;
 use std::str::FromStr;
 
-pub struct IpChecking;
+pub struct Maxmind;
 
 #[async_trait]
-impl IpCheck for IpChecking {
+impl IpCheck for Maxmind {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
             let mut ip_results = Vec::new();
-            ip_results.push(get_ipcheck_ing_info(ip).await);
+            ip_results.push(get_maxmind_info(ip).await);
             ip_results
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
                 else {
-                    return create_reqwest_client_error("IpCheck.ing");
+                    return create_reqwest_client_error("Maxmind");
                 };
 
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
                     return request_error_ip_result(
-                        "IpCheck.ing",
+                        "Maxmind",
                         "Unable to connect to ipcheck.ing",
                     );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return parse_ip_error_ip_result("IpCheck.ing", "Unable to parse html");
+                    return parse_ip_error_ip_result("Maxmind", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return parse_ip_error_ip_result("IpCheck.ing", text);
+                    return parse_ip_error_ip_result("Maxmind", text);
                 };
-                get_ipcheck_ing_info(ip).await
+                get_maxmind_info(ip).await
             });
 
             let handle_v6 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
-                    return create_reqwest_client_error("IpCheck.ing");
+                    return create_reqwest_client_error("Maxmind");
                 };
 
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
                     return request_error_ip_result(
-                        "IpCheck.ing",
+                        "Maxmind",
                         "Unable to connect to ipcheck.ing",
                     );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return parse_ip_error_ip_result("IpCheck.ing", "Unable to parse html");
+                    return parse_ip_error_ip_result("Maxmind", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return parse_ip_error_ip_result("IpCheck.ing", text);
+                    return parse_ip_error_ip_result("Maxmind", text);
                 };
-                get_ipcheck_ing_info(ip).await
+                get_maxmind_info(ip).await
             });
 
             let mut results = Vec::new();
@@ -82,9 +82,9 @@ impl IpCheck for IpChecking {
     }
 }
 
-async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
+async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     let Ok(client) = create_reqwest_client(None, None).await else {
-        return create_reqwest_client_error("IpCheck.ing");
+        return create_reqwest_client_error("Maxmind");
     };
 
     let mut headers = header::HeaderMap::new();
@@ -94,18 +94,18 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
 
     let Ok(res) = client
         .get(format!(
-            "https://ipcheck.ing/api/ipchecking?ip={ip}&lang=en"
+            "https://ipcheck.ing/api/maxmind?ip={ip}&lang=en"
         ))
         .headers(headers)
         .send()
         .await
     else {
-        return request_error_ip_result("IpCheck.ing", "Unable to connect to ipcheck.ing");
+        return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
     };
 
     let Ok(json) = res.json::<serde_json::Value>().await else {
         return json_parse_error_ip_result(
-            "IpCheck.ing",
+            "Maxmind",
             "Unable to parse the returned result into Json",
         );
     };
@@ -114,30 +114,30 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
         if let Some(country) = country.as_str() {
             country.to_string()
         } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
+            return json_parse_error_ip_result("Maxmind", "Unable to get value for `country`");
         }
     } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
+        return json_parse_error_ip_result("Maxmind", "Unable to get value for `country`");
     };
 
     let region = if let Some(region) = json.get("region") {
         if let Some(region) = region.as_str() {
             region.to_string()
         } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
+            return json_parse_error_ip_result("Maxmind", "Unable to get value for `region`");
         }
     } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
+        return json_parse_error_ip_result("Maxmind", "Unable to get value for `region`");
     };
 
     let city = if let Some(city) = json.get("city") {
         if let Some(city) = city.as_str() {
             city.to_string()
         } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
+            return json_parse_error_ip_result("Maxmind", "Unable to get value for `city`");
         }
     } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
+        return json_parse_error_ip_result("Maxmind", "Unable to get value for `city`");
     };
 
     let asn = if let Some(asn) = json.get("asn") {
@@ -147,20 +147,20 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
                 .parse::<u32>()
                 .unwrap_or(0)
         } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
+            return json_parse_error_ip_result("Maxmind", "Unable to get value for `asn`");
         }
     } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
+        return json_parse_error_ip_result("Maxmind", "Unable to get value for `asn`");
     };
 
     let org = if let Some(org) = json.get("org") {
         if let Some(org) = org.as_str() {
             org.to_string()
         } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
+            return json_parse_error_ip_result("Maxmind", "Unable to get value for `org`");
         }
     } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
+        return json_parse_error_ip_result("Maxmind", "Unable to get value for `org`");
     };
 
     let lat = if let Some(lat) = json.get("latitude") {
@@ -186,7 +186,7 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     IpResult {
         success: true,
         error: NoError,
-        provider: "IpCheck.ing".to_string(),
+        provider: "Maxmind".to_string(),
         ip: Some(ip),
         autonomous_system: Some(AS {
             number: asn,

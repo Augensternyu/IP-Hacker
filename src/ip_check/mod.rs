@@ -18,7 +18,7 @@ pub trait IpCheck {
 
 pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
     let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> =
-        vec![Box::new(ip_checking::IpChecking)];
+        vec![Box::new(ip_checking::IpChecking), Box::new(maxmind::Maxmind)];
 
     let (tx, mut rx) = mpsc::channel(100);
 

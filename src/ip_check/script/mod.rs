@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 pub mod ip_checking;
+pub mod maxmind;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,
