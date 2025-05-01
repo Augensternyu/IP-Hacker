@@ -1,4 +1,3 @@
-use crate::ip_check::ip_result::IpResult;
 use reqwest::Client;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
@@ -25,15 +24,4 @@ pub async fn create_reqwest_client(
     builder = builder.cookie_store(true);
     builder = builder.timeout(Duration::from_secs(5));
     builder.build()
-}
-
-pub fn failed_ip_result(provider: &str) -> IpResult {
-    IpResult {
-        success: false,
-        provider: provider.to_string(),
-        ip: None,
-        autonomous_system: None,
-        region: None,
-        risk: None,
-    }
 }

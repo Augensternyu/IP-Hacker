@@ -1,6 +1,10 @@
 use crate::ip_check::IpCheck;
-use crate::ip_check::ip_result::{AS, Coordinates, IpResult, Region};
-use crate::ip_check::script::{create_reqwest_client, failed_ip_result};
+use crate::ip_check::ip_result::IpCheckError::NoError;
+use crate::ip_check::ip_result::{
+    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    parse_ip_error_ip_result, request_error_ip_result,
+};
+use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::header;
 use std::net::IpAddr;
@@ -19,21 +23,24 @@ impl IpCheck for IpChecking {
             let handle_v4 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
                 else {
-                    return failed_ip_result("IpCheck.ing");
+                    return create_reqwest_client_error("IpCheck.ing");
                 };
 
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
-                    return failed_ip_result("IpCheck.ing");
+                    return request_error_ip_result(
+                        "IpCheck.ing",
+                        "Unable to connect to ipcheck.ing",
+                    );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return failed_ip_result("IpCheck.ing");
+                    return parse_ip_error_ip_result("IpCheck.ing", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return failed_ip_result("IpCheck.ing");
+                    return parse_ip_error_ip_result("IpCheck.ing", text);
                 };
                 get_ipcheck_ing_info(ip).await
             });
@@ -41,21 +48,24 @@ impl IpCheck for IpChecking {
             let handle_v6 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
-                    return failed_ip_result("IpCheck.ing");
+                    return create_reqwest_client_error("IpCheck.ing");
                 };
 
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
-                    return failed_ip_result("IpCheck.ing");
+                    return request_error_ip_result(
+                        "IpCheck.ing",
+                        "Unable to connect to ipcheck.ing",
+                    );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return failed_ip_result("IpCheck.ing");
+                    return parse_ip_error_ip_result("IpCheck.ing", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return failed_ip_result("IpCheck.ing");
+                    return parse_ip_error_ip_result("IpCheck.ing", text);
                 };
                 get_ipcheck_ing_info(ip).await
             });
@@ -74,7 +84,7 @@ impl IpCheck for IpChecking {
 
 async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     let Ok(client) = create_reqwest_client(None, None).await else {
-        return failed_ip_result("IpCheck.ing");
+        return create_reqwest_client_error("IpCheck.ing");
     };
 
     let mut headers = header::HeaderMap::new();
@@ -90,41 +100,44 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
         .send()
         .await
     else {
-        return failed_ip_result("IpCheck.ing");
+        return request_error_ip_result("IpCheck.ing", "Unable to connect to ipcheck.ing");
     };
 
     let Ok(json) = res.json::<serde_json::Value>().await else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result(
+            "IpCheck.ing",
+            "Unable to parse the returned result into Json",
+        );
     };
 
     let country = if let Some(country) = json.get("country_name") {
         if let Some(country) = country.as_str() {
             country.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
     };
 
     let region = if let Some(region) = json.get("region") {
         if let Some(region) = region.as_str() {
             region.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
     };
 
     let city = if let Some(city) = json.get("city") {
         if let Some(city) = city.as_str() {
             city.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
     };
 
     let asn = if let Some(asn) = json.get("asn") {
@@ -134,44 +147,48 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
                 .parse::<u32>()
                 .unwrap_or(0)
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
     };
 
     let org = if let Some(org) = json.get("org") {
         if let Some(org) = org.as_str() {
             org.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
     };
 
     let lat = if let Some(lat) = json.get("latitude") {
         if let Some(lat) = lat.as_f64() {
             lat.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `latitude`");
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `latitude`");
     };
 
     let lon = if let Some(lng) = json.get("longitude") {
         if let Some(lng) = lng.as_f64() {
             lng.to_string()
         } else {
-            return failed_ip_result("IpCheck.ing");
+            return json_parse_error_ip_result(
+                "IpCheck.ing",
+                "Unable to get value for `longitude`",
+            );
         }
     } else {
-        return failed_ip_result("IpCheck.ing");
+        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `longitude`");
     };
 
     IpResult {
         success: true,
+        error: NoError,
         provider: "IpCheck.ing".to_string(),
         ip: Some(ip),
         autonomous_system: Some(AS {

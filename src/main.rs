@@ -4,8 +4,9 @@ mod utils;
 
 use crate::config::default_config;
 use crate::ip_check::table::gen_table;
+use crate::utils::report::get_usage_count;
 use clap::Parser;
-use log::LevelFilter;
+use log::{LevelFilter, error};
 
 #[tokio::main]
 async fn main() {
@@ -13,12 +14,36 @@ async fn main() {
     log::set_logger(&utils::logger::CONSOLE_LOGGER).unwrap();
     log::set_max_level(LevelFilter::Trace);
 
-    let ip = args
-        .set_ip
-        .as_ref()
-        .map(|ip| ip.parse::<std::net::IpAddr>().unwrap());
+    if !args.no_cls {
+        utils::term::clear_screen();
+    }
 
-    let a = ip_check::check_all(&args, ip).await;
-    let b = gen_table(&a, &args).await;
-    b.printstd();
+    if !args.no_logo {
+        print_ascii_art();
+    }
+
+    if let Ok((today, all)) = get_usage_count().await {
+        println!("Usage: {} / {}", today, all);
+    };
+
+    let ip = args.set_ip.as_ref().map(|ip| {
+        ip.parse::<std::net::IpAddr>().unwrap_or_else(|_| {
+            error!("Invalid IP address");
+            std::process::exit(1)
+        })
+    });
+
+    let ip_result = ip_check::check_all(&args, ip).await;
+    let table = gen_table(&ip_result, &args).await;
+    table.printstd();
+}
+
+fn print_ascii_art() {
+    println!(
+        r#"  ___ ___     _  _         _
+ |_ _| _ \___| || |__ _ __| |_____ _ _
+  | ||  _/___| __ / _` / _| / / -_) '_|
+ |___|_|     |_||_\__,_\__|_\_\___|_|
+                                       "#
+    );
 }

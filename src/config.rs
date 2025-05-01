@@ -51,13 +51,21 @@ pub struct Config {
     #[arg(long, default_value_t = false)]
     pub tags: bool,
 
+    /// IP Address
+    #[arg(short, long)]
+    pub set_ip: Option<String>,
+
     /// No Color
     #[arg(long, default_value_t = false)]
     pub no_color: bool,
 
-    /// IP Address
-    #[arg(short, long)]
-    pub set_ip: Option<String>,
+    /// No CLS
+    #[arg(long, default_value_t = false)]
+    pub no_cls: bool,
+
+    /// No Logo
+    #[arg(long, default_value_t = false)]
+    pub no_logo: bool,
 }
 
 pub fn default_config(config: Config) -> Config {
@@ -90,6 +98,8 @@ pub fn default_config(config: Config) -> Config {
             no_color: config.no_color,
             all: true,
             set_ip: config.set_ip,
+            no_cls: config.no_cls,
+            no_logo: config.no_logo,
         }
     } else {
         Config {
@@ -107,6 +117,8 @@ pub fn default_config(config: Config) -> Config {
             tags: false,
             no_color: config.no_color,
             set_ip: config.set_ip,
+            no_cls: config.no_cls,
+            no_logo: config.no_logo,
         }
     }
 }

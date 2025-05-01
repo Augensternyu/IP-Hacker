@@ -187,7 +187,7 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
             } else {
                 "N/A".to_string()
             },
-            risk.tags.unwrap_or_default()
+            risk.tags.unwrap_or_default(),
         )
     } else {
         ("N/A".to_string(), vec![])

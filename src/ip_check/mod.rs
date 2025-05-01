@@ -3,9 +3,10 @@ mod script;
 pub mod table;
 
 use crate::config::Config;
-use crate::ip_check::ip_result::IpResult;
+use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::*;
 use async_trait::async_trait;
+use log::{info, warn};
 use std::net::IpAddr;
 use tokio::sync::mpsc;
 
@@ -35,7 +36,33 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
 
     let mut results = vec![];
     while let Some(result) = rx.recv().await {
-        results.extend(result);
+        results.extend(result.clone());
+
+        for result_single in result {
+            if result_single.success {
+                info!("{} check succeeded", result_single.provider);
+            } else {
+                warn!(
+                    "{} check failed, message: {}",
+                    result_single.provider,
+                    result_single.error.to_string()
+                );
+            }
+        }
     }
     results
+}
+
+impl IpCheckError {
+    fn to_string(&self) -> String {
+        match self {
+            IpCheckError::NoError => {
+                String::from("Why would you include a NoError in a failed request?")
+            }
+            IpCheckError::JsonParseError(message) => String::from(format!("Json: {}", message)),
+            IpCheckError::RequestError(message) => String::from(format!("Request: {}", message)),
+            IpCheckError::ParseIPError(message) => String::from(format!("Parse IP: {}", message)),
+            IpCheckError::CreateReqwestClientError => String::from("Create Reqwest Client Error"),
+        }
+    }
 }
