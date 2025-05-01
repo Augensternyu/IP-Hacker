@@ -17,10 +17,10 @@ jobs:
         platform:
           - release_for: android_armv7
             target: armv7-linux-androideabi
-            binary_name: rsbench-android-armv7
+            binary_name: IP-Hacker-android-armv7
           - release_for: android_arm
             target: arm-linux-androideabi
-            binary_name: rsbench-android-arm
+            binary_name: IP-Hacker-android-arm
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,7 +36,7 @@ jobs:
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
           CROSS_NO_WARNINGS: 0
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/rsbench target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
@@ -64,7 +64,7 @@ jobs:
         platform:
           - release_for: android_aarch64
             target: aarch64-linux-android
-            binary_name: rsbench-android-aarch64
+            binary_name: IP-Hacker-android-aarch64
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -80,7 +80,7 @@ jobs:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/rsbench target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
@@ -108,55 +108,55 @@ jobs:
         platform:
           - release_for: linux_x86_64_musl
             target: x86_64-unknown-linux-musl
-            binary_name: rsbench-linux-x86_64-musl
+            binary_name: IP-Hacker-linux-x86_64-musl
           - release_for: linux_x86_64_gnu
             target: x86_64-unknown-linux-gnu
-            binary_name: rsbench-linux-x86_64-gnu
+            binary_name: IP-Hacker-linux-x86_64-gnu
           - release_for: linux_arm_gnueabi
             target: arm-unknown-linux-gnueabi
-            binary_name: rsbench-linux-arm-gnueabi
+            binary_name: IP-Hacker-linux-arm-gnueabi
           - release_for: linux_arm_gnueabihf
             target: arm-unknown-linux-gnueabihf
-            binary_name: rsbench-linux-arm-gnueabihf
+            binary_name: IP-Hacker-linux-arm-gnueabihf
           - release_for: linux_aarch64_gnu
             target: aarch64-unknown-linux-gnu
-            binary_name: rsbench-linux-aarch64-gnu
+            binary_name: IP-Hacker-linux-aarch64-gnu
           - release_for: linux_aarch64_musl
             target: aarch64-unknown-linux-musl
-            binary_name: rsbench-linux-aarch64-musl
+            binary_name: IP-Hacker-linux-aarch64-musl
           - release_for: linux_i686_gnu
             target: i686-unknown-linux-gnu
-            binary_name: rsbench-linux-i686-gnu
+            binary_name: IP-Hacker-linux-i686-gnu
           - release_for: linux_i686_musl
             target: i686-unknown-linux-musl
-            binary_name: rsbench-linux-i686-musl
+            binary_name: IP-Hacker-linux-i686-musl
           - release_for: linux_arm_musleabi
             target: arm-unknown-linux-musleabi
-            binary_name: rsbench-linux-arm-musleabi
+            binary_name: IP-Hacker-linux-arm-musleabi
           - release_for: linux_arm_musleabihf
             target: arm-unknown-linux-musleabihf
-            binary_name: rsbench-linux-arm-musleabihf
+            binary_name: IP-Hacker-linux-arm-musleabihf
           - release_for: linux_armv5te_gnu
             target: armv5te-unknown-linux-gnueabi
-            binary_name: rsbench-linux-armv5te-gnueabi
+            binary_name: IP-Hacker-linux-armv5te-gnueabi
           - release_for: linux_armv5te_musl
             target: armv5te-unknown-linux-musleabi
-            binary_name: rsbench-linux-armv5te-musleabi
+            binary_name: IP-Hacker-linux-armv5te-musleabi
           - release_for: linux_armv7_gnueabi
             target: armv7-unknown-linux-gnueabi
-            binary_name: rsbench-linux-armv7-gnueabi
+            binary_name: IP-Hacker-linux-armv7-gnueabi
           - release_for: linux_armv7_gnueabihf
             target: armv7-unknown-linux-gnueabihf
-            binary_name: rsbench-linux-armv7-gnueabihf
+            binary_name: IP-Hacker-linux-armv7-gnueabihf
           - release_for: linux_armv7_musleabi
             target: armv7-unknown-linux-musleabi
-            binary_name: rsbench-linux-armv7-musleabi
+            binary_name: IP-Hacker-linux-armv7-musleabi
           - release_for: linux_armv7_musleabihf
             target: armv7-unknown-linux-musleabihf
-            binary_name: rsbench-linux-armv7-musleabihf
+            binary_name: IP-Hacker-linux-armv7-musleabihf
           - release_for: linux_s390x_gnu
             target: s390x-unknown-linux-gnu
-            binary_name: rsbench-linux-s390x-gnu
+            binary_name: IP-Hacker-linux-s390x-gnu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -176,7 +176,7 @@ jobs:
       - name: Build deb package
         run: cargo deb --target ${{ matrix.platform.target }} --no-build --no-strip
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/rsbench target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Rename deb package
         run: cp target/${{ matrix.platform.target }}/debian/*.deb target/${{ matrix.platform.target }}/debian/${{ matrix.platform.binary_name }}.deb
       - name: Upload binary
@@ -223,13 +223,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: target/release/rsbench.exe
+          path: target/release/IP-Hacker.exe
       - name: Publish to GitHub Release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/rsbench.exe
+            target/release/IP-Hacker.exe
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -255,15 +255,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: target/release/rsbench
+          path: target/release/IP-Hacker
       - name: Rename Binary
-        run: mv target/release/rsbench target/release/rsbench-macos-amd64
+        run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-amd64
       - name: Publish to GitHub Release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/rsbench-macos-amd64
+            target/release/IP-Hacker-macos-amd64
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -292,15 +292,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: target/release/rsbench
+          path: target/release/IP-Hacker
       - name: Rename Binary
-        run: mv target/release/rsbench target/release/rsbench-macos-arm64
+        run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-arm64
       - name: Publish to GitHub Release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/rsbench-macos-arm64
+            target/release/IP-Hacker-macos-arm64
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
