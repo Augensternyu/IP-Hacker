@@ -25,6 +25,7 @@ Options:
       --no-color         No Color
       --no-cls           No CLS
       --no-logo          No Logo
+      --no-upload        No Upload
   -h, --help             Print help
   -V, --version          Print version
 ```

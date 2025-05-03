@@ -66,6 +66,10 @@ pub struct Config {
     /// No Logo
     #[arg(long, default_value_t = false)]
     pub no_logo: bool,
+
+    /// No Upload
+    #[arg(long, default_value_t = false)]
+    pub no_upload: bool,
 }
 
 pub fn default_config(config: Config) -> Config {
@@ -100,6 +104,7 @@ pub fn default_config(config: Config) -> Config {
             set_ip: config.set_ip,
             no_cls: config.no_cls,
             no_logo: config.no_logo,
+            no_upload: config.no_upload,
         }
     } else {
         Config {
@@ -119,6 +124,7 @@ pub fn default_config(config: Config) -> Config {
             set_ip: config.set_ip,
             no_cls: config.no_cls,
             no_logo: config.no_logo,
+            no_upload: config.no_upload,
         }
     }
 }

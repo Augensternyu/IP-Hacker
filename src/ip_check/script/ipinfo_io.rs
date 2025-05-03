@@ -168,7 +168,7 @@ async fn get_ipinfo_io(ip: Value) -> IpResult {
         success: true,
         error: IpCheckError::No,
         provider: "Ipinfo.io".to_string(),
-        ip: Some(IpAddr::from_str(&ip["ip"].as_str().unwrap()).unwrap()),
+        ip: Some(IpAddr::from_str(ip["ip"].as_str().unwrap()).unwrap()),
         autonomous_system: Some(AS { number: asn, name: org }),
         region: Some(Region {
             country,

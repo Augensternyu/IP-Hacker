@@ -24,10 +24,12 @@ async fn main() {
         print_ascii_art();
     }
 
-    if let Ok((today, all)) = get_usage_count().await {
-        println!("Usage: {} / {}", today, all);
-        global_println!("Usage: {} / {}", today, all);
-    };
+    if !args.no_upload {
+        if let Ok((today, all)) = get_usage_count().await {
+            println!("Usage: {} / {}", today, all);
+            global_println!("Usage: {} / {}", today, all);
+        };
+    }
 
     let ip = args.set_ip.as_ref().map(|ip| {
         ip.parse::<std::net::IpAddr>().unwrap_or_else(|_| {
@@ -41,12 +43,14 @@ async fn main() {
     table.printstd();
     global_println!("{}", table.to_string());
 
-    match post_to_pastebin().await {
-        Ok(url) => {
-            info!("Result Url: {}", url)
-        }
-        Err(err) => {
-            error!("{}", err);
+    if !args.no_upload {
+        match post_to_pastebin().await {
+            Ok(url) => {
+                info!("Result Url: {}", url)
+            }
+            Err(err) => {
+                error!("{}", err);
+            }
         }
     }
 }
@@ -56,7 +60,7 @@ fn print_ascii_art() {
  |_ _| _ \___| || |__ _ __| |_____ _ _
   | ||  _/___| __ / _` / _| / / -_) '_|
  |___|_|     |_||_\__,_\__|_\_\___|_|
-                                       "#;
+    w                                   "#;
     println!("{}", art);
     global_println!("{}", art);
 }
