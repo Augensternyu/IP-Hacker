@@ -2,7 +2,6 @@ use crate::ip_check::ip_result::{create_reqwest_client_error, json_parse_error_i
 use crate::ip_check::script::create_reqwest_client;
 use crate::ip_check::IpCheck;
 use async_trait::async_trait;
-use clap::builder::TypedValueParser;
 use regex::Regex;
 use serde_json::Value;
 use std::net::IpAddr;
