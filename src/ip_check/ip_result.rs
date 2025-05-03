@@ -1,6 +1,6 @@
+use crate::ip_check::ip_result::IpCheckError::{CreateReqwestClient, JsonParse, ParseIP, Request};
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
-use crate::ip_check::ip_result::IpCheckError::{CreateReqwestClient, JsonParse, ParseIP, Request};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum IpCheckError {

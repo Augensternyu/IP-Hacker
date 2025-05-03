@@ -1,10 +1,10 @@
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
-    parse_ip_error_ip_result, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
+    Region, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::header;
 use std::net::IpAddr;
@@ -27,10 +27,7 @@ impl IpCheck for Maxmind {
                 };
 
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
-                    return request_error_ip_result(
-                        "Maxmind",
-                        "Unable to connect to ipcheck.ing",
-                    );
+                    return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
                 };
 
                 let Ok(text) = result.text().await else {
@@ -52,10 +49,7 @@ impl IpCheck for Maxmind {
                 };
 
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
-                    return request_error_ip_result(
-                        "Maxmind",
-                        "Unable to connect to ipcheck.ing",
-                    );
+                    return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
                 };
 
                 let Ok(text) = result.text().await else {
@@ -93,9 +87,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     headers.insert("content-type", "application/json".parse().unwrap());
 
     let Ok(res) = client
-        .get(format!(
-            "https://ipcheck.ing/api/maxmind?ip={ip}&lang=en"
-        ))
+        .get(format!("https://ipcheck.ing/api/maxmind?ip={ip}&lang=en"))
         .headers(headers)
         .send()
         .await

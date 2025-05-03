@@ -1,12 +1,12 @@
 name: Cross Build
 
 on:
-#  push:
-#    branches:
-#      - "*"
-#  pull_request:
-#    branches:
-#      - "*"
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
   workflow_dispatch:
 
 jobs:
@@ -171,10 +171,6 @@ jobs:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
           CROSS_NO_WARNINGS: 0
-      - name: Install Cargo-deb
-        run: cargo install cargo-deb
-      - name: Build deb package
-        run: cargo deb --target ${{ matrix.platform.target }} --no-build --no-strip
       - name: Rename binary
         run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Rename deb package
@@ -183,12 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
-      - name: Upload Deb package
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.target }}-deb
-          path: target/${{ matrix.platform.target }}/debian/${{ matrix.platform.binary_name }}.deb
+          path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }
       - name: Publish to GitHub Release
 #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1

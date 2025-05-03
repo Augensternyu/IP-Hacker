@@ -6,7 +6,7 @@ use crate::config::default_config;
 use crate::ip_check::table::gen_table;
 use crate::utils::report::get_usage_count;
 use clap::Parser;
-use log::{LevelFilter, error};
+use log::{error, LevelFilter};
 
 #[tokio::main]
 async fn main() {

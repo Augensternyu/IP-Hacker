@@ -2,12 +2,12 @@ mod ip_result;
 mod script;
 pub mod table;
 
-use std::fmt::{Display, Formatter};
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::*;
 use async_trait::async_trait;
 use log::{info, warn};
+use std::fmt::{Display, Formatter};
 use std::net::IpAddr;
 use tokio::sync::mpsc;
 
@@ -18,8 +18,11 @@ pub trait IpCheck {
 }
 
 pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
-    let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> =
-        vec![Box::new(ip_checking::IpChecking), Box::new(maxmind::Maxmind)];
+    let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> = vec![
+        Box::new(ip_checking::IpChecking),
+        Box::new(maxmind::Maxmind),
+        Box::new(ipinfo_io::IpInfoIo),
+    ];
 
     let (tx, mut rx) = mpsc::channel(100);
 
@@ -45,8 +48,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
             } else {
                 warn!(
                     "{} check failed, message: {}",
-                    result_single.provider,
-                    result_single.error
+                    result_single.provider, result_single.error
                 );
             }
         }
