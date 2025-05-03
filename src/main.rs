@@ -1,12 +1,14 @@
+use std::fmt::Write;
 mod config;
 mod ip_check;
 mod utils;
 
+use crate::utils::report::GLOBAL_STRING;
 use crate::config::default_config;
 use crate::ip_check::table::gen_table;
-use crate::utils::report::get_usage_count;
+use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
-use log::{error, LevelFilter};
+use log::{error, info, LevelFilter};
 
 #[tokio::main]
 async fn main() {
@@ -24,6 +26,7 @@ async fn main() {
 
     if let Ok((today, all)) = get_usage_count().await {
         println!("Usage: {} / {}", today, all);
+        global_println!("Usage: {} / {}", today, all);
     };
 
     let ip = args.set_ip.as_ref().map(|ip| {
@@ -36,14 +39,24 @@ async fn main() {
     let ip_result = ip_check::check_all(&args, ip).await;
     let table = gen_table(&ip_result, &args).await;
     table.printstd();
+    global_println!("{}", table.to_string());
+
+    match post_to_pastebin().await {
+        Ok(url) => {
+            info!("Result Url: {}", url)
+        }
+        Err(err) => {
+            error!("{}", err);
+        }
+    }
 }
 
 fn print_ascii_art() {
-    println!(
-        r#"  ___ ___     _  _         _
+    let art = r#"  ___ ___     _  _         _
  |_ _| _ \___| || |__ _ __| |_____ _ _
   | ||  _/___| __ / _` / _| / / -_) '_|
  |___|_|     |_||_\__,_\__|_\_\___|_|
-                                       "#
-    );
+                                       "#;
+    println!("{}", art);
+    global_println!("{}", art);
 }

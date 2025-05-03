@@ -173,8 +173,6 @@ jobs:
           CROSS_NO_WARNINGS: 0
       - name: Rename binary
         run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
-      - name: Rename deb package
-        run: cp target/${{ matrix.platform.target }}/debian/*.deb target/${{ matrix.platform.target }}/debian/${{ matrix.platform.binary_name }}.deb
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:

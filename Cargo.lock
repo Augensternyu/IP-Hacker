@@ -9,6 +9,7 @@ dependencies = [
  "async-trait",
  "clap",
  "crossterm",
+ "lazy_static",
  "log",
  "prettytable-rs",
  "regex",
