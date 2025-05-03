@@ -193,8 +193,6 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Delete deb package
-        run: rm -rf target/debian
 
   windows-release:
     runs-on: windows-latest
