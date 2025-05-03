@@ -69,7 +69,7 @@ pub async fn post_to_pastebin() -> Result<String, String> {
     };
 
     // If you see this password, please do not share it with others. (๑•̀ㅂ•́)و✧
-    let _secret = if let Some(secret) = option_env!("CROSS_PASTEBIN_SECRET") {
+    let secret = if let Some(secret) = option_env!("CROSS_PASTEBIN_SECRET") {
         secret
     } else {
         return Err(
@@ -81,7 +81,7 @@ pub async fn post_to_pastebin() -> Result<String, String> {
     let client = Client::new();
     let resp = client
         .post(format!("{}/upload", url))
-        .header("Authorization", "SWYgeW91IHNlZSB0aGlzIHBhc3N3b3JkLCBwbGVhc2UgZG8gbm90IHNoYXJlIGl0IHdpdGggb3RoZXJzLiAo4LmR4oCizIDjhYLigKLMgSnZiOKcpw==")
+        .header("Authorization", secret)
         .body(GLOBAL_STRING.lock().unwrap().clone())
         .send()
         .await;
