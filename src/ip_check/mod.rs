@@ -22,6 +22,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(ip_checking::IpChecking),
         Box::new(maxmind::Maxmind),
         Box::new(ipinfo_io::IpInfoIo),
+        Box::new(cloudflare::Cloudflare),
     ];
 
     let (tx, mut rx) = mpsc::channel(100);
@@ -66,6 +67,7 @@ impl Display for IpCheckError {
             IpCheckError::Request(message) => write!(f, "Request: {}", message),
             IpCheckError::ParseIP(message) => write!(f, "Request: {}", message),
             IpCheckError::CreateReqwestClient => write!(f, "Create Reqwest Client Error"),
+            IpCheckError::NotSupport => {write!(f, "This provider does not currently support the specified IP")}
         }
     }
 }

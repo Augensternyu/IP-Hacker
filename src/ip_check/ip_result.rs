@@ -10,6 +10,7 @@ pub enum IpCheckError {
     Request(String),
     ParseIP(String),
     CreateReqwestClient,
+    NotSupport,
 }
 
 pub fn json_parse_error_ip_result(provider: &str, message: &str) -> IpResult {
@@ -52,6 +53,18 @@ pub fn create_reqwest_client_error(provider: &str) -> IpResult {
     IpResult {
         success: false,
         error: CreateReqwestClient,
+        provider: provider.to_string(),
+        ip: None,
+        autonomous_system: None,
+        region: None,
+        risk: None,
+    }
+}
+
+pub fn not_support_error(provider: &str) -> IpResult {
+    IpResult {
+        success: false,
+        error: IpCheckError::NotSupport,
         provider: provider.to_string(),
         ip: None,
         autonomous_system: None,

@@ -1,3 +1,5 @@
+#![warn(clippy::all, clippy::pedantic)]
+
 use std::fmt::Write;
 mod config;
 mod ip_check;
@@ -8,7 +10,7 @@ use crate::config::default_config;
 use crate::ip_check::table::gen_table;
 use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
-use log::{error, info, LevelFilter};
+use log::{error, info, warn, LevelFilter};
 
 #[tokio::main]
 async fn main() {
@@ -28,6 +30,9 @@ async fn main() {
         if let Ok((today, all)) = get_usage_count().await {
             println!("Usage: {} / {}", today, all);
             global_println!("Usage: {} / {}", today, all);
+        } else {
+            warn!("Unable to get usage count");
+            global_println!("🟨 WARN: Unable to get usage count");
         };
     }
 

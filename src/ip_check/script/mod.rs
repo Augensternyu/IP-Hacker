@@ -6,6 +6,7 @@ use std::time::Duration;
 pub mod ip_checking;
 pub mod ipinfo_io;
 pub mod maxmind;
+pub mod cloudflare;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,
