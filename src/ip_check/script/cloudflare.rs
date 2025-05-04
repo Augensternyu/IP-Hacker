@@ -1,11 +1,14 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
-use std::str::FromStr;
+use crate::ip_check::IpCheck;
+use crate::ip_check::ip_result::IpCheckError::No;
+use crate::ip_check::ip_result::{
+    IpResult, create_reqwest_client_error, not_support_error, parse_ip_error_ip_result,
+    request_error_ip_result,
+};
+use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::Response;
-use crate::ip_check::ip_result::{create_reqwest_client_error, not_support_error, parse_ip_error_ip_result, request_error_ip_result, IpResult};
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::IpCheck;
-use crate::ip_check::script::create_reqwest_client;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::str::FromStr;
 
 pub struct Cloudflare;
 
@@ -16,24 +19,36 @@ impl IpCheck for Cloudflare {
             vec![not_support_error("Cloudflare")]
         } else {
             let handle_v4 = tokio::spawn(async move {
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await else {
+                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
+                else {
                     return create_reqwest_client_error("Cloudflare");
                 };
 
                 let Ok(result) = client_v4.get("https://1.0.0.1/cdn-cgi/trace").send().await else {
-                    return request_error_ip_result("Cloudflare", "Unable to connect to cloudflare");
+                    return request_error_ip_result(
+                        "Cloudflare",
+                        "Unable to connect to cloudflare",
+                    );
                 };
 
                 get_cloudflare_info(result).await
             });
 
             let handle_v6 = tokio::spawn(async move {
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await else {
+                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
+                else {
                     return create_reqwest_client_error("Cloudflare");
                 };
 
-                let Ok(result) = client_v4.get("https://[2606:4700:4700::1111]/cdn-cgi/trace").send().await else {
-                    return request_error_ip_result("Cloudflare", "Unable to connect to cloudflare");
+                let Ok(result) = client_v4
+                    .get("https://[2606:4700:4700::1111]/cdn-cgi/trace")
+                    .send()
+                    .await
+                else {
+                    return request_error_ip_result(
+                        "Cloudflare",
+                        "Unable to connect to cloudflare",
+                    );
                 };
 
                 get_cloudflare_info(result).await

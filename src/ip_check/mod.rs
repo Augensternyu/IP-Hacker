@@ -4,7 +4,7 @@ pub mod table;
 
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
-use crate::ip_check::script::{cloudflare, ip_checking, ipinfo_io, maxmind};
+use crate::ip_check::script::{cloudflare, ip_checking, ip_sb, ipinfo_io, maxmind};
 use async_trait::async_trait;
 use log::{info, warn};
 use std::fmt::{Display, Formatter};
@@ -23,6 +23,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(maxmind::Maxmind),
         Box::new(ipinfo_io::IpInfoIo),
         Box::new(cloudflare::Cloudflare),
+        Box::new(ip_sb::IpSb),
     ];
 
     let (tx, mut rx) = mpsc::channel(100);
@@ -67,7 +68,12 @@ impl Display for IpCheckError {
             IpCheckError::Request(message) => write!(f, "Request: {message}"),
             IpCheckError::ParseIP(message) => write!(f, "Request: {message}"),
             IpCheckError::CreateReqwestClient => write!(f, "Create Reqwest Client Error"),
-            IpCheckError::NotSupport => {write!(f, "This provider does not currently support the specified IP")}
+            IpCheckError::NotSupport => {
+                write!(
+                    f,
+                    "This provider does not currently support the specified IP"
+                )
+            }
         }
     }
 }

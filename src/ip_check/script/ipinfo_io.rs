@@ -1,6 +1,9 @@
-use crate::ip_check::ip_result::{create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpCheckError, IpResult, Region, AS};
-use crate::ip_check::script::create_reqwest_client;
 use crate::ip_check::IpCheck;
+use crate::ip_check::ip_result::{
+    AS, Coordinates, IpCheckError, IpResult, Region, create_reqwest_client_error,
+    json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result,
+};
+use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use regex::Regex;
 use serde_json::Value;
@@ -169,12 +172,18 @@ async fn get_ipinfo_io(ip: Value) -> IpResult {
         error: IpCheckError::No,
         provider: "Ipinfo.io".to_string(),
         ip: Some(IpAddr::from_str(ip["ip"].as_str().unwrap()).unwrap()),
-        autonomous_system: Some(AS { number: asn, name: org }),
+        autonomous_system: Some(AS {
+            number: asn,
+            name: org,
+        }),
         region: Some(Region {
             country,
             region,
             city,
-            coordinates: Some(Coordinates { lat: lat.to_string(), lon: lon.to_string() }),
+            coordinates: Some(Coordinates {
+                lat: lat.to_string(),
+                lon: lon.to_string(),
+            }),
             time_zone,
         }),
         risk: None,

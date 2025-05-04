@@ -1,8 +1,8 @@
-use std::sync::Mutex;
+use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::Client;
+use std::sync::Mutex;
 use std::time::Duration;
-use lazy_static::lazy_static;
 
 pub async fn get_usage_count() -> Result<(u64, u64), String> {
     let client = Client::new();

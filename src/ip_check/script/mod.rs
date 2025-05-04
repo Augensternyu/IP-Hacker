@@ -3,10 +3,11 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 use std::time::Duration;
 
+pub mod cloudflare;
 pub mod ip_checking;
+pub mod ip_sb;
 pub mod ipinfo_io;
 pub mod maxmind;
-pub mod cloudflare;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,
