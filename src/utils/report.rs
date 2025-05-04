@@ -80,7 +80,7 @@ pub async fn post_to_pastebin() -> Result<String, String> {
 
     let client = Client::new();
     let resp = client
-        .post(format!("{}/upload", url))
+        .post(format!("{url}/upload"))
         .header("Authorization", secret)
         .body(GLOBAL_STRING.lock().unwrap().clone())
         .send()

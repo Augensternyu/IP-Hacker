@@ -19,7 +19,7 @@ impl IpCheck for IpInfoIo {
             };
 
             let res = if let Ok(res) = client_v4
-                .get(format!("https://ipinfo.io/{}", ip))
+                .get(format!("https://ipinfo.io/{ip}"))
                 .send()
                 .await
             {
@@ -31,12 +31,7 @@ impl IpCheck for IpInfoIo {
                 )];
             };
 
-            if res.status() != 200 {
-                vec![request_error_ip_result(
-                    "Ipinfo.io",
-                    "ipinfo.io returned an error",
-                )]
-            } else {
+            if res.status() == 200 {
                 let json = if let Ok(json) = res.json::<Value>().await {
                     json
                 } else {
@@ -47,6 +42,11 @@ impl IpCheck for IpInfoIo {
                 };
 
                 vec![get_ipinfo_io(json).await]
+            } else {
+                vec![request_error_ip_result(
+                    "Ipinfo.io",
+                    "ipinfo.io returned an error",
+                )]
             }
         } else {
             let handle_v4 = tokio::spawn(async move {
@@ -59,15 +59,15 @@ impl IpCheck for IpInfoIo {
                     return request_error_ip_result("Ipinfo.io", "Unable to connect to ipinfo.io");
                 };
 
-                if result.status() != 200 {
-                    request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
-                } else {
+                if result.status() == 200 {
                     let json = if let Ok(json) = result.json::<Value>().await {
                         json
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
                     get_ipinfo_io(json).await
+                } else {
+                    request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
                 }
             });
 
@@ -81,15 +81,15 @@ impl IpCheck for IpInfoIo {
                     return request_error_ip_result("Ipinfo.io", "Unable to connect to ipinfo.io");
                 };
 
-                if result.status() != 200 {
-                    request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
-                } else {
+                if result.status() == 200 {
                     let json = if let Ok(json) = result.json::<Value>().await {
                         json
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
                     get_ipinfo_io(json).await
+                } else {
+                    request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
                 }
             });
 
@@ -107,25 +107,25 @@ impl IpCheck for IpInfoIo {
 
 async fn get_ipinfo_io(ip: Value) -> IpResult {
     let country = if let Some(country) = ip.get("country") {
-        country.as_str().map(|country| country.to_string())
+        country.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };
 
     let region = if let Some(region) = ip.get("region") {
-        region.as_str().map(|region| region.to_string())
+        region.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };
 
     let city = if let Some(city) = ip.get("city") {
-        city.as_str().map(|city| city.to_string())
+        city.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };
 
     let org_str = if let Some(org) = ip.get("org") {
-        org.as_str().map(|org| org.to_string())
+        org.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };
@@ -150,16 +150,16 @@ async fn get_ipinfo_io(ip: Value) -> IpResult {
     let asn = asn.replace("AS", "").parse::<u32>().unwrap_or(0);
 
     let loc = if let Some(loc) = ip.get("loc") {
-        loc.as_str().map(|loc| loc.to_string())
+        loc.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };
 
-    let temp = loc.unwrap_or("".to_string());
+    let temp = loc.unwrap_or(String::new());
     let (lat, lon) = temp.split_once(',').unwrap();
 
     let time_zone = if let Some(time_zone) = ip.get("timezone") {
-        time_zone.as_str().map(|time_zone| time_zone.to_string())
+        time_zone.as_str().map(std::string::ToString::to_string)
     } else {
         None
     };

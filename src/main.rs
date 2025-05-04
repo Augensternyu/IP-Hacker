@@ -28,12 +28,12 @@ async fn main() {
 
     if !args.no_upload {
         if let Ok((today, all)) = get_usage_count().await {
-            println!("Usage: {} / {}", today, all);
+            println!("Usage: {today} / {all}");
             global_println!("Usage: {} / {}", today, all);
         } else {
             warn!("Unable to get usage count");
             global_println!("🟨 WARN: Unable to get usage count");
-        };
+        }
     }
 
     let ip = args.set_ip.as_ref().map(|ip| {
@@ -51,24 +51,24 @@ async fn main() {
     if !args.no_upload {
         match post_to_pastebin().await {
             Ok(url) => {
-                info!("Result Url: {}", url)
+                info!("Result Url: {url}");
             }
             Err(err) => {
-                error!("{}", err);
+                error!("{err}");
             }
         }
     }
 }
 
 fn print_ascii_art() {
-    let art = r#"
+    let art = r"
    ___   ___
       / /    //   ) )         //    / /
      / /    //___/ /         //___ / /  ___      ___     / ___      ___      __
     / /    / ____ /   ____  / ___   / //   ) ) //   ) ) //\ \     //___) ) //  ) )
    / /    //               //    / / //   / / //       //  \ \   //       //
 __/ /___ //               //    / / ((___( ( ((____   //    \ \ ((____   //
-                                                                                   "#;
-    println!("{}", art);
+                                                                                   ";
+    println!("{art}");
     global_println!("{}", art);
 }

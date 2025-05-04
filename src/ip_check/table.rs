@@ -24,7 +24,7 @@ fn make_table_cells(config: &config::Config) -> Vec<Cell> {
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
         );
-    };
+    }
     if config.ip {
         cells.push(
             Cell::new("IP")
@@ -44,28 +44,28 @@ fn make_table_cells(config: &config::Config) -> Vec<Cell> {
             Cell::new("ISP")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.country {
         cells.push(
             Cell::new("Country")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.region {
         cells.push(
             Cell::new("Region")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.city {
         cells.push(
             Cell::new("City")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.coordinates {
         cells.push(
@@ -77,28 +77,28 @@ fn make_table_cells(config: &config::Config) -> Vec<Cell> {
             Cell::new("Lon")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.time_zone {
         cells.push(
             Cell::new("Time Zone")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.risk {
         cells.push(
             Cell::new("Risk")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     if config.tags {
         cells.push(
             Cell::new("Tags")
                 .with_style(Attr::ForegroundColor(color::YELLOW))
                 .with_style(Attr::Bold),
-        )
+        );
     }
     cells
 }

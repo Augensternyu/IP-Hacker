@@ -4,7 +4,7 @@ pub mod table;
 
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
-use crate::ip_check::script::*;
+use crate::ip_check::script::{cloudflare, ip_checking, ipinfo_io, maxmind};
 use async_trait::async_trait;
 use log::{info, warn};
 use std::fmt::{Display, Formatter};
@@ -63,9 +63,9 @@ impl Display for IpCheckError {
             IpCheckError::No => {
                 write!(f, "Why would you include a NoError in a failed request?")
             }
-            IpCheckError::JsonParse(message) => write!(f, "Json: {}", message),
-            IpCheckError::Request(message) => write!(f, "Request: {}", message),
-            IpCheckError::ParseIP(message) => write!(f, "Request: {}", message),
+            IpCheckError::JsonParse(message) => write!(f, "Json: {message}"),
+            IpCheckError::Request(message) => write!(f, "Request: {message}"),
+            IpCheckError::ParseIP(message) => write!(f, "Request: {message}"),
             IpCheckError::CreateReqwestClient => write!(f, "Create Reqwest Client Error"),
             IpCheckError::NotSupport => {write!(f, "This provider does not currently support the specified IP")}
         }
