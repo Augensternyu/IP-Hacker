@@ -171,6 +171,10 @@ jobs:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
           CROSS_NO_WARNINGS: 0
+      - name: Install Upx Binary
+        run: sudo apt install -y upx
+      - name: Compress binary
+        run: upx --brute target/${{ matrix.platform.target }}/release/IP-Hacker
       - name: Rename binary
         run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Upload binary
