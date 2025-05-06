@@ -1,4 +1,4 @@
-// #![warn(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic)]
 
 use std::fmt::Write;
 mod config;

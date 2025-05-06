@@ -7,6 +7,7 @@ pub mod cloudflare;
 pub mod ip_checking;
 pub mod ip_sb;
 pub mod ipinfo_io;
+pub mod ipip_net;
 pub mod maxmind;
 
 pub async fn create_reqwest_client(
