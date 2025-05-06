@@ -8,6 +8,7 @@ pub mod ip_checking;
 pub mod ip_sb;
 pub mod ipinfo_io;
 pub mod ipip_net;
+pub mod ipquery_io;
 pub mod maxmind;
 
 pub async fn create_reqwest_client(

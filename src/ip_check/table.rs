@@ -200,6 +200,7 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
             RiskTag::Proxy => "PROXY",
             RiskTag::Hosting => "HOSTING",
             RiskTag::Relay => "RELAY",
+            RiskTag::Mobile => "MOBILE",
         });
     }
     let risk_tags_str = risk_tags.join(", ");

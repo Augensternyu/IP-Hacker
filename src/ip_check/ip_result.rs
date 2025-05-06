@@ -117,4 +117,5 @@ pub enum RiskTag {
     Proxy,
     Hosting,
     Relay,
+    Mobile,
 }

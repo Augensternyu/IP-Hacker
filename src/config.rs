@@ -70,10 +70,29 @@ pub struct Config {
     /// No Upload
     #[arg(long, default_value_t = false)]
     pub no_upload: bool,
+
+    /// No Logger Output
+    #[arg(long, default_value_t = false)]
+    pub no_logger: bool,
+
+    /// Json Output
+    #[arg(long, default_value_t = false)]
+    pub json: bool,
 }
 
 pub fn default_config(config: Config) -> Config {
-    if config.provider
+    if config.json {
+        Config {
+            all: true,
+            json: true,
+            no_logo: true,
+            no_cls: true,
+            no_color: true,
+            no_upload: true,
+            no_logger: true,
+            ..config
+        }
+    } else if config.provider
         || config.ip
         || config.asn
         || config.isp
@@ -99,12 +118,7 @@ pub fn default_config(config: Config) -> Config {
             time_zone: true,
             risk: true,
             tags: true,
-            no_color: config.no_color,
-            all: true,
-            set_ip: config.set_ip,
-            no_cls: config.no_cls,
-            no_logo: config.no_logo,
-            no_upload: config.no_upload,
+            ..config
         }
     } else {
         Config {
@@ -120,11 +134,7 @@ pub fn default_config(config: Config) -> Config {
             time_zone: false,
             risk: false,
             tags: false,
-            no_color: config.no_color,
-            set_ip: config.set_ip,
-            no_cls: config.no_cls,
-            no_logo: config.no_logo,
-            no_upload: config.no_upload,
+            ..config
         }
     }
 }

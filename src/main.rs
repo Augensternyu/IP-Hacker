@@ -1,4 +1,4 @@
-#![warn(clippy::all, clippy::pedantic)]
+// #![warn(clippy::all, clippy::pedantic)]
 
 use std::fmt::Write;
 mod config;
@@ -16,7 +16,12 @@ use log::{LevelFilter, error, info, warn};
 async fn main() {
     let args = default_config(config::Config::parse());
     log::set_logger(&utils::logger::CONSOLE_LOGGER).unwrap();
-    log::set_max_level(LevelFilter::Trace);
+
+    if args.no_logger {
+        log::set_max_level(LevelFilter::Info);
+    } else {
+        log::set_max_level(LevelFilter::Error);
+    }
 
     if !args.no_cls {
         utils::term::clear_screen();
@@ -44,9 +49,15 @@ async fn main() {
     });
 
     let ip_result = ip_check::check_all(&args, ip).await;
-    let table = gen_table(&ip_result, &args).await;
-    table.printstd();
-    global_println!("{}", table.to_string());
+
+    if args.json {
+        let json_output = serde_json::to_string_pretty(&ip_result).unwrap();
+        println!("{json_output}");
+    } else {
+        let table = gen_table(&ip_result, &args).await;
+        table.printstd();
+        global_println!("{}", table.to_string());
+    }
 
     if !args.no_upload {
         match post_to_pastebin().await {

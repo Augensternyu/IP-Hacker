@@ -16,9 +16,7 @@ pub struct IpChecking;
 impl IpCheck for IpChecking {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
-            let mut ip_results = Vec::new();
-            ip_results.push(get_ipcheck_ing_info(ip).await);
-            ip_results
+            vec![get_ipcheck_ing_info(ip).await]
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
