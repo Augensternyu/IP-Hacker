@@ -45,3 +45,15 @@ jobs:
       - name: Cargo Clippy
         run: cargo clippy
 
+  publish-to-crates:
+    name: Cargo Publish To Crates.io - ${{ github.sha }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Rust Toolchain
+        uses: moonrepo/setup-rust@v1
+      - uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          ignore-unpublished-changes: true
