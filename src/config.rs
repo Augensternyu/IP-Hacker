@@ -55,10 +55,6 @@ pub struct Config {
     #[arg(short, long)]
     pub set_ip: Option<String>,
 
-    /// No Color
-    #[arg(long, default_value_t = false)]
-    pub no_color: bool,
-
     /// No CLS
     #[arg(long, default_value_t = false)]
     pub no_cls: bool,
@@ -87,7 +83,6 @@ pub fn default_config(config: Config) -> Config {
             json: true,
             no_logo: true,
             no_cls: true,
-            no_color: true,
             no_upload: true,
             no_logger: true,
             ..config

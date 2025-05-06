@@ -168,7 +168,7 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
         autonomous_system: {
             if let (Some(asn), Some(org)) = (asn, org) {
                 Some(AS {
-                    number: asn as u32,
+                    number: u32::try_from(asn).unwrap_or(0),
                     name: org,
                 })
             } else {
