@@ -1,12 +1,13 @@
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Tor};
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
-    json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
+    Region, Risk, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 
 pub struct IpQueryIo;
@@ -103,159 +104,96 @@ impl IpCheck for IpQueryIo {
 }
 
 async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
-    let ip = if let Some(ip) = json.get("ip") {
-        if let Some(ip) = ip.as_str() {
-            ip.parse::<IpAddr>().ok()
-        } else {
-            return parse_ip_error_ip_result("Ipquery.io", "Unable to parse ip");
-        }
-    } else {
-        return parse_ip_error_ip_result("Ipquery.io", "Unable to parse ip");
-    };
+    #[derive(Debug, Serialize, Deserialize)]
+    struct IpQuery {
+        ip: Option<IpAddr>,
+        isp: ISP,
+        location: Location,
+        risk: Risks,
+    }
 
-    let Some(isp) = json.get("isp") else {
-        return parse_ip_error_ip_result("Ipquery.io", "Unable to parse isp");
-    };
+    #[derive(Debug, Serialize, Deserialize)]
+    struct ISP {
+        asn: Option<String>,
+        isp: Option<String>,
+        org: Option<String>,
+    }
 
-    let asn = if let Some(asn) = isp.get("asn") {
-        asn.as_str().map(|asn| {
-            asn.to_string()
-                .replace("AS", "")
-                .parse::<u32>()
-                .unwrap_or(0)
-        })
-    } else {
-        None
-    };
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Location {
+        city: Option<String>,
+        country: Option<String>,
+        latitude: Option<f64>,
+        longitude: Option<f64>,
+        state: Option<String>,
+        timezone: Option<String>,
+    }
 
-    let org = if let Some(org) = isp.get("org") {
-        org.as_str().map(std::string::ToString::to_string)
-    } else {
-        None
-    };
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Risks {
+        is_datacenter: Option<bool>,
+        is_mobile: Option<bool>,
+        is_proxy: Option<bool>,
+        is_tor: Option<bool>,
+        is_vpn: Option<bool>,
+        risk_score: Option<u16>,
+    }
 
-    let location = if let Some(location) = json.get("location") {
-        location
-    } else {
-        return parse_ip_error_ip_result("Ipquery.io", "Unable to parse location");
-    };
-
-    let country = if let Some(country) = location.get("country") {
-        country.as_str().map(std::string::ToString::to_string)
-    } else {
-        None
-    };
-
-    let region = if let Some(region) = location.get("state") {
-        region.as_str().map(std::string::ToString::to_string)
-    } else {
-        None
-    };
-
-    let city = if let Some(city) = location.get("city") {
-        city.as_str().map(std::string::ToString::to_string)
-    } else {
-        None
-    };
-
-    let lat = if let Some(lat) = location.get("latitude") {
-        lat.as_f64().map(|lat| lat.to_string())
-    } else {
-        None
-    };
-
-    let lon = if let Some(long) = location.get("longitude") {
-        long.as_f64().map(|long| long.to_string())
-    } else {
-        None
-    };
-
-    let timezone = if let Some(timezone) = location.get("timezone") {
-        timezone.as_str().map(std::string::ToString::to_string)
-    } else {
-        None
-    };
-
-    let risk = if let Some(risk) = json.get("risk") {
-        risk
-    } else {
-        return parse_ip_error_ip_result("Ipquery.io", "Unable to parse risk");
-    };
-
-    let risk_score = if let Some(risk_score) = risk.get("risk_score") {
-        risk_score.as_u64().map(|risk_score| risk_score as u16)
-    } else {
-        None
+    let Ok(json_parsed) = serde_json::from_value::<IpQuery>(json) else {
+        return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
     };
 
     let mut risk_tags = vec![];
-
-    if risk
-        .get("is_mobile")
-        .unwrap_or(&serde_json::Value::Bool(false))
-        .as_bool()
-        .unwrap_or(false)
-    {
+    if json_parsed.risk.is_datacenter.unwrap_or(false) {
+        risk_tags.push(Hosting);
+    }
+    if json_parsed.risk.is_mobile.unwrap_or(false) {
         risk_tags.push(Mobile);
     }
-
-    if risk
-        .get("is_vpn")
-        .unwrap_or(&serde_json::Value::Bool(false))
-        .as_bool()
-        .unwrap_or(false)
-    {
+    if json_parsed.risk.is_proxy.unwrap_or(false) {
         risk_tags.push(Proxy);
     }
-
-    if risk
-        .get("is_tor")
-        .unwrap_or(&serde_json::Value::Bool(false))
-        .as_bool()
-        .unwrap_or(false)
-    {
+    if json_parsed.risk.is_tor.unwrap_or(false) {
         risk_tags.push(Tor);
     }
-
-    if risk
-        .get("is_datacenter")
-        .unwrap_or(&serde_json::Value::Bool(false))
-        .as_bool()
-        .unwrap_or(false)
-    {
-        risk_tags.push(Hosting);
+    if json_parsed.risk.is_vpn.unwrap_or(false) {
+        risk_tags.push(Proxy);
     }
 
     IpResult {
         success: true,
         error: No,
         provider: "Ipquery.io".to_string(),
-        ip,
+        ip: json_parsed.ip,
         autonomous_system: {
-            if let (Some(asn), Some(org)) = (asn, org) {
-                Some(AS {
-                    number: asn,
-                    name: org,
-                })
+            let asn = json_parsed.isp.asn.map(|asn| asn.replace("AS", "").parse::<u32>().unwrap_or(0));
+            let isp = json_parsed.isp.isp;
+            if let (Some(asn), Some(isp)) = (asn, isp) {
+                Some(AS { number: asn, name: isp })
             } else {
                 None
             }
         },
         region: Some(Region {
-            country,
-            region,
-            city,
+            country: json_parsed.location.country,
+            region: json_parsed.location.state,
+            city: json_parsed.location.city,
             coordinates: {
-                if let (Some(lat), Some(lon)) = (lat, lon) {
-                    Some(Coordinates { lat, lon })
+                let latitude = json_parsed.location.latitude;
+                let longitude = json_parsed.location.longitude;
+                if let (Some(latitude), Some(longitude)) = (latitude, longitude) {
+                    Some(Coordinates {
+                        lat: latitude.to_string(),
+                        lon: longitude.to_string(),
+                    })
                 } else {
                     None
                 }
             },
-            time_zone: timezone,
+            time_zone: json_parsed.location.timezone,
         }),
         risk: Some(Risk {
-            risk: risk_score,
+            risk: json_parsed.risk.risk_score,
             tags: Some(risk_tags),
         }),
     }

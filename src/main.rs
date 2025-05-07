@@ -10,7 +10,7 @@ use crate::ip_check::table::gen_table;
 use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
-use log::{LevelFilter, error, info, warn};
+use log::{error, info, warn, LevelFilter};
 
 #[tokio::main]
 async fn main() {
