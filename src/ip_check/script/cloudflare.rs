@@ -1,10 +1,10 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, not_support_error, parse_ip_error_ip_result, request_error_ip_result,
-    IpResult,
+    IpResult, create_reqwest_client_error, not_support_error, parse_ip_error_ip_result,
+    request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
