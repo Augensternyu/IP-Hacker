@@ -10,6 +10,7 @@ pub mod ipinfo_io;
 pub mod ipip_net;
 pub mod ipquery_io;
 pub mod maxmind;
+pub mod myip_la;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,
