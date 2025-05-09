@@ -10,14 +10,14 @@ use crate::ip_check::table::gen_table;
 use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
-use log::{error, info, warn, LevelFilter};
+use log::{LevelFilter, error, info, warn};
 
 #[tokio::main]
 async fn main() {
     let args = default_config(config::Config::parse());
     log::set_logger(&utils::logger::CONSOLE_LOGGER).unwrap();
 
-    if args.no_logger {
+    if !args.no_logger {
         log::set_max_level(LevelFilter::Info);
     } else {
         log::set_max_level(LevelFilter::Error);

@@ -1,11 +1,11 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Tor};
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
-    Region, Risk, AS,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
@@ -166,10 +166,16 @@ async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
         provider: "Ipquery.io".to_string(),
         ip: json_parsed.ip,
         autonomous_system: {
-            let asn = json_parsed.isp.asn.map(|asn| asn.replace("AS", "").parse::<u32>().unwrap_or(0));
+            let asn = json_parsed
+                .isp
+                .asn
+                .map(|asn| asn.replace("AS", "").parse::<u32>().unwrap_or(0));
             let isp = json_parsed.isp.isp;
             if let (Some(asn), Some(isp)) = (asn, isp) {
-                Some(AS { number: asn, name: isp })
+                Some(AS {
+                    number: asn,
+                    name: isp,
+                })
             } else {
                 None
             }

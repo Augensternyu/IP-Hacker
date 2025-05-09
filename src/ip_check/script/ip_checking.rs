@@ -1,12 +1,13 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
-    Region, AS,
+    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    parse_ip_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::header;
+use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 use std::str::FromStr;
 
@@ -101,93 +102,53 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
         return request_error_ip_result("IpCheck.ing", "Unable to connect to ipcheck.ing");
     };
 
-    let Ok(json) = res.json::<serde_json::Value>().await else {
+    #[derive(Deserialize, Serialize)]
+    struct IpCheckingResp {
+        ip: IpAddr,
+        city: Option<String>,
+        country_name: Option<String>,
+        region: Option<String>,
+        latitude: Option<f64>,
+        longitude: Option<f64>,
+        asn: Option<String>,
+        org: Option<String>,
+    }
+
+    let Ok(json) = res.json::<IpCheckingResp>().await else {
         return json_parse_error_ip_result(
             "IpCheck.ing",
             "Unable to parse the returned result into Json",
         );
     };
 
-    let country = if let Some(country) = json.get("country_name") {
-        if let Some(country) = country.as_str() {
-            country.to_string()
-        } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
-        }
-    } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `country`");
-    };
-
-    let region = if let Some(region) = json.get("region") {
-        if let Some(region) = region.as_str() {
-            region.to_string()
-        } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
-        }
-    } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `region`");
-    };
-
-    let city = if let Some(city) = json.get("city") {
-        if let Some(city) = city.as_str() {
-            city.to_string()
-        } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
-        }
-    } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `city`");
-    };
-
-    let asn = if let Some(asn) = json.get("asn") {
-        if let Some(asn) = asn.as_str() {
-            asn.to_string()
-                .replace("AS", "")
-                .parse::<u32>()
-                .unwrap_or(0)
-        } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
-        }
-    } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `asn`");
-    };
-
-    let org = if let Some(org) = json.get("org") {
-        if let Some(org) = org.as_str() {
-            org.to_string()
-        } else {
-            return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
-        }
-    } else {
-        return json_parse_error_ip_result("IpCheck.ing", "Unable to get value for `org`");
-    };
-
-    let lat = if let Some(lat) = json.get("latitude") {
-        lat.as_f64().map(|lat| lat.to_string())
-    } else {
-        None
-    };
-
-    let lon = if let Some(lng) = json.get("longitude") {
-        lng.as_f64().map(|lng| lng.to_string())
-    } else {
-        None
-    };
+    let asn = json
+        .asn
+        .map(|asn| asn.replace("AS", "").trim().parse::<u32>().unwrap_or(0));
 
     IpResult {
         success: true,
         error: No,
         provider: "IpCheck.ing".to_string(),
         ip: Some(ip),
-        autonomous_system: Some(AS {
-            number: asn,
-            name: org,
-        }),
+        autonomous_system: {
+            if let (Some(asn), Some(isp)) = (asn, json.org) {
+                Some(AS {
+                    number: asn,
+                    name: isp,
+                })
+            } else {
+                None
+            }
+        },
         region: Some(Region {
-            country: Some(country),
-            region: Some(region),
-            city: Some(city),
-            coordinates: if let (Some(lat), Some(lon)) = (lat, lon) {
-                Some(Coordinates { lat, lon })
+            country: json.country_name,
+            region: json.region,
+            city: json.city,
+            coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
+                Some(Coordinates {
+                    lat: lat.to_string(),
+                    lon: lon.to_string(),
+                })
             } else {
                 None
             },
