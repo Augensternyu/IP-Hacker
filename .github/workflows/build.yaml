@@ -43,7 +43,7 @@ jobs:
           name: ${{ matrix.platform.target }}
           path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -87,7 +87,7 @@ jobs:
           name: ${{ matrix.platform.target }}
           path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -154,9 +154,9 @@ jobs:
           - release_for: linux_armv7_musleabihf
             target: armv7-unknown-linux-musleabihf
             binary_name: IP-Hacker-linux-armv7-musleabihf
-#          - release_for: linux_s390x_gnu
-#            target: s390x-unknown-linux-gnu
-#            binary_name: IP-Hacker-linux-s390x-gnu
+    #          - release_for: linux_s390x_gnu
+    #            target: s390x-unknown-linux-gnu
+    #            binary_name: IP-Hacker-linux-s390x-gnu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -183,7 +183,7 @@ jobs:
           name: ${{ matrix.platform.target }}
           path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -216,7 +216,7 @@ jobs:
           name: windows
           path: target/release/IP-Hacker.exe
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -250,7 +250,7 @@ jobs:
       - name: Rename Binary
         run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-amd64
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -265,7 +265,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   macos-arm64-release:
-#    runs-on: [self-hosted, macOS]
+    #    runs-on: [self-hosted, macOS]
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -287,7 +287,7 @@ jobs:
       - name: Rename Binary
         run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-arm64
       - name: Publish to GitHub Release
-#        if: github.event_name == 'push'
+        #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |

@@ -5,7 +5,7 @@ pub mod table;
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::{
-    cloudflare, ip_checking, ip_sb, ipinfo_io, ipip_net, ipquery_io, maxmind, myip_la,
+    cloudflare, ip_checking, ip_sb, ipapi_co, ipinfo_io, ipip_net, ipquery_io, maxmind, myip_la,
 };
 use async_trait::async_trait;
 use log::{info, warn};
@@ -29,6 +29,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(ipip_net::IpIpNet),
         Box::new(ipquery_io::IpQueryIo),
         Box::new(myip_la::MyIPLa),
+        Box::new(ipapi_co::IPApiCo),
     ];
 
     let (tx, mut rx) = mpsc::channel(100);
