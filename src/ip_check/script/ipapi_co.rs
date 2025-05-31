@@ -18,7 +18,7 @@ impl IpCheck for IPApiCo {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.0"), None).await else {
-                    return create_reqwest_client_error("Ipapi.Co");
+                    return create_reqwest_client_error("IpApi.co");
                 };
 
                 let Ok(result) = client_v4
@@ -26,23 +26,23 @@ impl IpCheck for IPApiCo {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("Ipapi.Co", "Unable to connect to api.myip.la");
+                    return request_error_ip_result("IpApi.co", "Unable to connect to api.myip.la");
                 };
                 parse_ipapi_co_info(result).await
             });
             vec![handle.await.unwrap_or(parse_ip_error_ip_result(
-                "Ipapi.Co",
-                "Unable to parse Ipapi.Co",
+                "IpApi.co",
+                "Unable to parse IpApi.co",
             ))]
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.0"), Some(false)).await
                 else {
-                    return create_reqwest_client_error("Ipapi.Co");
+                    return create_reqwest_client_error("IpApi.co");
                 };
 
                 let Ok(result) = client_v4.get("https://ipapi.co/json").send().await else {
-                    return request_error_ip_result("Ipapi.Co", "Unable to connect to api.myip.la");
+                    return request_error_ip_result("IpApi.co", "Unable to connect to api.myip.la");
                 };
 
                 parse_ipapi_co_info(result).await
@@ -51,11 +51,11 @@ impl IpCheck for IPApiCo {
             let handle_v6 = tokio::spawn(async move {
                 let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.0"), Some(true)).await
                 else {
-                    return create_reqwest_client_error("Ipapi.Co");
+                    return create_reqwest_client_error("IpApi.co");
                 };
 
                 let Ok(result) = client_v6.get("https://ipapi.co/json").send().await else {
-                    return request_error_ip_result("Ipapi.Co", "Unable to connect to api.myip.la");
+                    return request_error_ip_result("IpApi.co", "Unable to connect to api.myip.la");
                 };
 
                 parse_ipapi_co_info(result).await
@@ -88,7 +88,7 @@ async fn parse_ipapi_co_info(response: Response) -> IpResult {
     }
 
     let Ok(json) = response.json::<IPApiCoResp>().await else {
-        return request_error_ip_result("Ipapi.Co", "Unable to parse MyIPLa Json");
+        return request_error_ip_result("IpApi.co", "Unable to parse MyIPLa Json");
     };
 
     let asn = json
@@ -98,7 +98,7 @@ async fn parse_ipapi_co_info(response: Response) -> IpResult {
     IpResult {
         success: true,
         error: No,
-        provider: "Ipapi.Co".to_string(),
+        provider: "IpApi.co".to_string(),
         ip: json.ip,
         autonomous_system: {
             if let (Some(asn), Some(isp)) = (asn, json.org) {

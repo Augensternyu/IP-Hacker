@@ -68,12 +68,12 @@ impl IpCheck for IpQueryIo {
             });
 
             let handle_v6 = tokio::spawn(async move {
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
+                let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
                     return create_reqwest_client_error("Ipquery.io");
                 };
 
-                let Ok(result) = client_v4
+                let Ok(result) = client_v6
                     .get("https://api.ipquery.io/?format=json")
                     .send()
                     .await
