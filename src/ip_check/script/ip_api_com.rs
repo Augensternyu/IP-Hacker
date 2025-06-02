@@ -16,13 +16,12 @@ pub struct IpApiCom;
 impl IpCheck for IpApiCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
-            let handle_v4 = tokio::spawn(async move {
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
-                else {
+            let handle = tokio::spawn(async move {
+                let Ok(client) = create_reqwest_client(Some("curl/8.11.1"), None).await else {
                     return create_reqwest_client_error("Ip-Api.com");
                 };
 
-                let Ok(result) = client_v4
+                let Ok(result) = client
                     .get(format!("http://ip-api.com/json/{ip}?lang=en-US"))
                     .send()
                     .await
@@ -33,7 +32,7 @@ impl IpCheck for IpApiCom {
                 get_ip_api_com_info(result).await
             });
 
-            vec![handle_v4.await.unwrap_or(json_parse_error_ip_result(
+            vec![handle.await.unwrap_or(json_parse_error_ip_result(
                 "Ip-Api.com",
                 "Unable to parse json",
             ))]
@@ -87,13 +86,13 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
 
     let Ok(json) = resp.json::<IpApiComResp>().await else {
         return json_parse_error_ip_result(
-            "IpCheck.ing",
+            "Ip-Api.com",
             "Unable to parse the returned result into Json",
         );
     };
 
     if json.status != "success" {
-        return request_error_ip_result("IpCheck.ing", "Unable to get Ip API info");
+        return request_error_ip_result("Ip-Api.com", "Unable to get Ip API info");
     }
 
     let asn = if let Some(asn) = json.asn {
