@@ -13,6 +13,7 @@ pub mod ipapi_co;
 pub mod ipinfo_io;
 pub mod ipip_net;
 pub mod ipquery_io;
+pub mod ipwhois_app;
 pub mod maxmind;
 pub mod myip_la;
 
