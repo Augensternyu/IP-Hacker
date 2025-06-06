@@ -69,7 +69,7 @@ pub struct Config {
 
     /// No Logger Output
     #[arg(long, default_value_t = false)]
-    pub no_logger: bool,
+    pub logger: bool,
 
     /// Json Output
     #[arg(long, default_value_t = false)]
@@ -84,7 +84,7 @@ pub fn default_config(config: Config) -> Config {
             no_logo: true,
             no_cls: true,
             no_upload: true,
-            no_logger: true,
+            logger: false,
             ..config
         }
     } else if config.provider

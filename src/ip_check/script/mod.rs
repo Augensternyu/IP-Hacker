@@ -5,6 +5,7 @@ use std::time::Duration;
 
 pub mod cloudflare;
 pub mod dbip_com;
+pub mod free_ip_api_com;
 pub mod ip_api_com;
 pub mod ip_checking;
 pub mod ip_sb;

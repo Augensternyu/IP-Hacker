@@ -66,7 +66,7 @@ async fn get_db_ip_com_info(resp: Response) -> IpResult {
     #[derive(Deserialize, Serialize)]
     struct DbIpComResp {
         #[serde(rename = "ipAddress")]
-        ip: Option<IpAddr>,
+        ip: IpAddr,
 
         #[serde(rename = "countryName")]
         country_name: Option<String>,
@@ -79,7 +79,7 @@ async fn get_db_ip_com_info(resp: Response) -> IpResult {
 
     let Ok(json) = resp.json::<DbIpComResp>().await else {
         return json_parse_error_ip_result(
-            "IpCheck.ing",
+            "Db-Ip.com",
             "Unable to parse the returned result into Json",
         );
     };
@@ -88,7 +88,7 @@ async fn get_db_ip_com_info(resp: Response) -> IpResult {
         success: true,
         error: No,
         provider: "Db-Ip.com".to_string(),
-        ip: json.ip,
+        ip: Some(json.ip),
         autonomous_system: None,
         region: Some(Region {
             country: json.country_name,

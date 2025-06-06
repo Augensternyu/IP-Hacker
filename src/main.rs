@@ -11,13 +11,14 @@ use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
 use log::{LevelFilter, error, info, warn};
+use tokio::time::Instant;
 
 #[tokio::main]
 async fn main() {
     let args = default_config(config::Config::parse());
     log::set_logger(&utils::logger::CONSOLE_LOGGER).unwrap();
 
-    if !args.no_logger {
+    if args.logger {
         log::set_max_level(LevelFilter::Info);
     } else {
         log::set_max_level(LevelFilter::Error);
@@ -48,7 +49,9 @@ async fn main() {
         })
     });
 
+    let time_start = Instant::now();
     let ip_result = ip_check::check_all(&args, ip).await;
+    let time_end = time_start.elapsed();
 
     if args.json {
         let json_output = serde_json::to_string_pretty(&ip_result).unwrap();
@@ -56,6 +59,8 @@ async fn main() {
     } else {
         let table = gen_table(&ip_result, &args).await;
         table.printstd();
+        global_println!("{}", table.to_string());
+        println!("Success! Usage time: {:.2}sec", time_end.as_secs_f64());
         global_println!("{}", table.to_string());
     }
 
@@ -65,7 +70,7 @@ async fn main() {
                 info!("Result Url: {url}");
             }
             Err(err) => {
-                error!("{err}");
+                warn!("{err}");
             }
         }
     }

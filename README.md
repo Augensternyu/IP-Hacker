@@ -2,6 +2,20 @@
 
 俄罗斯大黑客用的 IP 地址检测工具
 
+Support Provider:
+- Cloudflare
+- dbip.com
+- freeipapi.com
+- ip-api.com
+- ipcheck.ing
+- ip.sb
+- ipapi.co
+- ipinfo.io
+- ipip.net
+- ipquery.io
+- maxmind
+- myip.la
+
 Usage:
 
 ```
@@ -23,12 +37,14 @@ Options:
       --risk             Show Risk Score
       --tags             Show Risk Tags
   -s, --set-ip <SET_IP>  IP Address
-      --no-color         No Color
       --no-cls           No CLS
       --no-logo          No Logo
       --no-upload        No Upload
+      --no-logger        No Logger Output
+      --json             Json Output
   -h, --help             Print help
   -V, --version          Print version
+
 ```
 
 Demo:
