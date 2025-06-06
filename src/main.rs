@@ -67,7 +67,7 @@ async fn main() {
     if !args.no_upload {
         match post_to_pastebin().await {
             Ok(url) => {
-                info!("Result Url: {url}");
+                println!("Result Url: {url}");
             }
             Err(err) => {
                 warn!("{err}");
