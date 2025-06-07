@@ -76,7 +76,7 @@ async fn parse_ip_lark_com_resp(response: Response) -> IpResult {
         latitude: Option<f64>,
         longitude: Option<f64>,
         time_zone: TZ,
-        connection: CONN,
+        connection: Conn,
         security: Security,
     }
 
@@ -86,7 +86,7 @@ async fn parse_ip_lark_com_resp(response: Response) -> IpResult {
     }
 
     #[derive(Deserialize, Serialize)]
-    struct CONN {
+    struct Conn {
         asn: Option<i32>,
         isp: Option<String>,
     }

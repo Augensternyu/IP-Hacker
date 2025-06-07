@@ -107,13 +107,13 @@ async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
     #[derive(Debug, Serialize, Deserialize)]
     struct IpQuery {
         ip: Option<IpAddr>,
-        isp: ISP,
+        isp: Isp,
         location: Location,
         risk: Risks,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
-    struct ISP {
+    struct Isp {
         asn: Option<String>,
         isp: Option<String>,
         org: Option<String>,

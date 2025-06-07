@@ -3,6 +3,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 use std::time::Duration;
 
+pub mod baidu;
 pub mod cloudflare;
 pub mod dbip_com;
 pub mod free_ip_api_com;
@@ -19,7 +20,6 @@ pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod maxmind;
 pub mod myip_la;
-pub mod baidu;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,

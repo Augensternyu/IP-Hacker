@@ -1,7 +1,10 @@
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::{create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, IpResult, Region, AS};
-use crate::ip_check::script::create_reqwest_client;
 use crate::ip_check::IpCheck;
+use crate::ip_check::ip_result::IpCheckError::No;
+use crate::ip_check::ip_result::{
+    AS, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    request_error_ip_result,
+};
+use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -19,7 +22,9 @@ impl IpCheck for Baidu {
                 };
 
                 let Ok(result) = client
-                    .get(format!("https://qifu-api.baidubce.com/ip/geo/v1/district?ip={ip}"))
+                    .get(format!(
+                        "https://qifu-api.baidubce.com/ip/geo/v1/district?ip={ip}"
+                    ))
                     .send()
                     .await
                 else {
@@ -65,7 +70,7 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
     struct BaiduResp {
         code: String,
         data: Data,
-        ip: Option<IpAddr>
+        ip: Option<IpAddr>,
     }
     #[derive(Deserialize, Serialize)]
     struct Data {
@@ -93,9 +98,9 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
         ip: json.ip,
         autonomous_system: {
             json.data.isp.map(|isp| AS {
-                    number: 0,
-                    name: isp,
-                })
+                number: 0,
+                name: isp,
+            })
         },
         region: Some(Region {
             country: json.data.country,
