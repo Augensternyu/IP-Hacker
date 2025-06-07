@@ -24,7 +24,11 @@ impl IpCheck for Cloudflare {
                     return create_reqwest_client_error("Cloudflare");
                 };
 
-                let Ok(result) = client_v4.get("https://1.0.0.1/cdn-cgi/trace").send().await else {
+                let Ok(result) = client_v4
+                    .get("https://cloudflare.com/cdn-cgi/trace")
+                    .send()
+                    .await
+                else {
                     return request_error_ip_result(
                         "Cloudflare",
                         "Unable to connect to cloudflare",
@@ -41,7 +45,7 @@ impl IpCheck for Cloudflare {
                 };
 
                 let Ok(result) = client_v4
-                    .get("https://[2606:4700:4700::1111]/cdn-cgi/trace")
+                    .get("https://cloudflare.com/cdn-cgi/trace")
                     .send()
                     .await
                 else {

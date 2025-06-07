@@ -118,15 +118,19 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
         let ip = if let Some(ip) = ip_result.ip {
             ip.to_string()
         } else {
-            "N/A".to_string()
+            "".to_string()
         };
         rows_vec.push(Cell::new(&ip));
     }
 
     let (asn, isp) = if let Some(a_s) = ip_result.autonomous_system {
-        (a_s.number.to_string(), a_s.name)
+        if a_s.number == 0 {
+            ("".to_string(), a_s.name)
+        } else {
+            (a_s.number.to_string(), a_s.name)
+        }
     } else {
-        ("N/A".to_string(), "N/A".to_string())
+        ("".to_string(), "".to_string())
     };
 
     if config.asn {
@@ -139,23 +143,23 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
 
     let (country, region, city, (lat, lon), time_zone) = if let Some(region) = ip_result.region {
         (
-            region.country.unwrap_or("N/A".to_string()),
-            region.region.unwrap_or("N/A".to_string()),
-            region.city.unwrap_or("N/A".to_string()),
+            region.country.unwrap_or("".to_string()),
+            region.region.unwrap_or("".to_string()),
+            region.city.unwrap_or("".to_string()),
             if let Some(coordinates) = region.coordinates {
                 (coordinates.lat.to_string(), coordinates.lon.to_string())
             } else {
-                ("N/A".to_string(), "N/A".to_string())
+                ("".to_string(), "".to_string())
             },
-            region.time_zone.unwrap_or("N/A".to_string()),
+            region.time_zone.unwrap_or("".to_string()),
         )
     } else {
         (
-            "N/A".to_string(),
-            "N/A".to_string(),
-            "N/A".to_string(),
-            ("N/A".to_string(), "N/A".to_string()),
-            "N/A".to_string(),
+            "".to_string(),
+            "".to_string(),
+            "".to_string(),
+            ("".to_string(), "".to_string()),
+            "".to_string(),
         )
     };
 
@@ -185,12 +189,12 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
             if let Some(risk) = risk.risk {
                 risk.to_string()
             } else {
-                "N/A".to_string()
+                "".to_string()
             },
             risk.tags.unwrap_or_default(),
         )
     } else {
-        ("N/A".to_string(), vec![])
+        ("".to_string(), vec![])
     };
 
     let mut risk_tags = Vec::new();

@@ -15,6 +15,11 @@ Support Provider:
 - ipquery.io
 - maxmind
 - myip.la
+- ipwhois.app
+- itdog.cn
+- iplark.com
+- httpbin.org
+- baidu.com
 
 Usage:
 
