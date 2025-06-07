@@ -118,19 +118,19 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
         let ip = if let Some(ip) = ip_result.ip {
             ip.to_string()
         } else {
-            "".to_string()
+            String::new()
         };
         rows_vec.push(Cell::new(&ip));
     }
 
     let (asn, isp) = if let Some(a_s) = ip_result.autonomous_system {
         if a_s.number == 0 {
-            ("".to_string(), a_s.name)
+            (String::new(), a_s.name)
         } else {
             (a_s.number.to_string(), a_s.name)
         }
     } else {
-        ("".to_string(), "".to_string())
+        (String::new(), String::new())
     };
 
     if config.asn {
@@ -143,23 +143,23 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
 
     let (country, region, city, (lat, lon), time_zone) = if let Some(region) = ip_result.region {
         (
-            region.country.unwrap_or("".to_string()),
-            region.region.unwrap_or("".to_string()),
-            region.city.unwrap_or("".to_string()),
+            region.country.unwrap_or(String::new()),
+            region.region.unwrap_or(String::new()),
+            region.city.unwrap_or(String::new()),
             if let Some(coordinates) = region.coordinates {
                 (coordinates.lat.to_string(), coordinates.lon.to_string())
             } else {
-                ("".to_string(), "".to_string())
+                (String::new(), String::new())
             },
-            region.time_zone.unwrap_or("".to_string()),
+            region.time_zone.unwrap_or(String::new()),
         )
     } else {
         (
-            "".to_string(),
-            "".to_string(),
-            "".to_string(),
-            ("".to_string(), "".to_string()),
-            "".to_string(),
+            String::new(),
+            String::new(),
+            String::new(),
+            (String::new(), String::new()),
+            String::new(),
         )
     };
 
@@ -189,12 +189,12 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
             if let Some(risk) = risk.risk {
                 risk.to_string()
             } else {
-                "".to_string()
+                String::new()
             },
             risk.tags.unwrap_or_default(),
         )
     } else {
-        ("".to_string(), vec![])
+        (String::new(), vec![])
     };
 
     let mut risk_tags = Vec::new();

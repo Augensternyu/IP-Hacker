@@ -96,7 +96,7 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
     }
 
     let asn = if let Some(asn) = json.asn {
-        let asn = asn.split(" ").collect::<Vec<&str>>()[0];
+        let asn = asn.split(' ').collect::<Vec<&str>>()[0];
         Some(asn.replace("AS", "").parse::<u32>().unwrap_or(0))
     } else {
         None

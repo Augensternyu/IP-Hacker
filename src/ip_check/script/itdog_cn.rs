@@ -13,7 +13,7 @@ pub struct ItDogCn;
 #[async_trait]
 impl IpCheck for ItDogCn {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        if let Some(_) = ip {
+        if ip.is_some() {
             vec![not_support_error("Itdog.cn")]
         } else {
             let handle_v4 = tokio::spawn(async move {
@@ -33,7 +33,7 @@ impl IpCheck for ItDogCn {
                 let ip = result.json::<HttpBinOrgResp>().await.map(|resp| resp.ip);
 
                 if let Ok(ip) = ip {
-                    return IpResult {
+                    IpResult {
                         success: true,
                         error: No,
                         provider: "Itdog.cn".to_string(),
@@ -41,9 +41,9 @@ impl IpCheck for ItDogCn {
                         autonomous_system: None,
                         region: None,
                         risk: None,
-                    };
+                    }
                 } else {
-                    return request_error_ip_result("Itdog.cn", "Unable to connect");
+                    request_error_ip_result("Itdog.cn", "Unable to connect")
                 }
             });
 

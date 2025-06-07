@@ -82,7 +82,7 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
         );
     };
 
-    if json.code != String::from("Success") {
+    if json.code != *"Success" {
         return json_parse_error_ip_result("Baidu", "Server returned an error");
     }
 
@@ -92,14 +92,10 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
         provider: "Baidu".to_string(),
         ip: json.ip,
         autonomous_system: {
-            if let Some(isp) = json.data.isp {
-                Some(AS {
+            json.data.isp.map(|isp| AS {
                     number: 0,
                     name: isp,
                 })
-            } else {
-                None
-            }
         },
         region: Some(Region {
             country: json.data.country,

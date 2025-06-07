@@ -15,7 +15,7 @@ pub struct MyIPLa;
 #[async_trait]
 impl IpCheck for MyIPLa {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        if let Some(_) = ip {
+        if ip.is_some() {
             vec![not_support_error("Myip.La")]
         } else {
             let handle_v4 = tokio::spawn(async move {

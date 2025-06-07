@@ -16,7 +16,7 @@ pub struct IpLarkCom;
 #[async_trait]
 impl IpCheck for IpLarkCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        if let Some(_) = ip {
+        if ip.is_some() {
             vec![not_support_error("IpLark.com")]
         } else {
             let mut headers = header::HeaderMap::new();

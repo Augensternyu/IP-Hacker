@@ -13,7 +13,7 @@ pub struct HttpBinOrg;
 #[async_trait]
 impl IpCheck for HttpBinOrg {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        if let Some(_) = ip {
+        if ip.is_some() {
             vec![not_support_error("HttpBin.org")]
         } else {
             let handle_v4 = tokio::spawn(async move {
@@ -36,7 +36,7 @@ impl IpCheck for HttpBinOrg {
                     .map(|resp| resp.origin);
 
                 if let Ok(ip) = ip {
-                    return IpResult {
+                    IpResult {
                         success: true,
                         error: No,
                         provider: "HttpBin.org".to_string(),
@@ -44,9 +44,9 @@ impl IpCheck for HttpBinOrg {
                         autonomous_system: None,
                         region: None,
                         risk: None,
-                    };
+                    }
                 } else {
-                    return request_error_ip_result("HttpBin.org", "Unable to connect");
+                    request_error_ip_result("HttpBin.org", "Unable to connect")
                 }
             });
 
