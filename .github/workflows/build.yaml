@@ -30,7 +30,7 @@ jobs:
       - name: Install Cross
         run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Build binary
-        run: cross build --target ${{ matrix.platform.target }} --release --jobs 32 --locked
+        run: cross build --target ${{ matrix.platform.target }} --profile minimal --jobs 32 --locked
         env:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
@@ -74,7 +74,7 @@ jobs:
       - name: Install Cross
         run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Build binary
-        run: cross build --target ${{ matrix.platform.target }} --release --jobs 32 --locked
+        run: cross build --target ${{ matrix.platform.target }} --profile minimal --jobs 32 --locked
         env:
           CROSS_NO_WARNINGS: 0
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
@@ -166,7 +166,7 @@ jobs:
       - name: Install Cross
         run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Build binary
-        run: cross build --target ${{ matrix.platform.target }} --release --jobs 32 --locked
+        run: cross build --target ${{ matrix.platform.target }} --profile minimal --jobs 32 --locked
         env:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
@@ -206,7 +206,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Cargo Build
-        run: cargo build --release
+        run: cargo build --profile minimal
         env:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
@@ -238,7 +238,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Cargo Build
-        run: cargo build --release
+        run: cargo build --profile minimal
         env:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
@@ -275,7 +275,7 @@ jobs:
         with:
           cache: false
       - name: Cargo Build
-        run: cargo build --release
+        run: cargo build --profile minimal
         env:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
