@@ -36,18 +36,18 @@ jobs:
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
           CROSS_NO_WARNINGS: 0
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/minimal/IP-Hacker target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+          path: target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+            target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -80,18 +80,18 @@ jobs:
           CROSS_PASTEBIN_SECRET: ${{ secrets.PASTEBIN_SECRET }}
           CROSS_PASTEBIN_URL: ${{ secrets.PASTEBIN_URL }}
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/minimal/IP-Hacker target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+          path: target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+            target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -174,20 +174,20 @@ jobs:
       - name: Install Upx Binary
         run: sudo apt install -y upx
       - name: Compress binary
-        run: upx --brute target/${{ matrix.platform.target }}/release/IP-Hacker
+        run: upx --brute target/${{ matrix.platform.target }}/minimal/IP-Hacker
       - name: Rename binary
-        run: cp target/${{ matrix.platform.target }}/release/IP-Hacker target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+        run: cp target/${{ matrix.platform.target }}/minimal/IP-Hacker target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+          path: target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.platform.target }}/release/${{ matrix.platform.binary_name }}
+            target/${{ matrix.platform.target }}/minimal/${{ matrix.platform.binary_name }}
             target/${{ matrix.platform.target }}/debian/${{ matrix.platform.binary_name }}.deb
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
@@ -214,13 +214,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: target/release/IP-Hacker.exe
+          path: target/minimal/IP-Hacker.exe
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/IP-Hacker.exe
+            target/minimal/IP-Hacker.exe
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -246,15 +246,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-amd64
-          path: target/release/IP-Hacker
+          path: target/minimal/IP-Hacker
       - name: Rename Binary
-        run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-amd64
+        run: mv target/minimal/IP-Hacker target/minimal/IP-Hacker-macos-amd64
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/IP-Hacker-macos-amd64
+            target/minimal/IP-Hacker-macos-amd64
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -283,15 +283,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-arm64
-          path: target/release/IP-Hacker
+          path: target/minimal/IP-Hacker
       - name: Rename Binary
-        run: mv target/release/IP-Hacker target/release/IP-Hacker-macos-arm64
+        run: mv target/minimal/IP-Hacker target/minimal/IP-Hacker-macos-arm64
       - name: Publish to GitHub Release
         #        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/release/IP-Hacker-macos-arm64
+            target/minimal/IP-Hacker-macos-arm64
           tag_name: latest # 使用固定的标签名称作为发布版本号
           body: |
             Note: All Release operations will publish the Binary and software packages here
