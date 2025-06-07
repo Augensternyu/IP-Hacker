@@ -1,14 +1,12 @@
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
-    request_error_ip_result,
-};
+use crate::ip_check::ip_result::{AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Risk};
 use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
+use crate::ip_check::ip_result::RiskTag::{Mobile, Proxy};
 
 pub struct IpApiCom;
 
@@ -22,7 +20,7 @@ impl IpCheck for IpApiCom {
                 };
 
                 let Ok(result) = client
-                    .get(format!("http://ip-api.com/json/{ip}?lang=en-US"))
+                    .get(format!("https://pro.ip-api.com/json/{ip}?fields=66846719&key=EEKS6bLi6D91G1p&lang=en-US"))
                     .send()
                     .await
                 else {
@@ -44,7 +42,7 @@ impl IpCheck for IpApiCom {
                 };
 
                 let Ok(result) = client_v4
-                    .get("http://ip-api.com/json/?lang=en-US")
+                    .get("https://pro.ip-api.com/json/?fields=66846719&key=EEKS6bLi6D91G1p")
                     .send()
                     .await
                 else {
@@ -82,6 +80,10 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
 
         #[serde(rename = "query")]
         ip: Option<IpAddr>,
+
+        proxy: bool,
+        hosting: bool,
+        mobile: bool,
     }
 
     let Ok(json) = resp.json::<IpApiComResp>().await else {
@@ -133,6 +135,21 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
             },
             time_zone: json.timezone,
         }),
-        risk: None,
+        risk: {
+            let mut tags = vec![];
+            if json.proxy {
+                tags.push(Proxy)
+            }
+            if json.mobile {
+                tags.push(Mobile)
+            }
+            if json.hosting {
+                tags.push(Mobile)
+            }
+            Some(Risk {
+                risk: None,
+                tags: Some(tags),
+            })
+        },
     }
 }
