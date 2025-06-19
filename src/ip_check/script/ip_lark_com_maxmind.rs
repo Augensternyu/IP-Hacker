@@ -1,6 +1,6 @@
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag::Hosting;
+use crate::ip_check::ip_result::RiskTag::{Hosting, Other};
 use crate::ip_check::ip_result::{
     AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
     json_parse_error_ip_result, not_support_error, request_error_ip_result,
@@ -70,8 +70,9 @@ async fn parse_ip_lark_com_maxmind(response: Response) -> IpResult {
 
     let mut tags = Vec::new();
     if let Some(type_str) = json.type_str {
-        if type_str.contains("hosting") {
-            tags.push(Hosting);
+        match type_str.as_str() {
+            "hosting" => tags.push(Hosting),
+            _ => tags.push(Other(type_str))
         }
     }
 
