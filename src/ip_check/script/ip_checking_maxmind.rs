@@ -24,21 +24,24 @@ impl IpCheck for Maxmind {
             let handle_v4 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
                 else {
-                    return create_reqwest_client_error("Maxmind");
+                    return create_reqwest_client_error("IpCheck.ing Maxmind");
                 };
 
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
-                    return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
+                    return request_error_ip_result(
+                        "IpCheck.ing Maxmind",
+                        "Unable to connect to ipcheck.ing",
+                    );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return parse_ip_error_ip_result("Maxmind", "Unable to parse html");
+                    return parse_ip_error_ip_result("IpCheck.ing Maxmind", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return parse_ip_error_ip_result("Maxmind", text);
+                    return parse_ip_error_ip_result("IpCheck.ing Maxmind", text);
                 };
                 get_maxmind_info(ip).await
             });
@@ -46,21 +49,24 @@ impl IpCheck for Maxmind {
             let handle_v6 = tokio::spawn(async move {
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
-                    return create_reqwest_client_error("Maxmind");
+                    return create_reqwest_client_error("IpCheck.ing Maxmind");
                 };
 
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
-                    return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
+                    return request_error_ip_result(
+                        "IpCheck.ing Maxmind",
+                        "Unable to connect to ipcheck.ing",
+                    );
                 };
 
                 let Ok(text) = result.text().await else {
-                    return parse_ip_error_ip_result("Maxmind", "Unable to parse html");
+                    return parse_ip_error_ip_result("IpCheck.ing Maxmind", "Unable to parse html");
                 };
 
                 let text = text.trim();
 
                 let Ok(ip) = IpAddr::from_str(text) else {
-                    return parse_ip_error_ip_result("Maxmind", text);
+                    return parse_ip_error_ip_result("IpCheck.ing Maxmind", text);
                 };
                 get_maxmind_info(ip).await
             });
@@ -79,7 +85,7 @@ impl IpCheck for Maxmind {
 
 async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     let Ok(client) = create_reqwest_client(None, None).await else {
-        return create_reqwest_client_error("Maxmind");
+        return create_reqwest_client_error("IpCheck.ing Maxmind");
     };
 
     let mut headers = header::HeaderMap::new();
@@ -93,7 +99,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
         .send()
         .await
     else {
-        return request_error_ip_result("Maxmind", "Unable to connect to ipcheck.ing");
+        return request_error_ip_result("IpCheck.ing Maxmind", "Unable to connect to ipcheck.ing");
     };
 
     #[derive(Deserialize, Serialize)]
@@ -110,7 +116,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
 
     let Ok(json) = res.json::<MaxmindResp>().await else {
         return json_parse_error_ip_result(
-            "Maxmind",
+            "IpCheck.ing Maxmind",
             "Unable to parse the returned result into Json",
         );
     };
@@ -122,7 +128,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     IpResult {
         success: true,
         error: No,
-        provider: "Maxmind".to_string(),
+        provider: "IpCheck.ing Maxmind".to_string(),
         ip: Some(ip),
         autonomous_system: {
             if let (Some(asn), Some(isp)) = (asn, json.org) {

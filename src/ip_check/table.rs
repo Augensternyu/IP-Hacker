@@ -200,11 +200,12 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     let mut risk_tags = Vec::new();
     for tag in tags {
         risk_tags.push(match tag {
-            RiskTag::Tor => "TOR",
-            RiskTag::Proxy => "PROXY",
-            RiskTag::Hosting => "HOSTING",
-            RiskTag::Relay => "RELAY",
-            RiskTag::Mobile => "MOBILE",
+            RiskTag::Tor => "TOR".to_string(),
+            RiskTag::Proxy => "PROXY".to_string(),
+            RiskTag::Hosting => "HOSTING".to_string(),
+            RiskTag::Relay => "RELAY".to_string(),
+            RiskTag::Mobile => "MOBILE".to_string(),
+            RiskTag::Other(str) => str,
         });
     }
     let risk_tags_str = risk_tags.join(", ");

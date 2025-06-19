@@ -5,8 +5,9 @@ pub mod table;
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::{
-    baidu, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking, ip_sb,
-    ipapi_co, ipinfo_io, ipip_net, iplark_com, ipquery_io, ipwhois_app, itdog_cn, maxmind, myip_la,
+    baidu, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking,
+    ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_maxmind, ip_sb, ipapi_co,
+    ipinfo_io, ipip_net, ipquery_io, ipwhois_app, itdog_cn, myip_la,
 };
 use async_trait::async_trait;
 use log::{info, warn};
@@ -23,7 +24,7 @@ pub trait IpCheck {
 pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
     let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> = vec![
         Box::new(ip_checking::IpChecking),
-        Box::new(maxmind::Maxmind),
+        Box::new(ip_checking_maxmind::Maxmind),
         Box::new(ipinfo_io::IpInfoIo),
         Box::new(cloudflare::Cloudflare),
         Box::new(ip_sb::IpSb),
@@ -36,9 +37,10 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(free_ip_api_com::FreeIpApiCom),
         Box::new(ipwhois_app::IpWhoisApp),
         Box::new(httpbin_org::HttpBinOrg),
-        Box::new(iplark_com::IpLarkCom),
         Box::new(itdog_cn::ItDogCn),
         Box::new(baidu::Baidu),
+        Box::new(ip_lark_com_maxmind::IpLarkComMaxmind),
+        Box::new(ip_lark_com_digital_element::IpLarkComDigitalElement),
     ];
 
     let (tx, mut rx) = mpsc::channel(100);

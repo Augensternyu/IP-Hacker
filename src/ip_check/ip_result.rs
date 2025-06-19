@@ -111,11 +111,12 @@ pub struct Risk {
     pub tags: Option<Vec<RiskTag>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum RiskTag {
     Tor,
     Proxy,
     Hosting,
     Relay,
     Mobile,
+    Other(String),
 }

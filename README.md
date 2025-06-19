@@ -8,18 +8,20 @@ Support Provider:
 - freeipapi.com
 - ip-api.com
 - ipcheck.ing
+- ipcheck.ing Maxmind
 - ip.sb
 - ipapi.co
 - ipinfo.io
 - ipip.net
 - ipquery.io
-- ipcheck.ing Maxmind
 - myip.la
 - ipwhois.app
 - itdog.cn
 - iplark.com
 - httpbin.org
 - baidu.com
+- iplark.com Maxmind
+- iplark.com Digital Element
 
 ## 一键安装脚本
 

@@ -1,12 +1,15 @@
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::{AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Risk};
+use crate::ip_check::ip_result::RiskTag::{Mobile, Proxy};
+use crate::ip_check::ip_result::{
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, request_error_ip_result,
+};
 use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
-use crate::ip_check::ip_result::RiskTag::{Mobile, Proxy};
 
 pub struct IpApiCom;
 
@@ -138,13 +141,13 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
         risk: {
             let mut tags = vec![];
             if json.proxy {
-                tags.push(Proxy)
+                tags.push(Proxy);
             }
             if json.mobile {
-                tags.push(Mobile)
+                tags.push(Mobile);
             }
             if json.hosting {
-                tags.push(Mobile)
+                tags.push(Mobile);
             }
             Some(Risk {
                 risk: None,
