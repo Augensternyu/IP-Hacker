@@ -13,7 +13,7 @@ Support Provider:
 - ipinfo.io
 - ipip.net
 - ipquery.io
-- maxmind
+- ipcheck.ing Maxmind
 - myip.la
 - ipwhois.app
 - itdog.cn
@@ -21,8 +21,15 @@ Support Provider:
 - httpbin.org
 - baidu.com
 
-Usage:
+## 一键安装脚本
 
+```bash
+bash <(wget -qO- -o- https://raw.githubusercontent.com/rsbench/IP-Hacker/refs/heads/main/install.sh)
+```
+
+该脚本会自动安装到本地路径 `./IP-Hacker`
+
+## Usage
 ```
 IP tools used by Russia's big hackers
 
@@ -52,7 +59,7 @@ Options:
 
 ```
 
-Demo:
+## Demo
 
 ```
 > ./IP-Hacker
