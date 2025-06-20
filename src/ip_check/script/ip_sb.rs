@@ -27,7 +27,7 @@ impl IpCheck for IpSb {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("IP.sb", "Unable to connect to ip.sb");
+                    return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
                 get_ip_sb_info(result).await
@@ -50,7 +50,7 @@ impl IpCheck for IpSb {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("IP.sb", "Unable to connect to ip.sb");
+                    return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
                 get_ip_sb_info(result).await
@@ -67,7 +67,7 @@ impl IpCheck for IpSb {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("IP.sb", "Unable to connect to ip.sb");
+                    return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
                 get_ip_sb_info(result).await
@@ -87,7 +87,7 @@ impl IpCheck for IpSb {
 
 async fn get_ip_sb_info(response: Response) -> IpResult {
     if !response.status().is_success() {
-        return request_error_ip_result("IP.sb", "Unable to connect to ip.sb");
+        return request_error_ip_result("IP.sb", "Unable to connect");
     }
 
     let Ok(json) = response.json::<serde_json::Value>().await else {

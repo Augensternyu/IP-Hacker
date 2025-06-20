@@ -30,7 +30,7 @@ impl IpCheck for Maxmind {
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
                     return request_error_ip_result(
                         "IpCheck.ing Maxmind",
-                        "Unable to connect to ipcheck.ing",
+                        "Unable to connect",
                     );
                 };
 
@@ -55,7 +55,7 @@ impl IpCheck for Maxmind {
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
                     return request_error_ip_result(
                         "IpCheck.ing Maxmind",
-                        "Unable to connect to ipcheck.ing",
+                        "Unable to connect",
                     );
                 };
 
@@ -99,7 +99,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
         .send()
         .await
     else {
-        return request_error_ip_result("IpCheck.ing Maxmind", "Unable to connect to ipcheck.ing");
+        return request_error_ip_result("IpCheck.ing Maxmind", "Unable to connect");
     };
 
     #[derive(Deserialize, Serialize)]

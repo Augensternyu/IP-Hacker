@@ -30,7 +30,7 @@ impl IpCheck for IpInfoIo {
             } else {
                 return vec![request_error_ip_result(
                     "Ipinfo.io",
-                    "Unable to connect to ipinfo.io",
+                    "Unable to connect",
                 )];
             };
 
@@ -48,7 +48,7 @@ impl IpCheck for IpInfoIo {
             } else {
                 vec![request_error_ip_result(
                     "Ipinfo.io",
-                    "ipinfo.io returned an error",
+                    "Server returned an error",
                 )]
             }
         } else {
@@ -59,7 +59,7 @@ impl IpCheck for IpInfoIo {
                 };
 
                 let Ok(result) = client_v4.get("https://ipinfo.io").send().await else {
-                    return request_error_ip_result("Ipinfo.io", "Unable to connect to ipinfo.io");
+                    return request_error_ip_result("Ipinfo.io", "Unable to connect");
                 };
 
                 if result.status() == 200 {
@@ -81,7 +81,7 @@ impl IpCheck for IpInfoIo {
                 };
 
                 let Ok(result) = client_v6.get("https://v6.ipinfo.io").send().await else {
-                    return request_error_ip_result("Ipinfo.io", "Unable to connect to ipinfo.io");
+                    return request_error_ip_result("Ipinfo.io", "Unable to connect");
                 };
 
                 if result.status() == 200 {

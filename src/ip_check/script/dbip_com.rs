@@ -26,7 +26,7 @@ impl IpCheck for DbIpCom {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("Db-Ip.com", "Unable to connect to ipip.net");
+                    return request_error_ip_result("Db-Ip.com", "Unable to connect");
                 };
 
                 get_db_ip_com_info(result).await
@@ -48,7 +48,7 @@ impl IpCheck for DbIpCom {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("Db-Ip.com", "Unable to connect to ipip.net");
+                    return request_error_ip_result("Db-Ip.com", "Unable to connect");
                 };
 
                 get_db_ip_com_info(result).await

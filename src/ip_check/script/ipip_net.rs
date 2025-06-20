@@ -26,7 +26,7 @@ impl IpCheck for IpIpNet {
             };
 
             let Ok(result) = client_v4.get("https://myip.ipip.net/json").send().await else {
-                return request_error_ip_result("Ipip.Net", "Unable to connect to ipip.net");
+                return request_error_ip_result("Ipip.Net", "Unable to connect");
             };
 
             let json = if let Ok(json) = result.json::<Value>().await {

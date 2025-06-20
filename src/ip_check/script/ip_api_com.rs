@@ -27,7 +27,7 @@ impl IpCheck for IpApiCom {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("Ip-Api.com", "Unable to connect to ipip.net");
+                    return request_error_ip_result("Ip-Api.com", "Unable to connect");
                 };
 
                 get_ip_api_com_info(result).await
@@ -49,7 +49,7 @@ impl IpCheck for IpApiCom {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result("Ip-Api.com", "Unable to connect to ipip.net");
+                    return request_error_ip_result("Ip-Api.com", "Unable to connect");
                 };
 
                 get_ip_api_com_info(result).await

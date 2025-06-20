@@ -40,7 +40,7 @@ impl IpCheck for IpQueryIo {
             });
             vec![handle.await.unwrap_or(json_parse_error_ip_result(
                 "Ipquery.io",
-                "Unable to parse ipquery.io",
+                "Unable to parse json",
             ))]
         } else {
             let handle_v4 = tokio::spawn(async move {
@@ -56,7 +56,7 @@ impl IpCheck for IpQueryIo {
                 else {
                     return request_error_ip_result(
                         "Ipquery.io",
-                        "Unable to connect to ipquery.io",
+                        "Unable to connect",
                     );
                 };
 
@@ -80,7 +80,7 @@ impl IpCheck for IpQueryIo {
                 else {
                     return request_error_ip_result(
                         "Ipquery.io",
-                        "Unable to connect to ipquery.io",
+                        "Unable to connect",
                     );
                 };
 

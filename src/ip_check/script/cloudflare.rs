@@ -31,7 +31,7 @@ impl IpCheck for Cloudflare {
                 else {
                     return request_error_ip_result(
                         "Cloudflare",
-                        "Unable to connect to cloudflare",
+                        "Unable to connect",
                     );
                 };
 
@@ -51,7 +51,7 @@ impl IpCheck for Cloudflare {
                 else {
                     return request_error_ip_result(
                         "Cloudflare",
-                        "Unable to connect to cloudflare",
+                        "Unable to connect",
                     );
                 };
 
@@ -72,7 +72,7 @@ impl IpCheck for Cloudflare {
 
 async fn get_cloudflare_info(response: Response) -> IpResult {
     if !response.status().is_success() {
-        return request_error_ip_result("Cloudflare", "Unable to connect to cloudflare");
+        return request_error_ip_result("Cloudflare", "Unable to connect");
     }
     let Ok(html) = response.text().await else {
         return parse_ip_error_ip_result("Cloudflare", "Unable to parse html");

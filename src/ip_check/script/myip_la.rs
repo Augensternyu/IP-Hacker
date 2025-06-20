@@ -24,7 +24,7 @@ impl IpCheck for MyIPLa {
                 };
 
                 let Ok(result) = client_v4.get("https://api.myip.la/en?json").send().await else {
-                    return request_error_ip_result("Myip.La", "Unable to connect to api.myip.la");
+                    return request_error_ip_result("Myip.La", "Unable to connect");
                 };
 
                 parse_myip_la_info(result).await
@@ -36,7 +36,7 @@ impl IpCheck for MyIPLa {
                 };
 
                 let Ok(result) = client_v6.get("https://api.myip.la/en?json").send().await else {
-                    return request_error_ip_result("Myip.La", "Unable to connect to api.myip.la");
+                    return request_error_ip_result("Myip.La", "Unable to connect");
                 };
 
                 parse_myip_la_info(result).await
@@ -70,7 +70,7 @@ async fn parse_myip_la_info(response: Response) -> IpResult {
     }
 
     let Ok(json) = response.json::<MyIPLaResp>().await else {
-        return request_error_ip_result("MyIP.La", "Unable to parse MyIPLa Json");
+        return request_error_ip_result("MyIP.La", "Unable to parse Json");
     };
 
     IpResult {
