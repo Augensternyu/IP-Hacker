@@ -124,13 +124,13 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     if config.ip {
         if let Some(ip) = ip_result.ip {
             if ip.is_ipv4() {
-                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BRIGHT_BLUE)))
+                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BRIGHT_BLUE)));
             } else {
-                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BLUE)))
+                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BLUE)));
             }
         } else {
             rows_vec.push(Cell::new(""));
-        };
+        }
     }
 
     let (asn, isp) = if let Some(a_s) = ip_result.autonomous_system {
