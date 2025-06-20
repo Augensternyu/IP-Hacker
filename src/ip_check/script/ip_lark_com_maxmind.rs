@@ -35,8 +35,27 @@ impl IpCheck for IpLarkComMaxmind {
                 parse_ip_lark_com_maxmind(result).await
             });
 
+            let handle_v6 = tokio::spawn(async move {
+                let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
+                    return create_reqwest_client_error("IpLark.com Maxmind");
+                };
+
+                let Ok(result) = client_v6
+                    .get("https://6.iplark.com/ipapi/public/ipinfo")
+                    .send()
+                    .await
+                else {
+                    return request_error_ip_result("IpLark.com Maxmind", "Unable to connect");
+                };
+
+                parse_ip_lark_com_maxmind(result).await
+            });
+
             let mut results = Vec::new();
             if let Ok(result) = handle_v4.await {
+                results.push(result);
+            }
+            if let Ok(result) = handle_v6.await {
                 results.push(result);
             }
             results
