@@ -189,6 +189,7 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
             time_zone: timezone,
         }),
         risk: None,
+        used_time: None,
     }
 }
 

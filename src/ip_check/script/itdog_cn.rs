@@ -41,6 +41,7 @@ impl IpCheck for ItDogCn {
                         autonomous_system: None,
                         region: None,
                         risk: None,
+                        used_time: None,
                     }
                 } else {
                     request_error_ip_result("Itdog.cn", "Unable to connect")

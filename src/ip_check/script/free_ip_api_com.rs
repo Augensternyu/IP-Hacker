@@ -136,5 +136,6 @@ async fn parse_free_ip_api_com_resp(response: Response) -> IpResult {
                 }
             },
         }),
+        used_time: None,
     }
 }

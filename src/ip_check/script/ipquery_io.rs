@@ -54,10 +54,7 @@ impl IpCheck for IpQueryIo {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "Ipquery.io",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("Ipquery.io", "Unable to connect");
                 };
 
                 let Ok(json) = result.json::<serde_json::Value>().await else {
@@ -78,10 +75,7 @@ impl IpCheck for IpQueryIo {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "Ipquery.io",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("Ipquery.io", "Unable to connect");
                 };
 
                 let Ok(json) = result.json::<serde_json::Value>().await else {
@@ -202,5 +196,6 @@ async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
             risk: json_parsed.risk.risk_score,
             tags: Some(risk_tags),
         }),
+        used_time: None,
     }
 }

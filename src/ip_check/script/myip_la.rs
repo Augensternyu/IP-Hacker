@@ -93,5 +93,6 @@ async fn parse_myip_la_info(response: Response) -> IpResult {
             time_zone: None,
         }),
         risk: None,
+        used_time: None,
     }
 }

@@ -154,5 +154,6 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
                 tags: Some(tags),
             })
         },
+        used_time: None,
     }
 }

@@ -26,10 +26,7 @@ impl IpCheck for IpChecking {
                 };
 
                 let Ok(result) = client_v4.get("https://4.ipcheck.ing/").send().await else {
-                    return request_error_ip_result(
-                        "IpCheck.ing",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("IpCheck.ing", "Unable to connect");
                 };
 
                 let Ok(text) = result.text().await else {
@@ -51,10 +48,7 @@ impl IpCheck for IpChecking {
                 };
 
                 let Ok(result) = client_v4.get("https://6.ipcheck.ing/").send().await else {
-                    return request_error_ip_result(
-                        "IpCheck.ing",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("IpCheck.ing", "Unable to connect");
                 };
 
                 let Ok(text) = result.text().await else {
@@ -155,5 +149,6 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
             time_zone: None,
         }),
         risk: None,
+        used_time: None,
     }
 }

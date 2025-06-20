@@ -29,10 +29,7 @@ impl IpCheck for Cloudflare {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "Cloudflare",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("Cloudflare", "Unable to connect");
                 };
 
                 get_cloudflare_info(result).await
@@ -49,10 +46,7 @@ impl IpCheck for Cloudflare {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "Cloudflare",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("Cloudflare", "Unable to connect");
                 };
 
                 get_cloudflare_info(result).await
@@ -103,5 +97,6 @@ async fn get_cloudflare_info(response: Response) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }

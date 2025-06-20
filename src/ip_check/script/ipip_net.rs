@@ -108,5 +108,6 @@ async fn get_ipip_net_info(json: Value) -> IpResult {
             time_zone: None,
         }),
         risk: None,
+        used_time: None,
     }
 }
