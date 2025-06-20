@@ -110,5 +110,6 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
             time_zone: None,
         }),
         risk: None,
+        used_time: None,
     }
 }

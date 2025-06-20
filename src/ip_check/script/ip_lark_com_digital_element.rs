@@ -148,5 +148,6 @@ async fn parse_ip_lark_com_digital_element(response: Response) -> IpResult {
             risk: None,
             tags: Some(result),
         }),
+        used_time: None,
     }
 }

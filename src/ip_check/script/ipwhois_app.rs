@@ -119,5 +119,6 @@ async fn parse_ipwhois_app_resp(response: Response) -> IpResult {
             time_zone: json.timezone,
         }),
         risk: None,
+        used_time: None,
     }
 }

@@ -28,10 +28,7 @@ impl IpCheck for IpInfoIo {
             {
                 res
             } else {
-                return vec![request_error_ip_result(
-                    "Ipinfo.io",
-                    "Unable to connect",
-                )];
+                return vec![request_error_ip_result("Ipinfo.io", "Unable to connect")];
             };
 
             if res.status() == 200 {
@@ -187,5 +184,6 @@ async fn get_ipinfo_io(ip: Value) -> IpResult {
             time_zone,
         }),
         risk: None,
+        used_time: None,
     }
 }

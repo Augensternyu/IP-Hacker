@@ -72,7 +72,7 @@ async fn parse_ip_lark_com_maxmind(response: Response) -> IpResult {
     if let Some(type_str) = json.type_str {
         match type_str.as_str() {
             "hosting" => tags.push(Hosting),
-            _ => tags.push(Other(type_str))
+            _ => tags.push(Other(type_str)),
         }
     }
 
@@ -109,5 +109,6 @@ async fn parse_ip_lark_com_maxmind(response: Response) -> IpResult {
             risk: None,
             tags: Some(tags),
         }),
+        used_time: None,
     }
 }

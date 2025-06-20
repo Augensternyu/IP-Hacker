@@ -111,16 +111,19 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     }
 
     if config.provider {
-        rows_vec.push(Cell::new(ip_result.provider.as_str()));
+        rows_vec.push(Cell::new(ip_result.provider.as_str()).with_style(Attr::ForegroundColor(color::YELLOW)));
     }
 
     if config.ip {
-        let ip = if let Some(ip) = ip_result.ip {
-            ip.to_string()
+        if let Some(ip) = ip_result.ip {
+            if ip.is_ipv4() {
+                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BRIGHT_BLUE)))
+            } else {
+                rows_vec.push(Cell::new(&ip.to_string()).with_style(Attr::ForegroundColor(color::BLUE)))
+            }
         } else {
-            String::new()
+            rows_vec.push(Cell::new(""));
         };
-        rows_vec.push(Cell::new(&ip));
     }
 
     let (asn, isp) = if let Some(a_s) = ip_result.autonomous_system {
@@ -134,11 +137,11 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     };
 
     if config.asn {
-        rows_vec.push(Cell::new(asn.as_str()));
+        rows_vec.push(Cell::new(asn.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_CYAN)));
     }
 
     if config.isp {
-        rows_vec.push(Cell::new(isp.as_str()));
+        rows_vec.push(Cell::new(isp.as_str()).with_style(Attr::ForegroundColor(color::CYAN)));
     }
 
     let (country, region, city, (lat, lon), time_zone) = if let Some(region) = ip_result.region {

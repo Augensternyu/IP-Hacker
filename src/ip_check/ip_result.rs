@@ -1,6 +1,7 @@
 use crate::ip_check::ip_result::IpCheckError::{CreateReqwestClient, JsonParse, ParseIP, Request};
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
+use std::time::Duration;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum IpCheckError {
@@ -22,6 +23,7 @@ pub fn json_parse_error_ip_result(provider: &str, message: &str) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }
 
@@ -34,6 +36,7 @@ pub fn request_error_ip_result(provider: &str, message: &str) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }
 
@@ -46,6 +49,7 @@ pub fn parse_ip_error_ip_result(provider: &str, message: &str) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }
 
@@ -58,6 +62,7 @@ pub fn create_reqwest_client_error(provider: &str) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }
 
@@ -70,6 +75,7 @@ pub fn not_support_error(provider: &str) -> IpResult {
         autonomous_system: None,
         region: None,
         risk: None,
+        used_time: None,
     }
 }
 
@@ -82,6 +88,7 @@ pub struct IpResult {
     pub autonomous_system: Option<AS>,
     pub region: Option<Region>,
     pub risk: Option<Risk>,
+    pub used_time: Option<Duration>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

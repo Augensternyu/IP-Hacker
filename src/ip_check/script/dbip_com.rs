@@ -98,5 +98,6 @@ async fn get_db_ip_com_info(resp: Response) -> IpResult {
             time_zone: None,
         }),
         risk: None,
+        used_time: None,
     }
 }

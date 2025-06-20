@@ -44,6 +44,7 @@ impl IpCheck for HttpBinOrg {
                         autonomous_system: None,
                         region: None,
                         risk: None,
+                        used_time: None,
                     }
                 } else {
                     request_error_ip_result("HttpBin.org", "Unable to connect")
