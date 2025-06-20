@@ -17,6 +17,7 @@ impl IpCheck for IpQueryIo {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client) = create_reqwest_client(Some("curl/8.11.1"), None).await else {
                     return create_reqwest_client_error("Ipquery.io");
                 };
@@ -36,7 +37,10 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                get_ipquery_io_info(json).await
+                let mut result_without_time = get_ipquery_io_info(json).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
             vec![handle.await.unwrap_or(json_parse_error_ip_result(
                 "Ipquery.io",
@@ -44,6 +48,7 @@ impl IpCheck for IpQueryIo {
             ))]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
                 else {
                     return create_reqwest_client_error("Ipquery.io");
@@ -61,10 +66,14 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                get_ipquery_io_info(json).await
+                let mut result_without_time = get_ipquery_io_info(json).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
                     return create_reqwest_client_error("Ipquery.io");
@@ -82,7 +91,10 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                get_ipquery_io_info(json).await
+                let mut result_without_time = get_ipquery_io_info(json).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();

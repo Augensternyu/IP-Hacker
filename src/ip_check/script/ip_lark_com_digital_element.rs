@@ -21,6 +21,7 @@ impl IpCheck for IpLarkComDigitalElement {
             vec![not_support_error("IpLark.com Digital Element")]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
                     return create_reqwest_client_error("IpLark.com Digital Element");
                 };
@@ -36,10 +37,14 @@ impl IpCheck for IpLarkComDigitalElement {
                     );
                 };
 
-                parse_ip_lark_com_digital_element(result).await
+                let mut result_without_time = parse_ip_lark_com_digital_element(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
                     return create_reqwest_client_error("IpLark.com Digital Element");
                 };
@@ -55,7 +60,10 @@ impl IpCheck for IpLarkComDigitalElement {
                     );
                 };
 
-                parse_ip_lark_com_digital_element(result).await
+                let mut result_without_time = parse_ip_lark_com_digital_element(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();

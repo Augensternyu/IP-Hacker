@@ -100,6 +100,13 @@ fn make_table_cells(config: &config::Config) -> Vec<Cell> {
                 .with_style(Attr::Bold),
         );
     }
+    if config.time  {
+        cells.push(
+            Cell::new("Processing Time")
+                .with_style(Attr::ForegroundColor(color::YELLOW))
+                .with_style(Attr::Bold),
+        );
+    }
     cells
 }
 
@@ -219,6 +226,15 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
 
     if config.tags {
         rows_vec.push(Cell::new(risk_tags_str.as_str()));
+    }
+
+
+    if config.time {
+        if let Some(time) = ip_result.used_time {
+            rows_vec.push(Cell::new(format!("{}ms", time.as_millis()).as_str()));
+        } else {
+            rows_vec.push(Cell::new(""));
+        }
     }
 
     Some(Row::new(rows_vec))

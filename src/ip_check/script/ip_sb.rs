@@ -17,6 +17,7 @@ impl IpCheck for IpSb {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(None, None).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
@@ -30,7 +31,10 @@ impl IpCheck for IpSb {
                     return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
-                get_ip_sb_info(result).await
+                let mut result_without_time = get_ip_sb_info(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();
@@ -40,6 +44,7 @@ impl IpCheck for IpSb {
             results
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
@@ -53,10 +58,14 @@ impl IpCheck for IpSb {
                     return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
-                get_ip_sb_info(result).await
+                let mut result_without_time = get_ip_sb_info(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
@@ -70,7 +79,10 @@ impl IpCheck for IpSb {
                     return request_error_ip_result("IP.sb", "Unable to connect");
                 };
 
-                get_ip_sb_info(result).await
+                let mut result_without_time = get_ip_sb_info(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();

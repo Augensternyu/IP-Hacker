@@ -17,6 +17,8 @@ impl IpCheck for HttpBinOrg {
             vec![not_support_error("HttpBin.org")]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
+
                 let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
                     return create_reqwest_client_error("HttpBin.org");
                 };
@@ -44,7 +46,7 @@ impl IpCheck for HttpBinOrg {
                         autonomous_system: None,
                         region: None,
                         risk: None,
-                        used_time: None,
+                        used_time: Some(time_start.elapsed()),
                     }
                 } else {
                     request_error_ip_result("HttpBin.org", "Unable to connect")

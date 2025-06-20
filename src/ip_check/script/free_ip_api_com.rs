@@ -18,6 +18,8 @@ impl IpCheck for FreeIpApiCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
+
                 let Ok(client) = create_reqwest_client(None, None).await else {
                     return create_reqwest_client_error("FreeIpApi.com");
                 };
@@ -30,7 +32,10 @@ impl IpCheck for FreeIpApiCom {
                     return request_error_ip_result("FreeIpApi.com", "Unable to connect");
                 };
 
-                parse_free_ip_api_com_resp(result).await
+                let mut result_without_time = parse_free_ip_api_com_resp(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
             vec![handle.await.unwrap_or(json_parse_error_ip_result(
                 "FreeIpApi.com",
@@ -38,6 +43,8 @@ impl IpCheck for FreeIpApiCom {
             ))]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
+
                 let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
                     return create_reqwest_client_error("FreeIpApi.com");
                 };
@@ -47,10 +54,15 @@ impl IpCheck for FreeIpApiCom {
                     return request_error_ip_result("FreeIpApi.com", "Unable to connect");
                 };
 
-                parse_free_ip_api_com_resp(result).await
+                let mut result_without_time = parse_free_ip_api_com_resp(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
+
                 let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
                     return create_reqwest_client_error("FreeIpApi.com");
                 };
@@ -60,7 +72,10 @@ impl IpCheck for FreeIpApiCom {
                     return request_error_ip_result("FreeIpApi.com", "Unable to connect");
                 };
 
-                parse_free_ip_api_com_resp(result).await
+                let mut result_without_time = parse_free_ip_api_com_resp(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();

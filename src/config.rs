@@ -51,6 +51,10 @@ pub struct Config {
     #[arg(long, default_value_t = false)]
     pub tags: bool,
 
+    /// Show Processing Time
+    #[arg(long, default_value_t = false)]
+    pub time: bool,
+
     /// IP Address
     #[arg(short, long)]
     pub set_ip: Option<String>,
@@ -98,6 +102,7 @@ pub fn default_config(config: Config) -> Config {
         || config.time_zone
         || config.risk
         || config.tags
+        || config.time
     {
         config
     } else if config.all {
@@ -113,6 +118,7 @@ pub fn default_config(config: Config) -> Config {
             time_zone: true,
             risk: true,
             tags: true,
+            time: true,
             ..config
         }
     } else {

@@ -20,6 +20,7 @@ impl IpCheck for IpIpNet {
         }
 
         let handle_v4 = tokio::spawn(async move {
+            let time_start = tokio::time::Instant::now();
             let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
             else {
                 return create_reqwest_client_error("Ipip.Net");
@@ -35,7 +36,10 @@ impl IpCheck for IpIpNet {
                 return request_error_ip_result("Ipip.Net", "Unable to parse json");
             };
 
-            get_ipip_net_info(json).await
+            let mut result_without_time = get_ipip_net_info(json).await;
+            let end_time = time_start.elapsed();
+            result_without_time.used_time = Some(end_time);
+            result_without_time
         });
 
         vec![handle_v4.await.unwrap_or(json_parse_error_ip_result(

@@ -60,7 +60,7 @@ async fn main() {
         let table = gen_table(&ip_result, &args).await;
         table.printstd();
         global_println!("{}", table.to_string());
-        println!("Success! Usage time: {:.2}sec", time_end.as_secs_f64());
+        println!("Success! Usage time: {}ms", time_end.as_millis());
         global_println!("{}", table.to_string());
     }
 

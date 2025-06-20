@@ -20,6 +20,8 @@ impl IpCheck for IpLarkComMaxmind {
             vec![not_support_error("IpLark.com Maxmind")]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
+
                 let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
                     return create_reqwest_client_error("IpLark.com Maxmind");
                 };
@@ -32,10 +34,14 @@ impl IpCheck for IpLarkComMaxmind {
                     return request_error_ip_result("IpLark.com Maxmind", "Unable to connect");
                 };
 
-                parse_ip_lark_com_maxmind(result).await
+                let mut result_without_time = parse_ip_lark_com_maxmind(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
                     return create_reqwest_client_error("IpLark.com Maxmind");
                 };
@@ -48,7 +54,10 @@ impl IpCheck for IpLarkComMaxmind {
                     return request_error_ip_result("IpLark.com Maxmind", "Unable to connect");
                 };
 
-                parse_ip_lark_com_maxmind(result).await
+                let mut result_without_time = parse_ip_lark_com_maxmind(result).await;
+                let end_time = time_start.elapsed();
+                result_without_time.used_time = Some(end_time);
+                result_without_time
             });
 
             let mut results = Vec::new();

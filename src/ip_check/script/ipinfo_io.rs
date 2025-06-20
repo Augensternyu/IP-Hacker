@@ -16,6 +16,7 @@ pub struct IpInfoIo;
 impl IpCheck for IpInfoIo {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
+            let time_start = tokio::time::Instant::now();
             let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
             else {
                 return vec![create_reqwest_client_error("Ipinfo.io")];
@@ -41,7 +42,12 @@ impl IpCheck for IpInfoIo {
                     )];
                 };
 
-                vec![get_ipinfo_io(json).await]
+                vec![{
+                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let end_time = time_start.elapsed();
+                    result_without_time.used_time = Some(end_time);
+                    result_without_time
+                }]
             } else {
                 vec![request_error_ip_result(
                     "Ipinfo.io",
@@ -50,6 +56,7 @@ impl IpCheck for IpInfoIo {
             }
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
                 else {
                     return create_reqwest_client_error("Ipinfo.io");
@@ -65,13 +72,17 @@ impl IpCheck for IpInfoIo {
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    get_ipinfo_io(json).await
+                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let end_time = time_start.elapsed();
+                    result_without_time.used_time = Some(end_time);
+                    result_without_time
                 } else {
                     request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
                 }
             });
 
             let handle_v6 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
                 else {
                     return create_reqwest_client_error("Ipinfo.io");
@@ -87,7 +98,10 @@ impl IpCheck for IpInfoIo {
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    get_ipinfo_io(json).await
+                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let end_time = time_start.elapsed();
+                    result_without_time.used_time = Some(end_time);
+                    result_without_time
                 } else {
                     request_error_ip_result("Ipinfo.io", "ipinfo.io returned an error")
                 }

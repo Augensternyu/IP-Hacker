@@ -17,6 +17,7 @@ impl IpCheck for ItDogCn {
             vec![not_support_error("Itdog.cn")]
         } else {
             let handle_v4 = tokio::spawn(async move {
+                let time_start = tokio::time::Instant::now();
                 let Ok(client_v4) = create_reqwest_client(None, Some(true)).await else {
                     return create_reqwest_client_error("Itdog.cn");
                 };
@@ -41,7 +42,7 @@ impl IpCheck for ItDogCn {
                         autonomous_system: None,
                         region: None,
                         risk: None,
-                        used_time: None,
+                        used_time: Some(time_start.elapsed()),
                     }
                 } else {
                     request_error_ip_result("Itdog.cn", "Unable to connect")
