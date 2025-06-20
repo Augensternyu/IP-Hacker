@@ -9,7 +9,6 @@ pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &config::Config) 
     table.set_format(*format::consts::FORMAT_NO_LINESEP);
     table.set_titles(Row::new(make_table_cells(config)));
 
-
     for ip_result in ip_results_vec {
         if let Some(row) = make_table_row(ip_result.clone(), config) {
             table.add_row(row);
@@ -184,29 +183,28 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     };
 
     if config.country {
-        rows_vec.push(
-            Cell::new(country.as_str()).with_style(Attr::ForegroundColor(color::GREEN)),
-        );
+        rows_vec.push(Cell::new(country.as_str()).with_style(Attr::ForegroundColor(color::GREEN)));
     }
 
     if config.region {
-        rows_vec.push(
-            Cell::new(region.as_str()).with_style(Attr::ForegroundColor(color::GREEN)),
-        );
+        rows_vec.push(Cell::new(region.as_str()).with_style(Attr::ForegroundColor(color::GREEN)));
     }
 
     if config.city {
-        rows_vec
-            .push(Cell::new(city.as_str()).with_style(Attr::ForegroundColor(color::GREEN)));
+        rows_vec.push(Cell::new(city.as_str()).with_style(Attr::ForegroundColor(color::GREEN)));
     }
 
     if config.coordinates {
-        rows_vec.push(Cell::new(lat.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_GREEN)));
-        rows_vec.push(Cell::new(lon.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_GREEN)));
+        rows_vec
+            .push(Cell::new(lat.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_GREEN)));
+        rows_vec
+            .push(Cell::new(lon.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_GREEN)));
     }
 
     if config.time_zone {
-        rows_vec.push(Cell::new(time_zone.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_MAGENTA)));
+        rows_vec.push(
+            Cell::new(time_zone.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_MAGENTA)),
+        );
     }
 
     let (risk, tags) = if let Some(risk) = ip_result.risk {
@@ -240,12 +238,18 @@ fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     }
 
     if config.tags {
-        rows_vec.push(Cell::new(risk_tags_str.as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_YELLOW)));
+        rows_vec.push(
+            Cell::new(risk_tags_str.as_str())
+                .with_style(Attr::ForegroundColor(color::BRIGHT_YELLOW)),
+        );
     }
 
     if config.time {
         if let Some(time) = ip_result.used_time {
-            rows_vec.push(Cell::new(format!("{}ms", time.as_millis()).as_str()).with_style(Attr::ForegroundColor(color::BRIGHT_WHITE)));
+            rows_vec.push(
+                Cell::new(format!("{}ms", time.as_millis()).as_str())
+                    .with_style(Attr::ForegroundColor(color::BRIGHT_WHITE)),
+            );
         } else {
             rows_vec.push(Cell::new(""));
         }
