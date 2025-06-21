@@ -18,7 +18,7 @@ impl IpCheck for IpSb {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(None, None).await else {
+                let Ok(client_v4) = create_reqwest_client(None).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
 
@@ -45,7 +45,7 @@ impl IpCheck for IpSb {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
 
@@ -66,7 +66,7 @@ impl IpCheck for IpSb {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("IP.sb");
                 };
 
@@ -205,7 +205,7 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
     }
 }
 
-fn headers() -> reqwest::header::HeaderMap {
+fn headers() -> header::HeaderMap {
     let mut headers = header::HeaderMap::new();
     headers.insert("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7".parse().unwrap());
     headers.insert("accept-language", "zh-CN,zh;q=0.9".parse().unwrap());

@@ -18,7 +18,7 @@ impl IpCheck for IPApiCo {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.0"), None).await else {
+                let Ok(client_v4) = create_reqwest_client(None).await else {
                     return create_reqwest_client_error("IpApi.co");
                 };
 
@@ -41,8 +41,7 @@ impl IpCheck for IPApiCo {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.0"), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpApi.co");
                 };
 
@@ -58,8 +57,7 @@ impl IpCheck for IPApiCo {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.0"), Some(true)).await
-                else {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("IpApi.co");
                 };
 

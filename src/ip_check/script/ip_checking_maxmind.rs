@@ -29,8 +29,7 @@ impl IpCheck for Maxmind {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpCheck.ing Maxmind");
                 };
 
@@ -56,8 +55,7 @@ impl IpCheck for Maxmind {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("IpCheck.ing Maxmind");
                 };
 
@@ -94,7 +92,7 @@ impl IpCheck for Maxmind {
 }
 
 async fn get_maxmind_info(ip: IpAddr) -> IpResult {
-    let Ok(client) = create_reqwest_client(None, None).await else {
+    let Ok(client) = create_reqwest_client(None).await else {
         return create_reqwest_client_error("IpCheck.ing Maxmind");
     };
 

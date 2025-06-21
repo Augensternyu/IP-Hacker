@@ -17,8 +17,7 @@ impl IpCheck for IpInfoIo {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip) = ip {
             let time_start = tokio::time::Instant::now();
-            let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
-            else {
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                 return vec![create_reqwest_client_error("Ipinfo.io")];
             };
 
@@ -57,8 +56,7 @@ impl IpCheck for IpInfoIo {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("Ipinfo.io");
                 };
 
@@ -83,8 +81,7 @@ impl IpCheck for IpInfoIo {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) = create_reqwest_client(Some("curl/8.11.1"), Some(true)).await
-                else {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("Ipinfo.io");
                 };
 

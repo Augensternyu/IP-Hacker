@@ -15,7 +15,6 @@ pub struct Ip2locationIo;
 
 // 定义API密钥和User-Agent为常量
 const API_KEY: &str = "2AB0410E3D2DC3AD167C13D08309F394";
-const BROWSER_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 #[async_trait]
 impl IpCheck for Ip2locationIo {
@@ -24,7 +23,7 @@ impl IpCheck for Ip2locationIo {
             // --- 检查指定IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), None).await else {
+                let Ok(client) = create_reqwest_client(None).await else {
                     return create_reqwest_client_error("Ip2location.io");
                 };
 
@@ -42,9 +41,7 @@ impl IpCheck for Ip2locationIo {
             // --- 检查本机IP (IPv4 和 IPv6) ---
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) =
-                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("Ip2location.io");
                 };
 
@@ -60,9 +57,7 @@ impl IpCheck for Ip2locationIo {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) =
-                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(true)).await
-                else {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("Ip2location.io");
                 };
 

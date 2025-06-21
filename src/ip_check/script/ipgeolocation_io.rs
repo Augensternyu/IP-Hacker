@@ -1,10 +1,10 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result,
-    Coordinates, IpResult, Region,
+    Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,6 @@ use std::net::IpAddr;
 pub struct IpgeolocationIo;
 
 const API_KEY: &str = "14c7928d2aef416287e034ee91cd360d";
-const BROWSER_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 #[async_trait]
 impl IpCheck for IpgeolocationIo {
@@ -23,7 +22,7 @@ impl IpCheck for IpgeolocationIo {
             // --- 检查指定IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpGeolocation.io");
                 };
 
@@ -41,7 +40,7 @@ impl IpCheck for IpgeolocationIo {
             // --- 检查本机IP ---
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpGeolocation.io");
                 };
 
@@ -85,7 +84,10 @@ async fn parse_ipgeolocation_io_resp(response: Response) -> IpResult {
     }
 
     if json.ip.is_none() {
-        return request_error_ip_result("IpGeolocation.io", "API response did not contain an IP address.");
+        return request_error_ip_result(
+            "IpGeolocation.io",
+            "API response did not contain an IP address.",
+        );
     }
 
     let location = json.location;

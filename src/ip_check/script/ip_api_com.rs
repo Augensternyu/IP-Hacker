@@ -20,7 +20,7 @@ impl IpCheck for IpApiCom {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
 
-                let Ok(client) = create_reqwest_client(Some("curl/8.11.1"), None).await else {
+                let Ok(client) = create_reqwest_client(None).await else {
                     return create_reqwest_client_error("Ip-Api.com");
                 };
 
@@ -46,8 +46,7 @@ impl IpCheck for IpApiCom {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
 
-                let Ok(client_v4) = create_reqwest_client(Some("curl/8.11.1"), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("Ip-Api.com");
                 };
 

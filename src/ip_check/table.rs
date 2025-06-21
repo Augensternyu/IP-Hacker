@@ -1,9 +1,8 @@
-use crate::config;
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpResult, RiskTag};
 use prettytable::{Attr, Cell, Row, Table, color, format};
 
-pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &config::Config) -> Table {
+pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &Config) -> Table {
     let mut table = Table::new();
     // table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
     table.set_format(*format::consts::FORMAT_NO_LINESEP);
@@ -17,7 +16,7 @@ pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &config::Config) 
     table
 }
 
-fn make_table_cells(config: &config::Config) -> Vec<Cell> {
+fn make_table_cells(config: &Config) -> Vec<Cell> {
     let mut cells = Vec::new();
     if config.provider {
         cells.push(

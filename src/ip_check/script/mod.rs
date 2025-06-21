@@ -1,7 +1,7 @@
 use reqwest::Client;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
-use std::str::FromStr;
 use std::time::Duration;
+use tokio::sync::OnceCell;
 
 pub mod baidu;
 pub mod bilibili;
@@ -24,6 +24,7 @@ pub mod ip_lark_com_moon;
 pub mod ip_sb;
 pub mod ipapi_co;
 pub mod ipdata_co;
+pub mod ipgeolocation_io;
 pub mod ipinfo_io;
 pub mod ipip_net;
 pub mod ipquery_io;
@@ -32,25 +33,48 @@ pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
 pub mod myip_wtf;
-pub mod ipgeolocation_io;
 
-pub async fn create_reqwest_client(
-    ua: Option<&str>,
-    ipv6: Option<bool>,
-) -> Result<Client, reqwest::Error> {
-    let mut builder = Client::builder();
-    if ua.is_some() {
-        builder = builder.user_agent(ua.unwrap());
-    }
-    if let Some(ipv6) = ipv6 {
-        if ipv6 {
-            builder = builder.local_address(Some(IpAddr::V6(Ipv6Addr::from_str("::").unwrap())));
-        } else {
-            builder =
-                builder.local_address(Some(IpAddr::V4(Ipv4Addr::from_str("0.0.0.0").unwrap())));
+static CLIENT_IPV4: OnceCell<Client> = OnceCell::const_new();
+static CLIENT_IPV6: OnceCell<Client> = OnceCell::const_new();
+static CLIENT_DEFAULT: OnceCell<Client> = OnceCell::const_new();
+
+pub async fn create_reqwest_client(ipv6: Option<bool>) -> Result<&'static Client, reqwest::Error> {
+    match ipv6 {
+        Some(true) => {
+            // 使用 get_or_try_init
+            CLIENT_IPV6
+                .get_or_try_init(|| async {
+                    Client::builder()
+                        .timeout(Duration::from_secs(5))
+                        .cookie_store(true)
+                        .local_address(Some(IpAddr::V6(Ipv6Addr::UNSPECIFIED))) // 使用常量更佳
+                        .user_agent("curl/7.88.1")
+                        .build() // 返回 Result<Client, Error>，正好匹配
+                })
+                .await
+        }
+        Some(false) => {
+            CLIENT_IPV4
+                .get_or_try_init(|| async {
+                    Client::builder()
+                        .timeout(Duration::from_secs(5))
+                        .cookie_store(true)
+                        .local_address(Some(IpAddr::V4(Ipv4Addr::UNSPECIFIED))) // 使用常量更佳
+                        .user_agent("curl/7.88.1")
+                        .build()
+                })
+                .await
+        }
+        None => {
+            CLIENT_DEFAULT
+                .get_or_try_init(|| async {
+                    Client::builder()
+                        .timeout(Duration::from_secs(5))
+                        .cookie_store(true)
+                        .user_agent("curl/7.88.1")
+                        .build()
+                })
+                .await
         }
     }
-    builder = builder.cookie_store(true);
-    builder = builder.timeout(Duration::from_secs(5));
-    builder.build()
 }

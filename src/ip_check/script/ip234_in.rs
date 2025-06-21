@@ -8,12 +8,11 @@ use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
-use serde_json::Value; // 导入 Value 类型
+use serde_json::Value;
+// 导入 Value 类型
 use std::net::IpAddr;
 
 pub struct Ip234In;
-
-const BROWSER_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 #[async_trait]
 impl IpCheck for Ip234In {
@@ -21,7 +20,7 @@ impl IpCheck for Ip234In {
         if let Some(ip) = ip {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), None).await else {
+                let Ok(client) = create_reqwest_client(None).await else {
                     return create_reqwest_client_error("Ip234.in");
                 };
 
@@ -61,9 +60,7 @@ impl IpCheck for Ip234In {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) =
-                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("Ip234.in");
                 };
 

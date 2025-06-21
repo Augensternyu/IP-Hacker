@@ -22,7 +22,7 @@ impl IpCheck for IpLarkComMaxmind {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
 
-                let Ok(client_v4) = create_reqwest_client(None, Some(false)).await else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpLark.com Maxmind");
                 };
 
@@ -42,7 +42,7 @@ impl IpCheck for IpLarkComMaxmind {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) = create_reqwest_client(None, Some(true)).await else {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     return create_reqwest_client_error("IpLark.com Maxmind");
                 };
 

@@ -14,7 +14,6 @@ use std::net::IpAddr;
 pub struct IpdataCo;
 
 const API_KEY: &str = "a4098f89e8ceb83ca53f144e14088a4f1407aabb77d9b479b3a3b005";
-const BROWSER_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 #[async_trait]
 impl IpCheck for IpdataCo {
@@ -25,8 +24,7 @@ impl IpCheck for IpdataCo {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 // 强制使用IPv4进行API访问
-                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
-                else {
+                let Ok(client) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpData.co");
                 };
 
@@ -45,9 +43,7 @@ impl IpCheck for IpdataCo {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 // 强制使用IPv4进行API访问
-                let Ok(client_v4) =
-                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
-                else {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     return create_reqwest_client_error("IpData.co");
                 };
 
