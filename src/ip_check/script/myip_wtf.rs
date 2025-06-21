@@ -103,7 +103,7 @@ async fn parse_myip_wtf_resp(response: Response) -> IpResult {
     let region = if let Some(location) = json.location {
         let parts: Vec<&str> = location.split(", ").collect();
         // "Nanning, GX, China" -> parts[1] is "GX"
-        parts.get(1).map(|s| s.to_string())
+        parts.get(1).map(|s| (*s).to_string())
     } else {
         None
     };

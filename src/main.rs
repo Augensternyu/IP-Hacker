@@ -10,8 +10,10 @@ use crate::ip_check::ip_result::IpResultVecExt;
 use crate::ip_check::table::gen_table;
 use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::get_usage_count;
+use crate::utils::term::clear_last_line;
 use clap::Parser;
 use log::{LevelFilter, error, warn};
+use tokio::time;
 use tokio::time::Instant;
 
 #[tokio::main]
@@ -25,7 +27,7 @@ async fn main() {
         log::set_max_level(LevelFilter::Error);
     }
 
-    if !args.no_cls {
+    if args.cls {
         utils::term::clear_screen();
     }
 
@@ -51,20 +53,39 @@ async fn main() {
     });
 
     let time_start = Instant::now();
-    let mut ip_result = ip_check::check_all(&args, ip).await;
-    ip_result.sort_by_name();
-    let time_end = time_start.elapsed();
 
+    let mut rx = ip_check::check_all(&args, ip).await;
+    let mut results = Vec::new();
     if args.json {
-        let json_output = serde_json::to_string_pretty(&ip_result).unwrap();
+        let mut results_vec = Vec::new();
+        while let Some(result) = rx.recv().await {
+            results_vec.push(result);
+        }
+        results_vec.sort_by_name();
+        let json_output = serde_json::to_string_pretty(&results_vec).unwrap();
         println!("{json_output}");
     } else {
-        let table = gen_table(&ip_result, &args).await;
-        table.printstd();
-        global_println!("{}", table.to_string());
-        println!("Success! Usage time: {}ms", time_end.as_millis());
-        global_println!("{}", table.to_string());
+        while let Some(ip_result) = rx.recv().await {
+            println!("{ip_result}");
+            results.push(ip_result);
+        }
     }
+
+    let len = results.len();
+    for _ in 0..len {
+        clear_last_line();
+        time::sleep(time::Duration::from_millis(10)).await;
+    }
+
+    results.sort_by_name();
+
+    let table = gen_table(&results, &args).await;
+    table.printstd();
+    global_println!("{}", table.to_string());
+
+    let time_end = time_start.elapsed();
+    println!("Success! Usage time: {}ms", time_end.as_millis());
+    global_println!("Success! Usage time: {}ms", time_end.as_millis());
 
     // if !args.no_upload {
     //     match post_to_pastebin().await {

@@ -12,7 +12,6 @@ use crate::ip_check::script::{
     ipquery_io, ipwho_is, ipwhois_app, itdog_cn, myip_la, myip_wtf,
 };
 use async_trait::async_trait;
-use log::{info, warn};
 use std::fmt::{Display, Formatter};
 use std::net::IpAddr;
 use tokio::sync::mpsc;
@@ -23,7 +22,7 @@ pub trait IpCheck {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult>; // 本机 IP 或者指定 IP (不一定每一个 Provider 都支持)
 }
 
-pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
+pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<IpResult> {
     let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> = vec![
         Box::new(ip_checking::IpChecking),
         Box::new(ip_checking_maxmind::Maxmind),
@@ -57,36 +56,24 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(ipgeolocation_io::IpgeolocationIo),
     ];
 
-    let (tx, mut rx) = mpsc::channel(100);
+    let (tx, rx) = mpsc::channel(32);
 
-    let _time = tokio::time::Instant::now();
-
-    for provider in provider_list {
-        let tx = tx.clone();
-        tokio::spawn(async move {
-            let result = provider.check(ip).await;
-            tx.send(result).await.unwrap();
-        });
-    }
-
-    drop(tx);
-
-    let mut results = vec![];
-    while let Some(result) = rx.recv().await {
-        results.extend(result.clone());
-
-        for result_single in result {
-            if result_single.success {
-                info!("{} check succeeded", result_single.provider);
-            } else {
-                warn!(
-                    "{} check failed, message: {}",
-                    result_single.provider, result_single.error
-                );
-            }
+    tokio::spawn(async move {
+        for provider in provider_list {
+            let tx = tx.clone();
+            let ip_clone = ip;
+            tokio::spawn(async move {
+                let results = provider.check(ip_clone).await;
+                for result in results {
+                    if tx.send(result).await.is_err() {
+                        break;
+                    }
+                }
+            });
         }
-    }
-    results
+    });
+
+    rx
 }
 
 impl Display for IpCheckError {

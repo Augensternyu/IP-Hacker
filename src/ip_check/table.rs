@@ -16,7 +16,7 @@ pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &Config) -> Table
     table
 }
 
-fn make_table_cells(config: &Config) -> Vec<Cell> {
+pub(crate) fn make_table_cells(config: &Config) -> Vec<Cell> {
     let mut cells = Vec::new();
     if config.provider {
         cells.push(
@@ -110,7 +110,7 @@ fn make_table_cells(config: &Config) -> Vec<Cell> {
     cells
 }
 
-fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
+pub(crate) fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     let mut rows_vec = Vec::new();
 
     if !ip_result.success {

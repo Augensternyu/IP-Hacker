@@ -61,7 +61,7 @@ pub struct Config {
 
     /// No CLS
     #[arg(long, default_value_t = false)]
-    pub no_cls: bool,
+    pub cls: bool,
 
     /// No Logo
     #[arg(long, default_value_t = false)]
@@ -86,7 +86,7 @@ pub fn default_config(config: Config) -> Config {
             all: true,
             json: true,
             no_logo: true,
-            no_cls: true,
+            cls: false,
             no_upload: true,
             logger: false,
             ..config

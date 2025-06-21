@@ -24,6 +24,7 @@ Supported Provider:
 - ip.sb
 - ipapi.co
 - ipdata.co
+- ipgeolocation.io
 - ipinfo.io
 - ipip.net
 - ipquery.io

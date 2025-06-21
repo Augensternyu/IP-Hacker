@@ -1,5 +1,6 @@
 use crate::ip_check::ip_result::IpCheckError::{CreateReqwestClient, JsonParse, ParseIP, Request};
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 use std::net::IpAddr;
 use std::time::Duration;
 
@@ -143,5 +144,19 @@ impl IpResultVecExt for Vec<IpResult> {
                 .then_with(|| a.provider.cmp(&b.provider))
                 .then_with(|| a.used_time.cmp(&b.used_time))
         });
+    }
+}
+
+impl Display for IpResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if self.success {
+            if let Some(ip) = &self.ip {
+                write!(f, "{} Done: {}", self.provider, ip)
+            } else {
+                write!(f, "{} Done but have no IP", self.provider)
+            }
+        } else {
+            write!(f, "{} Error: {}", self.provider, self.error)
+        }
     }
 }
