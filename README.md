@@ -2,7 +2,7 @@
 
 俄罗斯大黑客用的 IP 地址检测工具
 
-Support Provider:
+Supported Provider:
 - Cloudflare
 - dbip.com
 - freeipapi.com
@@ -22,6 +22,10 @@ Support Provider:
 - baidu.com
 - iplark.com Maxmind
 - iplark.com Digital Element
+- iplark.com IpApi
+- iplark.com IpData
+- iplark.com Moe
+- iplark.com Moon
 
 ## 一键安装脚本
 
