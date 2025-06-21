@@ -66,16 +66,16 @@ async fn main() {
         global_println!("{}", table.to_string());
     }
 
-    if !args.no_upload {
-        match post_to_pastebin().await {
-            Ok(url) => {
-                println!("Result Url: {url}");
-            }
-            Err(err) => {
-                warn!("{err}");
-            }
-        }
-    }
+    // if !args.no_upload {
+    //     match post_to_pastebin().await {
+    //         Ok(url) => {
+    //             println!("Result Url: {url}");
+    //         }
+    //         Err(err) => {
+    //             warn!("{err}");
+    //         }
+    //     }
+    // }
 }
 
 fn print_ascii_art() {
