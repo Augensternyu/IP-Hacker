@@ -127,3 +127,20 @@ pub enum RiskTag {
     Mobile,
     Other(String),
 }
+
+pub trait IpResultVecExt {
+    fn sort_by_name(&mut self);
+}
+
+impl IpResultVecExt for Vec<IpResult> {
+    fn sort_by_name(&mut self) {
+        self.sort_unstable_by(|a, b| {
+            let len_a = a.ip.as_ref().map_or(0, |ip| ip.to_string().len());
+            let len_b = b.ip.as_ref().map_or(0, |ip| ip.to_string().len());
+
+            len_a.cmp(&len_b)
+                .then_with(|| a.provider.cmp(&b.provider))
+                .then_with(|| a.used_time.cmp(&b.used_time))
+        });
+    }
+}

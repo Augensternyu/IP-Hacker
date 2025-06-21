@@ -12,6 +12,7 @@ use crate::utils::report::{get_usage_count, post_to_pastebin};
 use clap::Parser;
 use log::{LevelFilter, error, warn};
 use tokio::time::Instant;
+use crate::ip_check::ip_result::IpResultVecExt;
 
 #[tokio::main]
 async fn main() {
@@ -50,7 +51,8 @@ async fn main() {
     });
 
     let time_start = Instant::now();
-    let ip_result = ip_check::check_all(&args, ip).await;
+    let mut ip_result = ip_check::check_all(&args, ip).await;
+    ip_result.sort_by_name();
     let time_end = time_start.elapsed();
 
     if args.json {

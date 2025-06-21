@@ -1,4 +1,4 @@
-mod ip_result;
+pub(crate) mod ip_result;
 mod script;
 pub mod table;
 
