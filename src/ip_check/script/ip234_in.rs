@@ -1,10 +1,10 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, AS,
-    Coordinates, IpResult, Region, Risk,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -61,15 +61,13 @@ impl IpCheck for Ip234In {
         } else {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client_v4) =
+                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
+                else {
                     return create_reqwest_client_error("Ip234.in");
                 };
 
-                let Ok(local_resp) = client_v4
-                    .get("https://ip234.in/ip.json")
-                    .send()
-                    .await
-                else {
+                let Ok(local_resp) = client_v4.get("https://ip234.in/ip.json").send().await else {
                     return request_error_ip_result("Ip234.in", "Unable to connect for local IP");
                 };
 
@@ -136,18 +134,30 @@ async fn parse_ip234_in_search_resp(response: Response) -> IpResult {
     };
 
     if json.code != 0 {
-        let err_msg = json.msg.unwrap_or_else(|| "Server returned an error".to_string());
+        let err_msg = json
+            .msg
+            .unwrap_or_else(|| "Server returned an error".to_string());
         return json_parse_error_ip_result("Ip234.in", &err_msg);
     }
 
     let Some(data) = json.data else {
-        return json_parse_error_ip_result("Ip234.in", "Server returned success code but no data payload");
+        return json_parse_error_ip_result(
+            "Ip234.in",
+            "Server returned success code but no data payload",
+        );
     };
 
     // 关键逻辑：手动处理经纬度
-    let lat_str = data.latitude.and_then(|v| v.as_str().map(ToString::to_string).or_else(|| v.as_f64().map(|f| f.to_string())));
-    let lon_str = data.longitude.and_then(|v| v.as_str().map(ToString::to_string).or_else(|| v.as_f64().map(|f| f.to_string())));
-
+    let lat_str = data.latitude.and_then(|v| {
+        v.as_str()
+            .map(ToString::to_string)
+            .or_else(|| v.as_f64().map(|f| f.to_string()))
+    });
+    let lon_str = data.longitude.and_then(|v| {
+        v.as_str()
+            .map(ToString::to_string)
+            .or_else(|| v.as_f64().map(|f| f.to_string()))
+    });
 
     IpResult {
         success: true,
@@ -156,8 +166,13 @@ async fn parse_ip234_in_search_resp(response: Response) -> IpResult {
         ip: data.ip,
         autonomous_system: {
             if let (Some(asn), Some(org)) = (data.asn, data.organization) {
-                Some(AS { number: asn, name: org })
-            } else { None }
+                Some(AS {
+                    number: asn,
+                    name: org,
+                })
+            } else {
+                None
+            }
         },
         region: Some(Region {
             country: data.country,
@@ -165,7 +180,9 @@ async fn parse_ip234_in_search_resp(response: Response) -> IpResult {
             city: data.city,
             coordinates: if let (Some(lat), Some(lon)) = (lat_str, lon_str) {
                 Some(Coordinates { lat, lon })
-            } else { None },
+            } else {
+                None
+            },
             time_zone: data.timezone,
         }),
         risk: None,
@@ -195,8 +212,16 @@ async fn parse_ip234_in_local_resp(response: Response) -> (IpResult, Option<IpAd
         );
     };
 
-    let lat_str = json.latitude.and_then(|v| v.as_str().map(ToString::to_string).or_else(|| v.as_f64().map(|f| f.to_string())));
-    let lon_str = json.longitude.and_then(|v| v.as_str().map(ToString::to_string).or_else(|| v.as_f64().map(|f| f.to_string())));
+    let lat_str = json.latitude.and_then(|v| {
+        v.as_str()
+            .map(ToString::to_string)
+            .or_else(|| v.as_f64().map(|f| f.to_string()))
+    });
+    let lon_str = json.longitude.and_then(|v| {
+        v.as_str()
+            .map(ToString::to_string)
+            .or_else(|| v.as_f64().map(|f| f.to_string()))
+    });
 
     let ip_addr = json.ip;
     let result = IpResult {
@@ -206,8 +231,13 @@ async fn parse_ip234_in_local_resp(response: Response) -> (IpResult, Option<IpAd
         ip: json.ip,
         autonomous_system: {
             if let (Some(asn), Some(org)) = (json.asn, json.organization) {
-                Some(AS { number: asn, name: org })
-            } else { None }
+                Some(AS {
+                    number: asn,
+                    name: org,
+                })
+            } else {
+                None
+            }
         },
         region: Some(Region {
             country: json.country,
@@ -215,7 +245,9 @@ async fn parse_ip234_in_local_resp(response: Response) -> (IpResult, Option<IpAd
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (lat_str, lon_str) {
                 Some(Coordinates { lat, lon })
-            } else { None },
+            } else {
+                None
+            },
             time_zone: json.timezone,
         }),
         risk: None,
@@ -239,7 +271,9 @@ async fn parse_ip234_in_fraud_resp(response: Response) -> Option<u16> {
         return None;
     };
 
-    if json.code != 0 { return None; }
+    if json.code != 0 {
+        return None;
+    }
 
     json.data.and_then(|d| d.score)
 }

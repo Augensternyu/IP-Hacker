@@ -9,6 +9,8 @@ pub mod cloudflare;
 pub mod dbip_com;
 pub mod free_ip_api_com;
 pub mod httpbin_org;
+pub mod ip234_in;
+pub mod ip2location_io;
 pub mod ip_api_com;
 pub mod ip_checking;
 pub mod ip_checking_maxmind;
@@ -21,16 +23,15 @@ pub mod ip_lark_com_moe;
 pub mod ip_lark_com_moon;
 pub mod ip_sb;
 pub mod ipapi_co;
+pub mod ipdata_co;
 pub mod ipinfo_io;
 pub mod ipip_net;
 pub mod ipquery_io;
+pub mod ipwho_is;
 pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
 pub mod myip_wtf;
-pub mod ip234_in;
-pub mod ip2location_io;
-pub mod ipdata_co;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,

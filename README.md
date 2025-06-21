@@ -27,6 +27,7 @@ Supported Provider:
 - ipinfo.io
 - ipip.net
 - ipquery.io
+- ipwho.is
 - ipwhois.app
 - itdog.cn
 - myip.la

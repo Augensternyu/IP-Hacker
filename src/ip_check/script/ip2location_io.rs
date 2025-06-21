@@ -1,11 +1,11 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::Proxy;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, AS,
-    Coordinates, IpResult, Region, Risk,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -42,7 +42,9 @@ impl IpCheck for Ip2locationIo {
             // --- 检查本机IP (IPv4 和 IPv6) ---
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v4) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client_v4) =
+                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
+                else {
                     return create_reqwest_client_error("Ip2location.io");
                 };
 
@@ -58,7 +60,9 @@ impl IpCheck for Ip2locationIo {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let Ok(client_v6) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(true)).await else {
+                let Ok(client_v6) =
+                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(true)).await
+                else {
                     return create_reqwest_client_error("Ip2location.io");
                 };
 
@@ -74,10 +78,14 @@ impl IpCheck for Ip2locationIo {
 
             let mut results = Vec::new();
             if let Ok(result) = handle_v4.await {
-                if result.success { results.push(result); }
+                if result.success {
+                    results.push(result);
+                }
             }
             if let Ok(result) = handle_v6.await {
-                if result.success { results.push(result); }
+                if result.success {
+                    results.push(result);
+                }
             }
             results
         }
@@ -114,10 +122,15 @@ async fn parse_ip2location_io_resp(response: Response) -> IpResult {
 
     // 如果没有IP地址，说明是一个失败的请求
     if json.ip.is_none() {
-        return request_error_ip_result("Ip2location.io", "API response did not contain an IP address.");
+        return request_error_ip_result(
+            "Ip2location.io",
+            "API response did not contain an IP address.",
+        );
     }
 
-    let asn_num = json.asn.map_or(0, |asn_str| asn_str.parse::<u32>().unwrap_or(0));
+    let asn_num = json
+        .asn
+        .map_or(0, |asn_str| asn_str.parse::<u32>().unwrap_or(0));
 
     let mut risk_tags = Vec::new();
     if json.is_proxy.unwrap_or(false) {

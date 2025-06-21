@@ -1,11 +1,11 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Other, Proxy, Tor};
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, AS,
-    Coordinates, IpResult, Region, Risk,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,8 @@ impl IpCheck for IpdataCo {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 // 强制使用IPv4进行API访问
-                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
+                else {
                     return create_reqwest_client_error("IpData.co");
                 };
 
@@ -44,7 +45,9 @@ impl IpCheck for IpdataCo {
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 // 强制使用IPv4进行API访问
-                let Ok(client_v4) = create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await else {
+                let Ok(client_v4) =
+                    create_reqwest_client(Some(BROWSER_USER_AGENT), Some(false)).await
+                else {
                     return create_reqwest_client_error("IpData.co");
                 };
 
@@ -112,15 +115,33 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
 
     let mut risk_tags = Vec::new();
     if let Some(threat) = json.threat {
-        if threat.is_tor.unwrap_or(false) { risk_tags.push(Tor); }
-        if threat.is_proxy.unwrap_or(false) { risk_tags.push(Proxy); }
-        if threat.is_icloud_relay.unwrap_or(false) { risk_tags.push(Other("iCLOUD RELAY".to_string())); }
-        if threat.is_datacenter.unwrap_or(false) { risk_tags.push(Hosting); }
-        if threat.is_anonymous.unwrap_or(false) { risk_tags.push(Other("ANONYMOUS".to_string())); }
-        if threat.is_known_attacker.unwrap_or(false) { risk_tags.push(Other("ATTACKER".to_string())); }
-        if threat.is_known_abuser.unwrap_or(false) { risk_tags.push(Other("ABUSER".to_string())); }
-        if threat.is_threat.unwrap_or(false) { risk_tags.push(Other("THREAT".to_string())); }
-        if threat.is_bogon.unwrap_or(false) { risk_tags.push(Other("BOGON".to_string())); }
+        if threat.is_tor.unwrap_or(false) {
+            risk_tags.push(Tor);
+        }
+        if threat.is_proxy.unwrap_or(false) {
+            risk_tags.push(Proxy);
+        }
+        if threat.is_icloud_relay.unwrap_or(false) {
+            risk_tags.push(Other("iCLOUD RELAY".to_string()));
+        }
+        if threat.is_datacenter.unwrap_or(false) {
+            risk_tags.push(Hosting);
+        }
+        if threat.is_anonymous.unwrap_or(false) {
+            risk_tags.push(Other("ANONYMOUS".to_string()));
+        }
+        if threat.is_known_attacker.unwrap_or(false) {
+            risk_tags.push(Other("ATTACKER".to_string()));
+        }
+        if threat.is_known_abuser.unwrap_or(false) {
+            risk_tags.push(Other("ABUSER".to_string()));
+        }
+        if threat.is_threat.unwrap_or(false) {
+            risk_tags.push(Other("THREAT".to_string()));
+        }
+        if threat.is_bogon.unwrap_or(false) {
+            risk_tags.push(Other("BOGON".to_string()));
+        }
     }
 
     let asn_details = json.asn.as_ref();
