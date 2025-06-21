@@ -27,6 +27,7 @@ pub mod ipquery_io;
 pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
+pub mod myip_wtf;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,

@@ -4,12 +4,7 @@ pub mod table;
 
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
-use crate::ip_check::script::{
-    baidu, bilibili, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking,
-    ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata,
-    ip_lark_com_ipstack, ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ipapi_co,
-    ipinfo_io, ipip_net, ipquery_io, ipwhois_app, itdog_cn, myip_la,
-};
+use crate::ip_check::script::{baidu, bilibili, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata, ip_lark_com_ipstack, ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ipapi_co, ipinfo_io, ipip_net, ipquery_io, ipwhois_app, itdog_cn, myip_la, myip_wtf};
 use async_trait::async_trait;
 use log::{info, warn};
 use std::fmt::{Display, Formatter};
@@ -48,6 +43,7 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> Vec<IpResult> {
         Box::new(ip_lark_com_ipapi::IpLarkComIpApi),
         Box::new(ip_lark_com_moon::IpLarkComMoon),
         Box::new(bilibili::Bilibili),
+        Box::new(myip_wtf::MyIpWtf)
     ];
 
     let (tx, mut rx) = mpsc::channel(100);
