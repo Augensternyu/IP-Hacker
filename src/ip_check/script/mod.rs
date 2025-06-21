@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 pub mod baidu;
+pub mod bilibili;
 pub mod cloudflare;
 pub mod dbip_com;
 pub mod free_ip_api_com;
@@ -12,10 +13,12 @@ pub mod ip_api_com;
 pub mod ip_checking;
 pub mod ip_checking_maxmind;
 pub mod ip_lark_com_digital_element;
+pub mod ip_lark_com_ipapi;
 pub mod ip_lark_com_ipdata;
 pub mod ip_lark_com_ipstack;
 pub mod ip_lark_com_maxmind;
 pub mod ip_lark_com_moe;
+pub mod ip_lark_com_moon;
 pub mod ip_sb;
 pub mod ipapi_co;
 pub mod ipinfo_io;
@@ -24,8 +27,6 @@ pub mod ipquery_io;
 pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
-pub mod ip_lark_com_ipapi;
-pub mod ip_lark_com_moon;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,

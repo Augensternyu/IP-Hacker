@@ -138,7 +138,8 @@ impl IpResultVecExt for Vec<IpResult> {
             let len_a = a.ip.as_ref().map_or(0, |ip| ip.to_string().len());
             let len_b = b.ip.as_ref().map_or(0, |ip| ip.to_string().len());
 
-            len_a.cmp(&len_b)
+            len_a
+                .cmp(&len_b)
                 .then_with(|| a.provider.cmp(&b.provider))
                 .then_with(|| a.used_time.cmp(&b.used_time))
         });

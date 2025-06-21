@@ -1,11 +1,11 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy};
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
-    Region, Risk, AS,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, not_support_error, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -30,10 +30,7 @@ impl IpCheck for IpLarkComIpApi {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "IpLark.com IpApi",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("IpLark.com IpApi", "Unable to connect");
                 };
 
                 let mut result_without_time = parse_ip_lark_com_ipapi(result).await;
@@ -53,10 +50,7 @@ impl IpCheck for IpLarkComIpApi {
                     .send()
                     .await
                 else {
-                    return request_error_ip_result(
-                        "IpLark.com IpApi",
-                        "Unable to connect",
-                    );
+                    return request_error_ip_result("IpLark.com IpApi", "Unable to connect");
                 };
 
                 let mut result_without_time = parse_ip_lark_com_ipapi(result).await;

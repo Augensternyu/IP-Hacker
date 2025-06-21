@@ -57,7 +57,7 @@ macro_rules! global_println {
 }
 
 #[allow(clippy::await_holding_lock)]
-pub async fn post_to_pastebin() -> Result<String, String> {
+pub async fn _post_to_pastebin() -> Result<String, String> {
     // https://pastebin.highp.ing
     let url = if let Some(url) = option_env!("CROSS_PASTEBIN_URL") {
         url

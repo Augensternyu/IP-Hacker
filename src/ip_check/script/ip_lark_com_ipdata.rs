@@ -1,11 +1,11 @@
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Other, Proxy, Tor};
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
-    Region, Risk, AS,
+    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
+    json_parse_error_ip_result, not_support_error, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -151,11 +151,7 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         risk_tags.push(Other("Bogon".to_string()));
     }
 
-    let score = if let Some(score) = json.threat.scores.trust_score {
-        Some(100 - score)
-    } else {
-        None
-    };
+    let score = json.threat.scores.trust_score.map(|score| 100 - score);
 
     let asn = if let Some(asn) = json.asn.asn {
         asn.replace("AS", "").parse::<u32>().ok()

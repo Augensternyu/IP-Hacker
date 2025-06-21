@@ -6,13 +6,13 @@ mod ip_check;
 mod utils;
 
 use crate::config::default_config;
+use crate::ip_check::ip_result::IpResultVecExt;
 use crate::ip_check::table::gen_table;
 use crate::utils::report::GLOBAL_STRING;
-use crate::utils::report::{get_usage_count, post_to_pastebin};
+use crate::utils::report::get_usage_count;
 use clap::Parser;
 use log::{LevelFilter, error, warn};
 use tokio::time::Instant;
-use crate::ip_check::ip_result::IpResultVecExt;
 
 #[tokio::main]
 async fn main() {
