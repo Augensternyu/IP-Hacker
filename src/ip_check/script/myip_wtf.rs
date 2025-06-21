@@ -1,5 +1,3 @@
-// src/ip_check/script/myip_wtf.rs
-
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::Tor;

@@ -148,7 +148,7 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         risk_tags.push(Other("THREAT".to_string()));
     }
     if let Some(true) = json.threat.is_bogon {
-        risk_tags.push(Other("Bogon".to_string()));
+        risk_tags.push(Other("BOGON".to_string()));
     }
 
     let score = json.threat.scores.trust_score.map(|score| 100 - score);

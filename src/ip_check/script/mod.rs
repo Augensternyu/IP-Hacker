@@ -28,6 +28,9 @@ pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
 pub mod myip_wtf;
+pub mod ip234_in;
+pub mod ip2location_io;
+pub mod ipdata_co;
 
 pub async fn create_reqwest_client(
     ua: Option<&str>,
