@@ -3,29 +3,34 @@
 俄罗斯大黑客用的 IP 地址检测工具
 
 Supported Provider:
+- Baidu
+- Bilibili
 - Cloudflare
-- dbip.com
-- freeipapi.com
+- db-ip.com
+- freeaiapi.com
+- httpbin.org
+- ip2location.io
+- ip234.in
 - ip-api.com
 - ipcheck.ing
 - ipcheck.ing Maxmind
+- iplark.com Digital Element
+- iplark.com Ip-Api
+- iplark.com IpData
+- iplark.com IpStack
+- iplark.com Maxmind
+- iplark.com Moe
+- iplark.com Moon
 - ip.sb
 - ipapi.co
+- ipdata.co
 - ipinfo.io
 - ipip.net
 - ipquery.io
-- myip.la
 - ipwhois.app
 - itdog.cn
-- iplark.com
-- httpbin.org
-- baidu.com
-- iplark.com Maxmind
-- iplark.com Digital Element
-- iplark.com IpApi
-- iplark.com IpData
-- iplark.com Moe
-- iplark.com Moon
+- myip.la
+- myip.wtf
 
 ## 一键安装脚本
 
