@@ -4,13 +4,7 @@ pub mod table;
 
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
-use crate::ip_check::script::{
-    baidu, bilibili, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking,
-    ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata,
-    ip_lark_com_ipstack, ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb,
-    ip2location_io, ip234_in, ipapi_co, ipdata_co, ipgeolocation_io, ipinfo_io, ipip_net,
-    ipquery_io, ipwho_is, ipwhois_app, itdog_cn, myip_la, myip_wtf,
-};
+use crate::ip_check::script::{baidu, bilibili, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata, ip_lark_com_ipstack, ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ip2location_io, ip234_in, ipapi_co, ipdata_co, ipgeolocation_io, ipinfo_io, ipip_net, ipquery_io, ipwho_is, ipwhois_app, itdog_cn, myip_la, myip_wtf, vvhan_com, cz88_net, ipw_cn, ip125_com};
 use async_trait::async_trait;
 use std::fmt::{Display, Formatter};
 use std::net::IpAddr;
@@ -54,6 +48,10 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<I
         Box::new(ipdata_co::IpdataCo),
         Box::new(ipwho_is::IpwhoIs),
         Box::new(ipgeolocation_io::IpgeolocationIo),
+        Box::new(vvhan_com::VvhanCom),
+        Box::new(cz88_net::Cz88Net),
+        Box::new(ipw_cn::IpwCn),
+        Box::new(ip125_com::Ip125Com),
     ];
 
     let (tx, rx) = mpsc::channel(32);

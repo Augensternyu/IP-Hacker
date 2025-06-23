@@ -71,6 +71,8 @@ async fn main() {
         }
     }
 
+    let time_end = time_start.elapsed();
+
     let len = results.len();
     for _ in 0..len {
         clear_last_line();
@@ -83,7 +85,6 @@ async fn main() {
     table.printstd();
     global_println!("{}", table.to_string());
 
-    let time_end = time_start.elapsed();
     println!("Success! Usage time: {}ms", time_end.as_millis());
     global_println!("Success! Usage time: {}ms", time_end.as_millis());
 

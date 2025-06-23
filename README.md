@@ -6,10 +6,12 @@ Supported Provider:
 - Baidu
 - Bilibili
 - Cloudflare
+- cz88.net
 - db-ip.com
 - freeaiapi.com
 - httpbin.org
 - ip2location.io
+- ip125.com
 - ip234.in
 - ip-api.com
 - ipcheck.ing
@@ -28,11 +30,13 @@ Supported Provider:
 - ipinfo.io
 - ipip.net
 - ipquery.io
+- ipw.cn
 - ipwho.is
 - ipwhois.app
 - itdog.cn
 - myip.la
 - myip.wtf
+- vvhan.com
 
 ## 一键安装脚本
 

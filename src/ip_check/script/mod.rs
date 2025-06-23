@@ -33,6 +33,10 @@ pub mod ipwhois_app;
 pub mod itdog_cn;
 pub mod myip_la;
 pub mod myip_wtf;
+pub mod vvhan_com;
+pub mod cz88_net;
+pub mod ipw_cn;
+pub mod ip125_com;
 
 static CLIENT_IPV4: OnceCell<Client> = OnceCell::const_new();
 static CLIENT_IPV6: OnceCell<Client> = OnceCell::const_new();
