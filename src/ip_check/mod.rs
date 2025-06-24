@@ -4,7 +4,15 @@ pub mod table;
 
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
-use crate::ip_check::script::{baidu, bilibili, cloudflare, dbip_com, free_ip_api_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind, ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata, ip_lark_com_ipstack, ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ip2location_io, ip234_in, ipapi_co, ipdata_co, ipgeolocation_io, ipinfo_io, ipip_net, ipquery_io, ipwho_is, ipwhois_app, itdog_cn, myip_la, myip_wtf, vvhan_com, cz88_net, ipw_cn, ip125_com};
+use crate::ip_check::script::{
+    baidu, biantailajiao_com, bilibili, cloudflare, cz88_net, dashi_163_com, dbip_com,
+    free_ip_api_com, hsselite_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind,
+    ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata, ip_lark_com_ipstack,
+    ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ip2location_io, ip125_com,
+    ip233_cn, ip234_in, ipapi_co, ipbase_com, ipdata_co, ipgeolocation_io, ipinfo_io, ipip_net,
+    ipleak_net, ipquery_io, ipw_cn, ipwho_is, ipwhois_app, itdog_cn, meituan_com, myip_la,
+    myip_wtf, nameless13_xyz, qq_com, realip_cc, reallyfreegeoip_org, taobao_com, vvhan_com,
+};
 use async_trait::async_trait;
 use std::fmt::{Display, Formatter};
 use std::net::IpAddr;
@@ -52,6 +60,18 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<I
         Box::new(cz88_net::Cz88Net),
         Box::new(ipw_cn::IpwCn),
         Box::new(ip125_com::Ip125Com),
+        Box::new(reallyfreegeoip_org::ReallyfreegeoipOrg),
+        Box::new(ipleak_net::IpleakNet),
+        Box::new(realip_cc::RealipCc),
+        Box::new(ipbase_com::IpbaseCom),
+        Box::new(dashi_163_com::Dashi163Com),
+        Box::new(hsselite_com::HsseliteCom),
+        Box::new(qq_com::QqCom),
+        Box::new(ip233_cn::Ip233Cn),
+        Box::new(nameless13_xyz::Nameless13Xyz),
+        Box::new(biantailajiao_com::BiantailajiaoCom),
+        Box::new(taobao_com::TaobaoCom),
+        Box::new(meituan_com::MeituanCom),
     ];
 
     let (tx, rx) = mpsc::channel(32);

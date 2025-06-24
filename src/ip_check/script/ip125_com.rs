@@ -36,14 +36,18 @@ struct Ip125ComApiRespPayload {
     org: Option<String>, // Often similar to ISP or a parent org
     #[serde(rename = "as")]
     asn_str: Option<String>, // e.g., "AS13335 Cloudflare, Inc."
-    query: String, // The IP address that was queried
+    query: String,       // The IP address that was queried
     message: Option<String>, // For error messages like "invalid query"
 }
 
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
-        if trimmed.is_empty() || trimmed == "-" || trimmed == "未知" || trimmed.to_lowercase() == "unknown" {
+        if trimmed.is_empty()
+            || trimmed == "-"
+            || trimmed == "未知"
+            || trimmed.to_lowercase() == "unknown"
+        {
             None
         } else {
             Some(trimmed.to_string())
@@ -57,7 +61,10 @@ fn parse_asn_from_string(asn_string_opt: Option<String>) -> (Option<u32>, Option
             let re = Regex::new(r"^(AS)?(\d+)\s*(.*)$").unwrap(); // Make "AS" prefix optional
             if let Some(caps) = re.captures(&asn_string) {
                 let number = caps.get(2).and_then(|m| m.as_str().parse::<u32>().ok());
-                let name = caps.get(3).map(|m| m.as_str().trim().to_string()).filter(|s| !s.is_empty());
+                let name = caps
+                    .get(3)
+                    .map(|m| m.as_str().trim().to_string())
+                    .filter(|s| !s.is_empty());
                 (number, name)
             } else {
                 // If regex doesn't match, treat the whole string as the name if it's not purely numeric
@@ -76,7 +83,8 @@ fn parse_asn_from_string(asn_string_opt: Option<String>) -> (Option<u32>, Option
 impl IpCheck for Ip125Com {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         // API itself is accessed via IPv4, but can query IPv4 or IPv6 data
-        let client = match create_reqwest_client(Some(false)).await { // Force IPv4 for API access
+        let client = match create_reqwest_client(Some(false)).await {
+            // Force IPv4 for API access
             Ok(c) => c,
             Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
         };
@@ -104,7 +112,10 @@ impl IpCheck for Ip125Com {
 
         match handle.await {
             Ok(result) => vec![result], // This API returns a single result per request
-            Err(_) => vec![request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")],
+            Err(_) => vec![request_error_ip_result(
+                PROVIDER_NAME,
+                "Task panicked or was cancelled.",
+            )],
         }
     }
 }
@@ -118,7 +129,10 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
-            return request_error_ip_result(PROVIDER_NAME, &format!("Failed to read response text: {e}"));
+            return request_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to read response text: {e}"),
+            );
         }
     };
 
@@ -126,18 +140,28 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>();
-            return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"));
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"),
+            );
         }
     };
 
     if payload.status != "success" {
-        let err_msg = payload.message.unwrap_or_else(|| "API status was not 'success'.".to_string());
+        let err_msg = payload
+            .message
+            .unwrap_or_else(|| "API status was not 'success'.".to_string());
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
     let parsed_ip = match payload.query.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,
-        Err(_) => return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse 'query' IP from API: '{}'", payload.query)),
+        Err(_) => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse 'query' IP from API: '{}'", payload.query),
+            );
+        }
     };
 
     let country = sanitize_string_field(payload.country);
@@ -145,7 +169,8 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
     let city = sanitize_string_field(payload.city);
     let timezone = sanitize_string_field(payload.timezone);
 
-    let (asn_number, asn_name_from_as_field) = parse_asn_from_string(sanitize_string_field(payload.asn_str));
+    let (asn_number, asn_name_from_as_field) =
+        parse_asn_from_string(sanitize_string_field(payload.asn_str));
 
     let isp_name = sanitize_string_field(payload.isp);
     let org_name = sanitize_string_field(payload.org);
@@ -179,7 +204,7 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
             coordinates,
             time_zone: timezone,
         }),
-        risk: None, // API does not provide risk information
+        risk: None,      // API does not provide risk information
         used_time: None, // Will be set by the caller
     }
 }

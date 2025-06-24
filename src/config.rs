@@ -72,7 +72,7 @@ pub struct Config {
     pub no_upload: bool,
 
     /// No Logger Output
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = true)]
     pub logger: bool,
 
     /// Json Output

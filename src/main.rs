@@ -1,4 +1,4 @@
-// #![warn(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic)]
 
 use std::fmt::Write;
 mod config;
@@ -12,7 +12,7 @@ use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::get_usage_count;
 use crate::utils::term::clear_last_line;
 use clap::Parser;
-use log::{LevelFilter, error, warn};
+use log::{LevelFilter, error, info, warn};
 use tokio::time;
 use tokio::time::Instant;
 
@@ -66,17 +66,25 @@ async fn main() {
         println!("{json_output}");
     } else {
         while let Some(ip_result) = rx.recv().await {
-            println!("{ip_result}");
+            if args.logger {
+                if ip_result.success {
+                    info!("{ip_result}");
+                } else {
+                    warn!("{ip_result}");
+                }
+            }
             results.push(ip_result);
         }
     }
 
     let time_end = time_start.elapsed();
 
-    let len = results.len();
-    for _ in 0..len {
-        clear_last_line();
-        time::sleep(time::Duration::from_millis(10)).await;
+    if !cfg!(debug_assertions) && args.logger {
+        let len = results.len();
+        for _ in 0..len {
+            clear_last_line();
+            time::sleep(time::Duration::from_millis(10)).await;
+        }
     }
 
     results.sort_by_name();

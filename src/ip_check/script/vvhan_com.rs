@@ -1,12 +1,12 @@
 // src/ip_check/script/vvhan_com.rs
 
+use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, IpResult, Region,
-    AS,
+    AS, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -45,13 +45,17 @@ impl IpCheck for VvhanCom {
 
             match handle.await {
                 Ok(result) => vec![result],
-                Err(_) => vec![request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")],
+                Err(_) => vec![request_error_ip_result(
+                    PROVIDER_NAME,
+                    "Task panicked or was cancelled.",
+                )],
             }
         } else {
             // 查询本机 IP (尝试 IPv4 和 IPv6)
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await { // Force IPv4
+                let client_v4 = match create_reqwest_client(Some(false)).await {
+                    // Force IPv4
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -72,7 +76,8 @@ impl IpCheck for VvhanCom {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await { // Force IPv6
+                let client_v6 = match create_reqwest_client(Some(true)).await {
+                    // Force IPv6
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -126,7 +131,7 @@ struct VvhanComApiRespPayload {
     success: bool,
     ip: Option<String>, // API可能在某些错误情况下不返回IP，或IP格式错误
     info: Option<VvhanComApiInfoPayload>, // info也可能在错误时缺失
-    tip: Option<String>,  // 用于捕获如 "您已超过免费使用次数..." 之类的消息
+    tip: Option<String>, // 用于捕获如 "您已超过免费使用次数..." 之类的消息
     error: Option<String>, // 用于捕获如 "IP地址格式错误" 之类的消息
 }
 
@@ -139,7 +144,10 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
-            return request_error_ip_result(PROVIDER_NAME, &format!("Failed to read response text: {e}"));
+            return request_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to read response text: {e}"),
+            );
         }
     };
 
@@ -147,13 +155,20 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>(); // 获取部分响应文本用于调试
-            return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"));
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"),
+            );
         }
     };
 
     if !payload.success {
-        let mut err_msg = payload.tip.or(payload.error).unwrap_or_else(|| "API indicated failure without a specific message.".to_string());
-        if err_msg.is_empty() { // API可能返回空的错误字段
+        let mut err_msg = payload
+            .tip
+            .or(payload.error)
+            .unwrap_or_else(|| "API indicated failure without a specific message.".to_string());
+        if err_msg.is_empty() {
+            // API可能返回空的错误字段
             err_msg = "API indicated failure.".to_string();
         }
 
@@ -168,23 +183,39 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
     // 如果 success == true，我们期望 'ip' 和 'info' 字段存在且有效
     let ip_str = match payload.ip {
         Some(s) => s,
-        None => return json_parse_error_ip_result(PROVIDER_NAME, "API success=true but 'ip' field is missing."),
+        None => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                "API success=true but 'ip' field is missing.",
+            );
+        }
     };
 
     let parsed_ip = match ip_str.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,
-        Err(_) => return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse IP string from API: '{ip_str}'")),
+        Err(_) => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse IP string from API: '{ip_str}'"),
+            );
+        }
     };
 
     let api_info_data = match payload.info {
         Some(info_data) => info_data,
-        None => return json_parse_error_ip_result(PROVIDER_NAME, "API success=true but 'info' field is missing."),
+        None => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                "API success=true but 'info' field is missing.",
+            );
+        }
     };
 
     // 处理 "-", 空字符串, "unknown", "未知" 等表示无效数据的情况
     let process_field = |field_val: String| {
         let lower_val = field_val.to_lowercase();
-        if field_val == "-" || field_val.is_empty() || lower_val == "unknown" || field_val == "未知" {
+        if field_val == "-" || field_val.is_empty() || lower_val == "unknown" || field_val == "未知"
+        {
             None
         } else {
             Some(field_val)
@@ -212,7 +243,7 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
             coordinates: None, // API不提供经纬度
             time_zone: None,   // API不提供时区
         }),
-        risk: None, // API不提供风险信息
+        risk: None,      // API不提供风险信息
         used_time: None, // 将由调用者设置
     }
 }

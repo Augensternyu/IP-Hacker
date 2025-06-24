@@ -4,14 +4,18 @@
 
 Supported Provider:
 - Baidu
+- biantailajiao.com
 - Bilibili
 - Cloudflare
 - cz88.net
+- dashi.163.com
 - db-ip.com
 - freeaiapi.com
+- hsselite.com
 - httpbin.org
 - ip2location.io
 - ip125.com
+- ip233.cn
 - ip234.in
 - ip-api.com
 - ipcheck.ing
@@ -25,17 +29,25 @@ Supported Provider:
 - iplark.com Moon
 - ip.sb
 - ipapi.co
+- ipbase.com
 - ipdata.co
 - ipgeolocation.io
 - ipinfo.io
 - ipip.net
+- ipleak.net
 - ipquery.io
 - ipw.cn
 - ipwho.is
 - ipwhois.app
 - itdog.cn
+- meituan.com
 - myip.la
 - myip.wtf
+- nameless13.xyz
+- qq.com
+- realip.cc
+- reallyfreegeoip.org
+- taobao.com
 - vvhan.com
 
 ## 一键安装脚本

@@ -32,7 +32,7 @@ struct Cz88NetApiDataPayload {
     province: Option<String>,
     city: Option<String>,
     isp: Option<String>,
-    asn: Option<String>,    // More like a label or org name
+    asn: Option<String>,     // More like a label or org name
     company: Option<String>, // Also an org name
     locations: Option<Vec<Cz88NetApiLocation>>,
     score: Option<String>, // Trust score, string "0"-"100"
@@ -57,14 +57,17 @@ struct Cz88NetApiRespPayload {
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
-        if trimmed.is_empty() || trimmed == "-" || trimmed == "未知" || trimmed.to_lowercase() == "unknown" {
+        if trimmed.is_empty()
+            || trimmed == "-"
+            || trimmed == "未知"
+            || trimmed.to_lowercase() == "unknown"
+        {
             None
         } else {
             Some(trimmed.to_string())
         }
     })
 }
-
 
 #[async_trait]
 impl IpCheck for Cz88Net {
@@ -77,7 +80,8 @@ impl IpCheck for Cz88Net {
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
 
-            let client = match create_reqwest_client(None).await { // Default client
+            let client = match create_reqwest_client(None).await {
+                // Default client
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
@@ -95,7 +99,10 @@ impl IpCheck for Cz88Net {
 
         match handle.await {
             Ok(result) => vec![result],
-            Err(_) => vec![request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")],
+            Err(_) => vec![request_error_ip_result(
+                PROVIDER_NAME,
+                "Task panicked or was cancelled.",
+            )],
         }
     }
 }
@@ -109,7 +116,10 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
-            return request_error_ip_result(PROVIDER_NAME, &format!("Failed to read response text: {e}"));
+            return request_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to read response text: {e}"),
+            );
         }
     };
 
@@ -117,23 +127,38 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>();
-            return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"));
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse JSON: {e}. Response snippet: '{snippet}'"),
+            );
         }
     };
 
     if !(payload.code == 200 && payload.success) {
-        let err_msg = payload.message.unwrap_or_else(|| "API indicated failure.".to_string());
+        let err_msg = payload
+            .message
+            .unwrap_or_else(|| "API indicated failure.".to_string());
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
     let data = match payload.data {
         Some(d) => d,
-        None => return json_parse_error_ip_result(PROVIDER_NAME, "API success but 'data' field is missing."),
+        None => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                "API success but 'data' field is missing.",
+            );
+        }
     };
 
     let parsed_ip = match data.ip.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,
-        Err(_) => return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse IP string from API data: '{}'", data.ip)),
+        Err(_) => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse IP string from API data: '{}'", data.ip),
+            );
+        }
     };
 
     let country = sanitize_string_field(data.country);
@@ -153,16 +178,26 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
 
     let coordinates = data.locations.and_then(|locs| {
         locs.first().and_then(|loc| {
-            match (sanitize_string_field(loc.latitude.clone()), sanitize_string_field(loc.longitude.clone())) {
+            match (
+                sanitize_string_field(loc.latitude.clone()),
+                sanitize_string_field(loc.longitude.clone()),
+            ) {
                 (Some(lat), Some(lon)) => Some(Coordinates { lat, lon }),
                 _ => None,
             }
         })
     });
 
-    let risk_score = data.score.and_then(|s| s.parse::<u16>().ok()).map(|trust_score| {
-        if trust_score > 100 { 100 } else { 100 - trust_score } // Convert trust score to risk score
-    });
+    let risk_score = data
+        .score
+        .and_then(|s| s.parse::<u16>().ok())
+        .map(|trust_score| {
+            if trust_score > 100 {
+                100
+            } else {
+                100 - trust_score
+            } // Convert trust score to risk score
+        });
 
     let mut risk_tags_set = HashSet::new();
     if data.vpn == Some(true) {
@@ -187,7 +222,6 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     }
     let risk_tags_vec: Vec<_> = risk_tags_set.into_iter().collect();
 
-
     IpResult {
         success: true,
         error: No,
@@ -203,7 +237,11 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }),
         risk: Some(Risk {
             risk: risk_score,
-            tags: if risk_tags_vec.is_empty() { None } else { Some(risk_tags_vec) },
+            tags: if risk_tags_vec.is_empty() {
+                None
+            } else {
+                Some(risk_tags_vec)
+            },
         }),
         used_time: None, // Will be set by the caller
     }

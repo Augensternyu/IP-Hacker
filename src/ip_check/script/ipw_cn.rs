@@ -3,8 +3,8 @@
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::{self, No};
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, create_reqwest_client_error,
-    json_parse_error_ip_result, not_support_error, request_error_ip_result, parse_ip_error_ip_result,
+    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    not_support_error, parse_ip_error_ip_result, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
@@ -57,9 +57,8 @@ struct IpwCnApiRespPayload {
     // charge: bool,
     msg: Option<String>,
     ip: Option<String>, // The IP that was queried
-    // coordsys: Option<String>,
+                        // coordsys: Option<String>,
 }
-
 
 async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Addr) -> IpResult {
     let url = format!(
@@ -68,17 +67,28 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
 
     let response = match client.get(&url).send().await {
         Ok(r) => r,
-        Err(e) => return request_error_ip_result(PROVIDER_NAME, &format!("Failed to connect to details API: {e}")),
+        Err(e) => {
+            return request_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to connect to details API: {e}"),
+            );
+        }
     };
 
     if !response.status().is_success() {
-        return request_error_ip_result(PROVIDER_NAME, &format!("Details API HTTP Error: {}", response.status()));
+        return request_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Details API HTTP Error: {}", response.status()),
+        );
     }
 
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
-            return request_error_ip_result(PROVIDER_NAME, &format!("Failed to read details response text: {e}"));
+            return request_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to read details response text: {e}"),
+            );
         }
     };
 
@@ -86,12 +96,17 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>();
-            return json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse details JSON: {e}. Response snippet: '{snippet}'"));
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                &format!("Failed to parse details JSON: {e}. Response snippet: '{snippet}'"),
+            );
         }
     };
 
     if payload.code.to_lowercase() != "success" {
-        let err_msg = payload.msg.unwrap_or_else(|| format!("API error code: {}", payload.code));
+        let err_msg = payload
+            .msg
+            .unwrap_or_else(|| format!("API error code: {}", payload.code));
         let mut err_res = request_error_ip_result(PROVIDER_NAME, &err_msg);
         // Try to include the IP address if returned by API, even on error
         if let Some(ip_str) = payload.ip.as_deref() {
@@ -102,7 +117,12 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
 
     let data = match payload.data {
         Some(d) => d,
-        None => return json_parse_error_ip_result(PROVIDER_NAME, "Details API success but 'data' field is missing."),
+        None => {
+            return json_parse_error_ip_result(
+                PROVIDER_NAME,
+                "Details API success but 'data' field is missing.",
+            );
+        }
     };
 
     // Ensure the IP in the response matches the one we queried, or is parseable
@@ -113,7 +133,10 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
 
     // It's an IPv6 only API, so if the final_ip_addr is not V6, something is very wrong.
     if !final_ip_addr.is_ipv6() {
-        return parse_ip_error_ip_result(PROVIDER_NAME, "Details API returned a non-IPv6 address for an IPv6 query.");
+        return parse_ip_error_ip_result(
+            PROVIDER_NAME,
+            "Details API returned a non-IPv6 address for an IPv6 query.",
+        );
     }
 
     let as_number = data.asnumber.and_then(|s| s.parse::<u32>().ok());
@@ -133,16 +156,18 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
             region: data.prov,
             city: data.city.or(data.district), // Prefer city, fallback to district
             coordinates: match (data.lat, data.lng) {
-                (Some(lat_str), Some(lon_str)) => Some(Coordinates { lat: lat_str, lon: lon_str }),
+                (Some(lat_str), Some(lon_str)) => Some(Coordinates {
+                    lat: lat_str,
+                    lon: lon_str,
+                }),
                 _ => None,
             },
             time_zone: data.timezone,
         }),
-        risk: None, // API does not provide direct risk flags
+        risk: None,      // API does not provide direct risk flags
         used_time: None, // To be set by caller
     }
 }
-
 
 #[async_trait]
 impl IpCheck for IpwCn {
@@ -153,15 +178,24 @@ impl IpCheck for IpwCn {
                 // API only supports IPv6 for details
                 return vec![not_support_error(PROVIDER_NAME)];
             }
-            None => { // Need to fetch local IPv6
-                let client_for_myip = match create_reqwest_client(Some(true)).await { // Must use IPv6 client
+            None => {
+                // Need to fetch local IPv6
+                let client_for_myip = match create_reqwest_client(Some(true)).await {
+                    // Must use IPv6 client
                     Ok(c) => c,
                     Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
                 };
-                match client_for_myip.get("https://6.ipw.cn/api/ip/myip?json").send().await {
+                match client_for_myip
+                    .get("https://6.ipw.cn/api/ip/myip?json")
+                    .send()
+                    .await
+                {
                     Ok(resp) => {
                         if !resp.status().is_success() {
-                            return vec![request_error_ip_result(PROVIDER_NAME, &format!("myip API HTTP Error: {}", resp.status()))];
+                            return vec![request_error_ip_result(
+                                PROVIDER_NAME,
+                                &format!("myip API HTTP Error: {}", resp.status()),
+                            )];
                         }
                         match resp.json::<IpwCnMyIpResp>().await {
                             Ok(my_ip_payload) => {
@@ -172,21 +206,31 @@ impl IpCheck for IpwCn {
                                 }
                             }
                             Err(e) => {
-                                return vec![json_parse_error_ip_result(PROVIDER_NAME, &format!("Failed to parse myip JSON: {e}"))];
+                                return vec![json_parse_error_ip_result(
+                                    PROVIDER_NAME,
+                                    &format!("Failed to parse myip JSON: {e}"),
+                                )];
                             }
                         }
                     }
                     Err(e) => {
-                        return vec![request_error_ip_result(PROVIDER_NAME, &format!("Failed to connect to myip API: {e}"))];
+                        return vec![request_error_ip_result(
+                            PROVIDER_NAME,
+                            &format!("Failed to connect to myip API: {e}"),
+                        )];
                     }
                 }
             }
         };
 
-        let target_ipv6 = if let Some(ipv6) = target_ipv6_opt { ipv6 } else {
+        let target_ipv6 = if let Some(ipv6) = target_ipv6_opt {
+            ipv6
+        } else {
             // If 'ip' was None and we couldn't get a local IPv6, then we can't proceed
             let mut res = not_support_error(PROVIDER_NAME);
-            res.error = IpCheckError::Request("Could not determine a local IPv6 address to query.".to_string());
+            res.error = IpCheckError::Request(
+                "Could not determine a local IPv6 address to query.".to_string(),
+            );
             return vec![res];
         };
 
@@ -202,14 +246,18 @@ impl IpCheck for IpwCn {
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
-            let mut result_without_time = fetch_and_parse_ip_details(client_for_details, target_ipv6).await;
+            let mut result_without_time =
+                fetch_and_parse_ip_details(client_for_details, target_ipv6).await;
             result_without_time.used_time = Some(time_start.elapsed());
             result_without_time
         });
 
         match handle.await {
             Ok(result) => vec![result],
-            Err(_) => vec![request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")],
+            Err(_) => vec![request_error_ip_result(
+                PROVIDER_NAME,
+                "Task panicked or was cancelled.",
+            )],
         }
     }
 }
