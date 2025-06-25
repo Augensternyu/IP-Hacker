@@ -78,7 +78,7 @@ impl IpCheck for MeituanCom {
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
-            let url = format!("{}{}", API_URL_BASE, target_ip);
+            let url = format!("{API_URL_BASE}{target_ip}");
             let response_result = client.get(&url).send().await;
 
             let mut result = match response_result {
@@ -108,7 +108,7 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
             .unwrap_or_else(|_| "Unknown HTTP error".to_string());
         return request_error_ip_result(
             PROVIDER_NAME,
-            &format!("HTTP Error {}: {}", status, err_text),
+            &format!("HTTP Error {status}: {err_text}"),
         );
     }
 

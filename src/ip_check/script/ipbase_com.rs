@@ -177,7 +177,7 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
             .text()
             .await
             .unwrap_or_else(|_| "Unknown HTTP error".to_string());
-        let err_msg = format!("HTTP Error {}: {}", status, err_text);
+        let err_msg = format!("HTTP Error {status}: {err_text}");
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
@@ -187,7 +187,7 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
     };
 
     if let Some(errors) = payload.errors {
-        return request_error_ip_result(PROVIDER_NAME, &format!("API returned error: {}", errors));
+        return request_error_ip_result(PROVIDER_NAME, &format!("API returned error: {errors}"));
     }
 
     let data = match payload.data {

@@ -55,16 +55,16 @@ async fn main() {
     let time_start = Instant::now();
 
     let mut rx = ip_check::check_all(&args, ip).await;
-    let mut results = Vec::new();
     if args.json {
         let mut results_vec = Vec::new();
         while let Some(result) = rx.recv().await {
             results_vec.push(result);
         }
         results_vec.sort_by_name();
-        let json_output = serde_json::to_string_pretty(&results_vec).unwrap();
+        let json_output = serde_json::to_string(&results_vec).unwrap();
         println!("{json_output}");
     } else {
+        let mut results = Vec::new();
         while let Some(ip_result) = rx.recv().await {
             if args.logger {
                 if ip_result.success {
@@ -75,26 +75,25 @@ async fn main() {
             }
             results.push(ip_result);
         }
-    }
+        let time_end = time_start.elapsed();
 
-    let time_end = time_start.elapsed();
-
-    if !cfg!(debug_assertions) && args.logger {
-        let len = results.len();
-        for _ in 0..len {
-            clear_last_line();
-            time::sleep(time::Duration::from_millis(10)).await;
+        if !cfg!(debug_assertions) && args.logger {
+            let len = results.len();
+            for _ in 0..len {
+                clear_last_line();
+                time::sleep(time::Duration::from_millis(10)).await;
+            }
         }
+
+        results.sort_by_name();
+
+        let table = gen_table(&results, &args).await;
+        table.printstd();
+        global_println!("{}", table.to_string());
+
+        println!("Success! Usage time: {}ms", time_end.as_millis());
+        global_println!("Success! Usage time: {}ms", time_end.as_millis());
     }
-
-    results.sort_by_name();
-
-    let table = gen_table(&results, &args).await;
-    table.printstd();
-    global_println!("{}", table.to_string());
-
-    println!("Success! Usage time: {}ms", time_end.as_millis());
-    global_println!("Success! Usage time: {}ms", time_end.as_millis());
 
     // if !args.no_upload {
     //     match post_to_pastebin().await {

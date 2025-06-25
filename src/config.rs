@@ -55,7 +55,7 @@ pub struct Config {
     #[arg(long, default_value_t = false)]
     pub time: bool,
 
-    /// IP Address
+    /// Set IP Address
     #[arg(short, long)]
     pub set_ip: Option<String>,
 
@@ -71,7 +71,7 @@ pub struct Config {
     #[arg(long, default_value_t = false)]
     pub no_upload: bool,
 
-    /// No Logger Output
+    /// Logger Output
     #[arg(long, default_value_t = true)]
     pub logger: bool,
 
