@@ -1,4 +1,4 @@
-// src/ip_check/script/taobao_com.rs
+// src/ip_check/script/iplocation_net.rs
 
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
@@ -12,33 +12,24 @@ use reqwest::Response;
 use serde::Deserialize;
 use std::net::IpAddr;
 
-pub struct TaobaoCom;
+pub struct IplocationNet;
 
-const PROVIDER_NAME: &str = "Taobao.com";
-// URL structure from provided example
-const API_URL_BASE: &str = "https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc&ip=";
+const PROVIDER_NAME: &str = "Iplocation.net";
+const API_BASE_URL: &str = "https://api.iplocation.net/?ip=";
 
 #[derive(Deserialize, Debug)]
-struct ApiDataPayload {
-    country: Option<String>,
-    region: Option<String>, // province
-    city: Option<String>,
-    isp: Option<String>,
+struct IplocationNetApiRespPayload {
     ip: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct TopLevelResp {
-    code: i32,
-    msg: String,
-    data: Option<ApiDataPayload>,
+    country_name: Option<String>,
+    isp: Option<String>,
+    response_code: String,
+    response_message: String,
 }
 
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
-        if trimmed.is_empty() || trimmed == "XX" {
-            // Taobao API uses "XX" for unknown ISP
+        if trimmed.is_empty() {
             None
         } else {
             Some(trimmed.to_string())
@@ -47,38 +38,31 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
 }
 
 #[async_trait]
-impl IpCheck for TaobaoCom {
+impl IpCheck for IplocationNet {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        // This API only supports checking a specific IP and is accessed via IPv4.
         let target_ip = match ip {
-            Some(ip_addr) => {
-                if ip_addr.is_ipv6() {
-                    // The API seems to be for IPv4 only based on examples and common knowledge.
-                    return vec![not_support_error(PROVIDER_NAME)];
-                }
-                ip_addr
-            }
-            // `ip` must be specified for this provider
+            Some(ip_addr) => ip_addr,
+            // API requires a specific IP.
             None => return vec![not_support_error(PROVIDER_NAME)],
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            // Force IPv4 for API access as it's an older API
-            let client = match create_reqwest_client(Some(false)).await {
+            // API can be accessed via IPv4 or IPv6, client choice is default
+            let client = match create_reqwest_client(None).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
-            let url = format!("{API_URL_BASE}{target_ip}");
+            let url = format!("{API_BASE_URL}{target_ip}");
             let response_result = client.get(&url).send().await;
 
-            let mut result = match response_result {
-                Ok(r) => parse_taobao_com_resp(r).await,
+            let mut result_without_time = match response_result {
+                Ok(r) => parse_iplocation_net_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
-            result.used_time = Some(time_start.elapsed());
-            result
+            result_without_time.used_time = Some(time_start.elapsed());
+            result_without_time
         });
 
         match handle.await {
@@ -91,14 +75,15 @@ impl IpCheck for TaobaoCom {
     }
 }
 
-async fn parse_taobao_com_resp(response: Response) -> IpResult {
+async fn parse_iplocation_net_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
         let err_text = response
             .text()
             .await
             .unwrap_or_else(|_| "Unknown HTTP error".to_string());
-        return request_error_ip_result(PROVIDER_NAME, &format!("HTTP Error {status}: {err_text}"));
+        let err_msg = format!("HTTP Error {status}: {err_text}");
+        return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
     let response_text = match response.text().await {
@@ -111,7 +96,7 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
         }
     };
 
-    let payload: TopLevelResp = match serde_json::from_str(&response_text) {
+    let payload: IplocationNetApiRespPayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>();
@@ -122,34 +107,23 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
         }
     };
 
-    if payload.code != 0 {
-        return request_error_ip_result(PROVIDER_NAME, &payload.msg);
+    // Check the API's internal response code
+    if payload.response_code != "200" {
+        return request_error_ip_result(PROVIDER_NAME, &payload.response_message);
     }
 
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API code was 0 but 'data' field is missing.",
-            );
-        }
-    };
-
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
+    let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
             return json_parse_error_ip_result(
                 PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
+                &format!("Could not parse IP from API: {}", payload.ip),
             );
         }
     };
 
-    let country = sanitize_string_field(data.country);
-    let region = sanitize_string_field(data.region);
-    let city = sanitize_string_field(data.city);
-    let isp = sanitize_string_field(data.isp);
+    let country = sanitize_string_field(payload.country_name);
+    let isp = sanitize_string_field(payload.isp);
 
     let autonomous_system = isp.map(|name| AS { number: 0, name });
 
@@ -161,12 +135,13 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
-            city,
-            coordinates: None, // API does not provide coordinates
-            time_zone: None,   // API does not provide timezone
+            // API does not provide region, city, coordinates, or timezone
+            region: None,
+            city: None,
+            coordinates: None,
+            time_zone: None,
         }),
-        risk: None,
+        risk: None, // API does not provide risk information
         used_time: None,
     }
 }

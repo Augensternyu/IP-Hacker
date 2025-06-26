@@ -1,8 +1,14 @@
 # IP-Hacker
 
+![](https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Frsbench%2Frsbench&label=&icon=github&color=%23160d27)
+
 俄罗斯大黑客用的 IP 地址检测工具
 
 Supported Provider:
+- abstractapi.com
+- apiip.net
+- apilayer.com
+- apip.cc
 - Baidu
 - biantailajiao.com
 - Bilibili
@@ -11,6 +17,8 @@ Supported Provider:
 - dashi.163.com
 - db-ip.com
 - freeaiapi.com
+- groapify.com
+- geoplugin.net
 - hsselite.com
 - httpbin.org
 - ip2location.io
@@ -29,17 +37,21 @@ Supported Provider:
 - iplark.com Moon
 - ip.sb
 - ipapi.co
+- ipapi.is
 - ipbase.com
 - ipdata.co
 - ipgeolocation.io
 - ipinfo.io
 - ipip.net
 - ipleak.net
+- iplocation.net
 - ipquery.io
 - ipw.cn
 - ipwho.is
 - ipwhois.app
 - itdog.cn
+- keycdn.com
+- maptiler.com
 - meituan.com
 - myip.la
 - myip.wtf

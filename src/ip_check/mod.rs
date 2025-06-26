@@ -5,13 +5,15 @@ pub mod table;
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpCheckError, IpResult};
 use crate::ip_check::script::{
-    baidu, biantailajiao_com, bilibili, cloudflare, cz88_net, dashi_163_com, dbip_com,
-    free_ip_api_com, hsselite_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind,
+    abstractapi_com, apiip_net, apilayer_com, apip_cc, baidu, biantailajiao_com, bilibili,
+    cloudflare, cz88_net, dashi_163_com, dbip_com, free_ip_api_com, geoapify_com, geoplugin_net,
+    hsselite_com, httpbin_org, ip_api_com, ip_checking, ip_checking_maxmind,
     ip_lark_com_digital_element, ip_lark_com_ipapi, ip_lark_com_ipdata, ip_lark_com_ipstack,
     ip_lark_com_maxmind, ip_lark_com_moe, ip_lark_com_moon, ip_sb, ip2location_io, ip125_com,
-    ip233_cn, ip234_in, ipapi_co, ipbase_com, ipdata_co, ipgeolocation_io, ipinfo_io, ipip_net,
-    ipleak_net, ipquery_io, ipw_cn, ipwho_is, ipwhois_app, itdog_cn, meituan_com, myip_la,
-    myip_wtf, nameless13_xyz, qq_com, realip_cc, reallyfreegeoip_org, taobao_com, vvhan_com,
+    ip233_cn, ip234_in, ipapi_co, ipapi_is, ipbase_com, ipdata_co, ipgeolocation_io, ipinfo_io,
+    ipip_net, ipleak_net, iplocation_net, ipquery_io, ipw_cn, ipwho_is, ipwhois_app, itdog_cn,
+    keycdn_com, maptiler_com, meituan_com, myip_la, myip_wtf, nameless13_xyz, qq_com, realip_cc,
+    reallyfreegeoip_org, taobao_com, vvhan_com,
 };
 use async_trait::async_trait;
 use std::fmt::{Display, Formatter};
@@ -72,6 +74,16 @@ pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<I
         Box::new(biantailajiao_com::BiantailajiaoCom),
         Box::new(taobao_com::TaobaoCom),
         Box::new(meituan_com::MeituanCom),
+        Box::new(apiip_net::ApiipNet),
+        Box::new(geoplugin_net::GeopluginNet),
+        Box::new(ipapi_is::IpapiIs),
+        Box::new(apip_cc::ApipCc),
+        Box::new(iplocation_net::IplocationNet),
+        Box::new(apilayer_com::ApilayerCom),
+        Box::new(geoapify_com::GeoapifyCom),
+        Box::new(keycdn_com::KeycdnCom),
+        Box::new(maptiler_com::MaptilerCom),
+        Box::new(abstractapi_com::AbstractapiCom),
     ];
 
     let (tx, rx) = mpsc::channel(32);

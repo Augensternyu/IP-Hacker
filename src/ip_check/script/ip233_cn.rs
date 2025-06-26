@@ -132,10 +132,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
             .text()
             .await
             .unwrap_or_else(|_| "Unknown HTTP error".to_string());
-        return request_error_ip_result(
-            provider_name,
-            &format!("HTTP Error {status}: {err_text}"),
-        );
+        return request_error_ip_result(provider_name, &format!("HTTP Error {status}: {err_text}"));
     }
 
     let response_text = match response.text().await {

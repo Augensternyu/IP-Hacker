@@ -1,48 +1,47 @@
-// src/ip_check/script/meituan_com.rs
+// src/ip_check/script/keycdn_com.rs
 
 use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
+    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
     not_support_error, request_error_ip_result,
 };
 use crate::ip_check::script::create_reqwest_client;
 use async_trait::async_trait;
-use reqwest::Response;
+use reqwest::{Response, header};
 use serde::Deserialize;
 use std::net::IpAddr;
 
-pub struct MeituanCom;
+pub struct KeycdnCom;
 
-const PROVIDER_NAME: &str = "Meituan.com";
-// URL structure from the provided example
-const API_URL_BASE: &str =
-    "https://apimobile.meituan.com/locate/v2/ip/loc?client_source=yourAppKey&rgeo=true&ip=";
+const PROVIDER_NAME: &str = "Keycdn.com";
+const API_BASE_URL: &str = "https://tools.keycdn.com/geo.json";
 
-#[derive(Deserialize, Debug)]
-struct RgeoData {
-    country: Option<String>,
-    province: Option<String>,
-    city: Option<String>,
-    district: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-struct ApiDataPayload {
-    lng: Option<f64>,
-    lat: Option<f64>,
-    ip: String,
-    rgeo: Option<RgeoData>,
-}
+// --- Serde Structs to match the API's nested JSON response ---
 
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
-    // The API might not have a top-level status/code field and directly returns the data object on success.
-    // If it's just the data object, we'll deserialize directly into ApiDataPayload.
-    // Let's assume for now it might have a 'data' key.
-    data: Option<ApiDataPayload>,
-    // Add other potential top-level fields if errors return a different structure
-    // e.g., code: Option<i32>, message: Option<String>
+    status: String,
+    description: Option<String>,
+    data: Option<ApiData>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ApiData {
+    geo: ApiGeo,
+}
+
+#[derive(Deserialize, Debug)]
+struct ApiGeo {
+    ip: String,
+    asn: Option<u32>,
+    isp: Option<String>,
+    country_name: Option<String>,
+    region_name: Option<String>,
+    city: Option<String>,
+    latitude: Option<f64>,
+    longitude: Option<f64>,
+    timezone: Option<String>,
 }
 
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
@@ -57,32 +56,33 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
 }
 
 #[async_trait]
-impl IpCheck for MeituanCom {
+impl IpCheck for KeycdnCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        // API requires a specific IP and is accessed via IPv4.
         let target_ip = match ip {
-            Some(ip_addr) => {
-                if ip_addr.is_ipv6() {
-                    return vec![not_support_error(PROVIDER_NAME)];
-                }
-                ip_addr
-            }
+            Some(ip_addr) => ip_addr,
+            // API requires a specific IP.
             None => return vec![not_support_error(PROVIDER_NAME)],
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client = match create_reqwest_client(Some(false)).await {
-                // Force IPv4
+            let client = match create_reqwest_client(None).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
-            let url = format!("{API_URL_BASE}{target_ip}");
-            let response_result = client.get(&url).send().await;
+            let url = format!("{API_BASE_URL}?host={target_ip}");
+            let mut headers = header::HeaderMap::new();
+            // The User-Agent is critical for this API.
+            headers.insert(
+                header::USER_AGENT,
+                "keycdn-tools:https://yoursite.com".parse().unwrap(),
+            );
+
+            let response_result = client.get(&url).headers(headers).send().await;
 
             let mut result = match response_result {
-                Ok(r) => parse_meituan_com_resp(r).await,
+                Ok(r) => parse_keycdn_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
             result.used_time = Some(time_start.elapsed());
@@ -99,7 +99,7 @@ impl IpCheck for MeituanCom {
     }
 }
 
-async fn parse_meituan_com_resp(response: Response) -> IpResult {
+async fn parse_keycdn_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
         let err_text = response
@@ -119,7 +119,6 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         }
     };
 
-    // The demo shows the data is nested under a "data" key.
     let payload: TopLevelResp = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -131,35 +130,42 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         }
     };
 
-    let data = match payload.data {
-        Some(d) => d,
+    if payload.status != "success" {
+        let err_msg = payload
+            .description
+            .unwrap_or_else(|| "API status was not 'success'.".to_string());
+        return request_error_ip_result(PROVIDER_NAME, &err_msg);
+    }
+
+    let geo_data = match payload.data {
+        Some(data) => data.geo,
         None => {
             return json_parse_error_ip_result(PROVIDER_NAME, "API response missing 'data' field.");
         }
     };
 
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
+    let parsed_ip = match geo_data.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
             return json_parse_error_ip_result(
                 PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
+                &format!("Could not parse IP from API: {}", geo_data.ip),
             );
         }
     };
 
-    let (country, region, city) = if let Some(rgeo) = data.rgeo {
-        (
-            sanitize_string_field(rgeo.country),
-            sanitize_string_field(rgeo.province),
-            // Prefer city, but fallback to district if city is empty/null
-            sanitize_string_field(rgeo.city).or(sanitize_string_field(rgeo.district)),
-        )
-    } else {
-        (None, None, None)
+    let autonomous_system = match (geo_data.asn, sanitize_string_field(geo_data.isp)) {
+        (Some(number), Some(name)) => Some(AS { number, name }),
+        (None, Some(name)) => Some(AS { number: 0, name }),
+        _ => None,
     };
 
-    let coordinates = match (data.lat, data.lng) {
+    let country = sanitize_string_field(geo_data.country_name);
+    let region = sanitize_string_field(geo_data.region_name);
+    let city = sanitize_string_field(geo_data.city);
+    let time_zone = sanitize_string_field(geo_data.timezone);
+
+    let coordinates = match (geo_data.latitude, geo_data.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
             lat: lat.to_string(),
             lon: lon.to_string(),
@@ -172,15 +178,15 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         error: No,
         provider: PROVIDER_NAME.to_string(),
         ip: Some(parsed_ip),
-        autonomous_system: None, // API does not provide ASN/ISP
+        autonomous_system,
         region: Some(Region {
             country,
             region,
             city,
             coordinates,
-            time_zone: None, // API does not provide timezone
+            time_zone,
         }),
-        risk: None,
+        risk: None, // API does not provide risk information
         used_time: None,
     }
 }
