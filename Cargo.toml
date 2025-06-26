@@ -1,6 +1,6 @@
 [package]
 name = "IP-Hacker"
-version = "0.2.25"
+version = "0.2.26"
 edition = "2024"
 authors = ["GenshinMinecraft <gm@highp.ing>"]
 description = "IP tools used by Russia's big hackers"

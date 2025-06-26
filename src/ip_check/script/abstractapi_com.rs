@@ -65,7 +65,6 @@ struct ApiTimezone {
 #[derive(Deserialize, Debug)]
 struct ApiError {
     message: String,
-    details: Option<serde_json::Value>,
 }
 
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
