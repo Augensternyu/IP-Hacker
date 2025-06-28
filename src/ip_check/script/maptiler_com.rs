@@ -107,9 +107,7 @@ async fn parse_maptiler_com_resp(response: Response, is_ipv6_request: bool) -> I
         Err(e) => {
             return request_error_ip_result(
                 PROVIDER_NAME,
-                &format!(
-                    "Failed to read response text (status was {status}): {e}"
-                ),
+                &format!("Failed to read response text (status was {status}): {e}"),
             );
         }
     };

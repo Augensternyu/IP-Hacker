@@ -6,7 +6,7 @@ mod ip_check;
 mod utils;
 
 use crate::config::default_config;
-use crate::ip_check::ip_result::IpResultVecExt;
+use crate::ip_check::ip_result::{IpResultVecExt, RiskTag};
 use crate::ip_check::table::gen_table;
 use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::get_usage_count;
@@ -63,6 +63,69 @@ async fn main() {
         results_vec.sort_by_name();
         let json_output = serde_json::to_string(&results_vec).unwrap();
         println!("{json_output}");
+    } else if args.special_for_gui {
+        while let Some(ip_result) = rx.recv().await {
+            println!(
+                "{}|{}|{}|{}|{}|{}|{}|{}",
+                ip_result.provider,
+                ip_result.ip.map_or("".to_string(), |ip| ip.to_string()),
+                ip_result.success,
+                ip_result.error,
+                ip_result
+                    .autonomous_system
+                    .map_or("|".to_string(), |asn| format!(
+                        "{}|{}",
+                        asn.number, asn.name
+                    )),
+                {
+                    match ip_result.region.clone() {
+                        None => "|||".to_string(),
+                        Some(region) => {
+                            format!(
+                                "{}|{}|{}|{}",
+                                region.country.unwrap_or("".to_string()),
+                                region.region.unwrap_or("".to_string()),
+                                region.city.unwrap_or("".to_string()),
+                                region.time_zone.unwrap_or("".to_string())
+                            )
+                        }
+                    }
+                },
+                {
+                    match ip_result.region.clone() {
+                        None => "|".to_string(),
+                        Some(region) => match region.coordinates {
+                            None => "|".to_string(),
+                            Some(coordinates) => format!("{}|{}", coordinates.lat, coordinates.lon),
+                        },
+                    }
+                },
+                {
+                    match ip_result.risk {
+                        None => "|".to_string(),
+                        Some(risk) => format!(
+                            "{}|{}",
+                            risk.risk
+                                .map(|risk| risk.to_string())
+                                .unwrap_or("".to_string()),
+                            risk.tags
+                                .unwrap_or(vec![])
+                                .iter()
+                                .map(|tag| match tag {
+                                    RiskTag::Tor => "TOR".to_string(),
+                                    RiskTag::Proxy => "PROXY".to_string(),
+                                    RiskTag::Hosting => "HOSTING".to_string(),
+                                    RiskTag::Relay => "RELAY".to_string(),
+                                    RiskTag::Mobile => "MOBILE".to_string(),
+                                    RiskTag::Other(str) => str.to_string(),
+                                })
+                                .collect::<Vec<String>>()
+                                .join(",")
+                        ),
+                    }
+                }
+            );
+        }
     } else {
         let mut results = Vec::new();
         while let Some(ip_result) = rx.recv().await {

@@ -164,9 +164,7 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
         Err(e) => {
             return request_error_ip_result(
                 PROVIDER_NAME,
-                &format!(
-                    "Failed to read response text (status was {status}): {e}"
-                ),
+                &format!("Failed to read response text (status was {status}): {e}"),
             );
         }
     };

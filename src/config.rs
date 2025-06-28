@@ -78,6 +78,10 @@ pub struct Config {
     /// Json Output
     #[arg(long, default_value_t = false)]
     pub json: bool,
+
+    /// Special For IP-Hacker-GUI
+    #[arg(long, default_value_t = false)]
+    pub special_for_gui: bool,
 }
 
 pub fn default_config(config: Config) -> Config {
@@ -119,6 +123,16 @@ pub fn default_config(config: Config) -> Config {
             risk: true,
             tags: true,
             time: true,
+            ..config
+        }
+    } else if config.special_for_gui {
+        Config {
+            all: true,
+            json: false,
+            no_logo: true,
+            cls: false,
+            no_upload: true,
+            logger: false,
             ..config
         }
     } else {
