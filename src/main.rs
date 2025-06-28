@@ -1,4 +1,4 @@
-// #![warn(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic)]
 
 use std::fmt::Write;
 mod config;
@@ -68,7 +68,7 @@ async fn main() {
             println!(
                 "{}|{}|{}|{}|{}|{}|{}|{}",
                 ip_result.provider,
-                ip_result.ip.map_or("".to_string(), |ip| ip.to_string()),
+                ip_result.ip.map_or(String::new(), |ip| ip.to_string()),
                 ip_result.success,
                 ip_result.error,
                 ip_result
@@ -83,10 +83,10 @@ async fn main() {
                         Some(region) => {
                             format!(
                                 "{}|{}|{}|{}",
-                                region.country.unwrap_or("".to_string()),
-                                region.region.unwrap_or("".to_string()),
-                                region.city.unwrap_or("".to_string()),
-                                region.time_zone.unwrap_or("".to_string())
+                                region.country.unwrap_or(String::new()),
+                                region.region.unwrap_or(String::new()),
+                                region.city.unwrap_or(String::new()),
+                                region.time_zone.unwrap_or(String::new())
                             )
                         }
                     }
@@ -106,8 +106,7 @@ async fn main() {
                         Some(risk) => format!(
                             "{}|{}",
                             risk.risk
-                                .map(|risk| risk.to_string())
-                                .unwrap_or("".to_string()),
+                                .map_or(String::new(), |risk| risk.to_string()),
                             risk.tags
                                 .unwrap_or(vec![])
                                 .iter()
