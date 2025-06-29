@@ -328,7 +328,7 @@ jobs:
           name: linux-x86_64-gui-binary
           path: ./gui/target/minimal/IP-Hacker-GUI
       - name: mkdir & cp
-        run: mkdir ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+        run: mkdir -p ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
       - name: Download IP-Hacker
         run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-linux-x86_64-gnu -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
       - name: Tar xz
