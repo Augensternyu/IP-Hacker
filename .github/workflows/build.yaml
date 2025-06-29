@@ -367,7 +367,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: choco install wget --no-progress
       - name: mkdir & cp
-        run: mkdir ./gui/release/IP-Hacker-GUI && copy ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+        run: mkdir ./gui/release/IP-Hacker-GUI && copy ./gui/target/minimal/IP-Hacker-GUI.exe ./gui/release/IP-Hacker-GUI/
       - name: Download IP-Hacker
         run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker.exe -O ./gui/release/IP-Hacker-GUI/IP-Hacker.exe
       - uses: vimtor/action-zip@v1.2
