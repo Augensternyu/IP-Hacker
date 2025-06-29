@@ -300,3 +300,168 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gui-linux-x86_64:
+    needs: linux-all-platforms-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Lib
+        run: sudo apt update && sudo apt install -y wget musl-tools musl-dev musl libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build binary
+        run: cargo build --profile minimal --jobs 32 --locked
+        working-directory: ./gui
+        env:
+          CROSS_NO_WARNINGS: 0
+      - name: Install Upx Binary
+        run: sudo apt install -y upx
+      - name: List Files
+        run: ls -lah ./gui && ls -lah ./gui/target && ls -lah ./gui/target/minimal
+      - name: Compress binary
+        run: upx --brute ./gui/target/minimal/IP-Hacker-GUI
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64-gui-binary
+          path: ./gui/target/minimal/IP-Hacker-GUI
+      - name: mkdir & cp
+        run: mkdir ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+      - name: Download IP-Hacker
+        run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-linux-x86_64-gnu -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
+      - name: Tar xz
+        run: tar -zcvf linux-x86_64-gnu-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            linux-x86_64-gnu-with-gui.tar.gz
+          tag_name: latest
+          body: |
+            Note: All Release operations will publish the Binary and software packages here
+            Latest release for Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gui-windows-x86_64:
+    needs: windows-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build binary
+        run: cargo build --profile minimal --jobs 32 --locked
+        working-directory: ./gui
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64-gui-binary
+          path: ./gui/target/minimal/IP-Hacker-GUI.exe
+      - name: Install wget for Windows
+        if: matrix.os == 'windows-latest'
+        run: choco install wget --no-progress
+      - name: mkdir & cp
+        run: mkdir ./gui/release/IP-Hacker-GUI && copy ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+      - name: Download IP-Hacker
+        run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker.exe -O ./gui/release/IP-Hacker-GUI/IP-Hacker.exe
+      - uses: vimtor/action-zip@v1.2
+        with:
+          files: gui/release/IP-Hacker-GUI/
+          dest: windows-x86_64-with-gui.zip
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            windows-x86_64-with-gui.zip
+          tag_name: latest
+          body: |
+            Note: All Release operations will publish the Binary and software packages here
+            Latest release for Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gui-macos-amd64-release:
+    needs: macos-amd64-release
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Tar
+        run: brew install gnu-tar
+      - name: Install Rust Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Cargo Build
+        working-directory: ./gui
+        run: cargo build --profile minimal
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-amd64
+          path: ./gui/target/minimal/IP-Hacker-GUI
+      - name: mkdir & cp
+        run: mkdir ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+      - name: Download IP-Hacker
+        run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-macos-amd64 -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
+      - name: Tar xz
+        run: tar -zcvf macos-amd64-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            macos-amd64-with-gui.tar.gz
+          tag_name: latest
+          body: |
+            Note: All Release operations will publish the Binary and software packages here
+            Latest release for Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gui-macos-arm64-release:
+    needs: macos-arm64-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Tar
+        run: brew install gnu-tar
+      - name: Install Rust Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+      - name: Cargo Build
+        working-directory: ./gui
+        run: cargo build --profile minimal
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64
+          path: ./gui/target/minimal/IP-Hacker-GUI
+      - name: mkdir & cp
+        run: mkdir ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
+      - name: Download IP-Hacker
+        run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-macos-arm64 -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
+      - name: Tar xz
+        run: tar -zcvf macos-arm64-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            macos-arm64-with-gui.tar.gz
+          tag_name: latest
+          body: |
+            Note: All Release operations will publish the Binary and software packages here
+            Latest release for Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
