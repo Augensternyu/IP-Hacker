@@ -27,8 +27,7 @@ jobs:
       - name: Install Upx Binary
         run: sudo apt install -y upx
       - name: Compress binary
-        working-directory: ./gui
-        run: upx --brute target/minimal/IP-Hacker-GUI
+        run: upx --brute ./gui/target/minimal/IP-Hacker-GUI
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
