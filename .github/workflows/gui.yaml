@@ -19,10 +19,8 @@ jobs:
         run: sudo apt update && sudo apt install -y musl-tools musl-dev musl libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      - name: Install Cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Build binary
-        run: cross build --target x86_64-unknown-linux-gnu --profile minimal --jobs 32 --locked
+        run: cargo build --target x86_64-unknown-linux-gnu --profile minimal --jobs 32 --locked
         working-directory: ./gui
         env:
           CROSS_NO_WARNINGS: 0
@@ -30,12 +28,12 @@ jobs:
         run: sudo apt install -y upx
       - name: Compress binary
         working-directory: ./gui
-        run: upx --brute target/x86_64-unknown-linux-gnu/minimal/IP-Hacker-GUI
+        run: upx --brute target/minimal/IP-Hacker-GUI
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: linux-x86_64
-          path: target/x86_64-unknown-linux-gnu/minimal/IP-Hacker-GUI
+          path: target/minimal/IP-Hacker-GUI
 
   windows-x86_64:
     runs-on: windows-latest
