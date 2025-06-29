@@ -1,0 +1,29 @@
+[package]
+name = "IP-Hacker-GUI"
+version = "0.0.1"
+edition = "2024"
+authors = ["GenshinMinecraft <gm@highp.ing>"]
+repository = "https://github.com/rsbench/IP-Hacker"
+homepage = "https://rsbench.github.io"
+
+[package.metadata.deb]
+maintainer = "GenshinMinecraft"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+eframe = { version = "0.31.1", features = ["glow", "wayland", "x11", "default_fonts"] }
+simple_logger = "5.0.0"
+log = "0.4.27"
+egui_extras = { version = "0.31.1", features = ["serde"] }
+egui_file = "0.22"
+catppuccin-egui = { version = "5.5.0", default-features = false, features = ["egui31"] }
+
+[workspace.metadata.cross.target.aarch64-linux-android]
+image = "genshinmc/rust-cross-new-ndk-aarch64-linux-android:0.0.1"
+
+[profile]
+dev = { opt-level = 3 }
+release = { opt-level = 3, lto = true, codegen-units = 1, panic = "abort" }
+minimal = { inherits = "release", opt-level = "z", lto = true, codegen-units = 1, panic = "abort", debug = false }
