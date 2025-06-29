@@ -20,12 +20,14 @@ jobs:
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Build binary
-        run: cargo build --target x86_64-unknown-linux-gnu --profile minimal --jobs 32 --locked
+        run: cargo build --profile minimal --jobs 32 --locked
         working-directory: ./gui
         env:
           CROSS_NO_WARNINGS: 0
       - name: Install Upx Binary
         run: sudo apt install -y upx
+      - name: List Files
+        run: ls -lah ./gui && ls -lah ./gui/target && ls -lah ./gui/target/minimal
       - name: Compress binary
         run: upx --brute ./gui/target/minimal/IP-Hacker-GUI
       - name: Upload binary
