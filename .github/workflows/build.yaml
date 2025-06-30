@@ -331,13 +331,14 @@ jobs:
         run: mkdir -p ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
       - name: Download IP-Hacker
         run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-linux-x86_64-gnu -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
-      - name: Tar xz
-        run: tar -zcvf linux-x86_64-gnu-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Tar
+        working-directory: gui/release/IP-Hacker-GUI
+        run: tar -zcvf linux-x86_64-gnu-with-gui.tar.gz ./*
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            linux-x86_64-gnu-with-gui.tar.gz
+            gui/release/IP-Hacker-GUI/linux-x86_64-gnu-with-gui.tar.gz
           tag_name: latest
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -407,13 +408,14 @@ jobs:
         run: mkdir -p ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
       - name: Download IP-Hacker
         run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-macos-amd64 -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
-      - name: Tar xz
-        run: tar -zcvf macos-amd64-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Tar
+        working-directory: gui/release/IP-Hacker-GUI
+        run: tar -zcvf macos-amd64-with-gui.tar.gz ./*
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            macos-amd64-with-gui.tar.gz
+            ./gui/release/IP-Hacker-GUImacos-amd64-with-gui.tar.gz
           tag_name: latest
           body: |
             Note: All Release operations will publish the Binary and software packages here
@@ -447,13 +449,14 @@ jobs:
         run: mkdir -p ./gui/release/IP-Hacker-GUI && cp ./gui/target/minimal/IP-Hacker-GUI ./gui/release/IP-Hacker-GUI/
       - name: Download IP-Hacker
         run: wget https://github.com/rsbench/IP-Hacker/releases/download/latest/IP-Hacker-macos-arm64 -O ./gui/release/IP-Hacker-GUI/IP-Hacker && chmod +x ./gui/release/IP-Hacker-GUI/IP-Hacker
-      - name: Tar xz
-        run: tar -zcvf macos-arm64-with-gui.tar.gz ./gui/release/IP-Hacker-GUI
+      - name: Tar
+        working-directory: gui/release/IP-Hacker-GUI
+        run: tar -zcvf macos-arm64-with-gui.tar.gz ./*
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            macos-arm64-with-gui.tar.gz
+            ./gui/release/IP-Hacker-GUI/macos-arm64-with-gui.tar.gz
           tag_name: latest
           body: |
             Note: All Release operations will publish the Binary and software packages here
