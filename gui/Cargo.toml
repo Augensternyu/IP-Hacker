@@ -20,6 +20,9 @@ egui_extras = { version = "0.31.1", features = ["serde"] }
 egui_file = "0.22"
 catppuccin-egui = { version = "5.5.0", default-features = false, features = ["egui31"] }
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60.2", features = ["Win32_System_Threading"] }
+
 [workspace.metadata.cross.target.aarch64-linux-android]
 image = "genshinmc/rust-cross-new-ndk-aarch64-linux-android:0.0.1"
 

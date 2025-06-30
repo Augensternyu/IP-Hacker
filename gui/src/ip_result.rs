@@ -8,6 +8,12 @@ use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::thread;
 
+// 只在 Windows 上引入和使用扩展
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+#[cfg(windows)]
+use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
+
 #[derive(Debug)]
 pub struct IpResult {
     pub id: u32,
@@ -90,11 +96,17 @@ pub fn get_result_stream(
         command_args.join(" ")
     );
 
-    let mut child = Command::new(command_path)
-        .args(&command_args)
+    let mut command = Command::new(command_path);
+    command.args(&command_args)
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
+        .stderr(Stdio::piped());
+
+    #[cfg(windows)]
+    {
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let mut child = command.spawn()
         .map_err(|e| format!("无法启动命令 '{}': {}", command_path.to_str().unwrap(), e))?;
 
     let stdout = child.stdout.take().ok_or("无法获取子进程的标准输出")?;
