@@ -2,7 +2,7 @@
 
 ![](https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Frsbench%2Frsbench&label=&icon=github&color=%23160d27) ![](https://img.shields.io/crates/v/IP-Hacker) ![](https://tokei.rs/b1/github/rsbench/IP-Hacker)
 
-![IP-Hacker](https://socialify.git.ci/rsbench/IP-Hacker/image?custom_description=%E4%B8%80%E6%AC%BE%E8%B7%A8%E5%B9%B3%E5%8F%B0%E3%80%81%E9%AB%98%E6%80%A7%E8%83%BD%E3%80%81%E6%98%93%E4%BD%BF%E7%94%A8%E3%80%81CLI+%E5%8F%8B%E5%A5%BD%E7%9A%84+IP+%E6%89%B9%E9%87%8F%E6%A3%80%E6%B5%8B%E5%B7%A5%E5%85%B7&description=1&font=Jost&forks=1&language=1&name=1&owner=1&pattern=Circuit+Board&stargazers=1&theme=Auto)
+![IP-Hacker](https://socialify.git.ci/rsbench/IP-Hacker/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&pulls=1&stargazers=1&theme=Dark)
 
 俄罗斯大黑客用的 IP 地址检测工具
 
