@@ -1,9 +1,9 @@
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpCheckError, IpResult, Region, create_reqwest_client_error,
-    json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpCheckError,
+    IpResult, Region, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use regex::Regex;
 use serde_json::Value;

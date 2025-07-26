@@ -1,16 +1,16 @@
 // src/ip_check/script/ip233_cn.rs
 
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
-    not_support_error, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
+    Region, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use regex::Regex;
 use reqwest::header::HeaderMap;
-use reqwest::{Response, header};
+use reqwest::Response;
 use serde::Deserialize;
 use std::net::IpAddr;
 
@@ -198,7 +198,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
 }
 
 pub async fn ip233_style_headers() -> HeaderMap {
-    let mut headers = header::HeaderMap::new();
+    let mut headers = HeaderMap::new();
     headers.insert(
         "Accept",
         "application/json, text/plain, */*".parse().unwrap(),

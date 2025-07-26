@@ -1,11 +1,11 @@
 // src/ip_check/script/biantailajiao_com.rs
 
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::{
-    IpResult, create_reqwest_client_error, not_support_error, request_error_ip_result,
+    create_reqwest_client_error, not_support_error, request_error_ip_result, IpResult,
 };
 use crate::ip_check::script::create_reqwest_client;
 use crate::ip_check::script::ip233_cn::{ip233_style_headers, parse_ip233_style_resp};
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use std::net::IpAddr;
 

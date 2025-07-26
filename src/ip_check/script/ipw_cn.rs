@@ -1,12 +1,12 @@
 // src/ip_check/script/ipw_cn.rs
 
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::{self, No};
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, create_reqwest_client_error, json_parse_error_ip_result,
-    not_support_error, parse_ip_error_ip_result, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, not_support_error, parse_ip_error_ip_result, request_error_ip_result, Coordinates,
+    IpResult, Region, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv6Addr};
@@ -57,7 +57,7 @@ struct IpwCnApiRespPayload {
     // charge: bool,
     msg: Option<String>,
     ip: Option<String>, // The IP that was queried
-                        // coordsys: Option<String>,
+    // coordsys: Option<String>,
 }
 
 async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Addr) -> IpResult {

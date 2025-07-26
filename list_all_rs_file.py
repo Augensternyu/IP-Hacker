@@ -5,6 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
+
 def format_project_files_to_markdown(root_dir: Path, output_stream):
     """
     遍历指定目录，查找 Cargo.toml 和所有 .rs 文件，
@@ -63,6 +64,7 @@ def format_project_files_to_markdown(root_dir: Path, output_stream):
         except Exception as e:
             print(f"处理文件 {file_path} 时出错: {e}", file=sys.stderr)
 
+
 def main():
     """
     主函数，用于解析命令行参数并执行脚本。
@@ -83,7 +85,7 @@ def main():
     )
 
     args = parser.parse_args()
-    root_directory = Path(args.directory).resolve() # 使用 resolve 获取绝对路径
+    root_directory = Path(args.directory).resolve()  # 使用 resolve 获取绝对路径
 
     if args.output:
         try:
@@ -98,6 +100,7 @@ def main():
             sys.exit(1)
     else:
         format_project_files_to_markdown(root_directory, sys.stdout)
+
 
 if __name__ == "__main__":
     main()

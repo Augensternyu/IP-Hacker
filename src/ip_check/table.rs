@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::ip_check::ip_result::{IpResult, RiskTag};
-use prettytable::{Attr, Cell, Row, Table, color, format};
+use prettytable::{color, format, Attr, Cell, Row, Table};
 
 pub async fn gen_table(ip_results_vec: &Vec<IpResult>, config: &Config) -> Table {
     let mut table = Table::new();

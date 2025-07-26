@@ -1,13 +1,13 @@
 // src/ip_check/script/ipapi_is.rs
 
-use crate::ip_check::IpCheck;
 use crate::ip_check::ip_result::IpCheckError::No;
 use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Tor};
 use crate::ip_check::ip_result::{
-    AS, Coordinates, IpResult, Region, Risk, create_reqwest_client_error,
-    json_parse_error_ip_result, request_error_ip_result,
+    create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
+    Risk, AS,
 };
 use crate::ip_check::script::create_reqwest_client;
+use crate::ip_check::IpCheck;
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::Deserialize;

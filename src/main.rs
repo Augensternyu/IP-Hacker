@@ -8,11 +8,11 @@ mod utils;
 use crate::config::default_config;
 use crate::ip_check::ip_result::{IpResultVecExt, RiskTag};
 use crate::ip_check::table::gen_table;
-use crate::utils::report::GLOBAL_STRING;
 use crate::utils::report::get_usage_count;
+use crate::utils::report::GLOBAL_STRING;
 use crate::utils::term::clear_last_line;
 use clap::Parser;
-use log::{LevelFilter, error, info, warn};
+use log::{error, info, warn, LevelFilter};
 use tokio::time;
 use tokio::time::Instant;
 

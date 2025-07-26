@@ -15,81 +15,85 @@
 ## About
 
 相比于一般的 Bash IP 检测脚本，有何优势？
+
 - `速度超快`: **Powered By RUST!**，别问，问就是比 Bash 处理快 (尽管瓶颈还是在网络请求) \
-    除开网络请求，处理 100 个 IP 信息只需要 6ms (包括解析、输出、格式化)
+  除开网络请求，处理 100 个 IP 信息只需要 6ms (包括解析、输出、格式化)
 - `支持服务商多`: 现已支持 50+ API 服务商查询，涵盖了大部分常用的 API
-- `CLI 程序 / 用户界面友好`: 有两种输出格式，**Json 输出**可传递给其他程序继续处理；**表格输出**为默认，便于用户阅读；既可作为其他项目依赖，也可直接调用
+- `CLI 程序 / 用户界面友好`: 有两种输出格式，**Json 输出**可传递给其他程序继续处理；**表格输出**
+  为默认，便于用户阅读；既可作为其他项目依赖，也可直接调用
 - `便于拓展`: 只要有一点点的编程基础，就可以为本项目贡献各种 API，相关的请往下看
 - `可自定义程度高`: 支持自定义输出格式 / 列表
 - `多平台支持`: 由于使用编译型语言，可以简单地实现**跨平台支持**，不像 Bash 脚本仅 Linux，还需要很多依赖
 - ... 总之就是很多
 
 相关链接:
+
 - Github Repo: <https://github.com/rsbench/IP-Hacker>
 - TG Channel: <https://t.me/rsbench>
 - TG Chat: <https://t.me/rsbench_chat>
 - Blog: https://c1oudf1are.eu.org/p/hackerip
 
-
 <details>
   <summary>目前已经支持 56+ 个 API 提供商</summary>
 
-  - abstractapi.com
-  - apiip.net
-  - apilayer.com
-  - apip.cc
-  - Baidu
-  - biantailajiao.com
-  - Bilibili
-  - Cloudflare
-  - cz88.net
-  - dashi.163.com
-  - db-ip.com
-  - freeaiapi.com
-  - groapify.com
-  - geoplugin.net
-  - hsselite.com
-  - httpbin.org
-  - ip2location.io
-  - ip125.com
-  - ip233.cn
-  - ip234.in
-  - ip-api.com
-  - ipcheck.ing
-  - ipcheck.ing Maxmind
-  - iplark.com Digital Element
-  - iplark.com Ip-Api
-  - iplark.com IpData
-  - iplark.com IpStack
-  - iplark.com Maxmind
-  - iplark.com Moe
-  - iplark.com Moon
-  - ip.sb
-  - ipapi.co
-  - ipapi.is
-  - ipbase.com
-  - ipdata.co
-  - ipgeolocation.io
-  - ipinfo.io
-  - ipip.net
-  - ipleak.net
-  - iplocation.net
-  - ipquery.io
-  - ipw.cn
-  - ipwho.is
-  - ipwhois.app
-  - itdog.cn
-  - keycdn.com
-  - maptiler.com
-  - meituan.com
-  - myip.la
-  - myip.wtf
-  - nameless13.xyz
-  - qq.com
-  - realip.cc
-  - reallyfreegeoip.org
-  - taobao.com
-  - vvhan.com
+- abstractapi.com
+- airvpn.org
+- apiip.net
+- apilayer.com
+- apip.cc
+- Baidu
+- biantailajiao.com
+- Bilibili
+- Cloudflare
+- cz88.net
+- dashi.163.com
+- db-ip.com
+- freeaiapi.com
+- groapify.com
+- geoplugin.net
+- hsselite.com
+- httpbin.org
+- ip2location.io
+- ip125.com
+- ip233.cn
+- ip234.in
+- ip-api.com
+- ipcheck.ing
+- ipcheck.ing Maxmind
+- iplark.com Digital Element
+- iplark.com Ip-Api
+- iplark.com IpData
+- iplark.com IpStack
+- iplark.com Maxmind
+- iplark.com Moe
+- iplark.com Moon
+- ip.sb
+- ipapi.co
+- ipapi.is
+- ipbase.com
+- ipdata.co
+- ipgeolocation.io
+- ipinfo.io
+- ipip.net
+- ipleak.net
+- iplocation.net
+- ipquery.io
+- ipw.cn
+- ipwho.is
+- ipwhois.app
+- itdog.cn
+- keycdn.com
+- maptiler.com
+- meituan.com
+- mullvad.net
+- myip.la
+- myip.wtf
+- nameless13.xyz
+- qq.com
+- realip.cc
+- reallyfreegeoip.org
+- taobao.com
+- vvhan.com
 
 </details>
 
@@ -121,11 +125,12 @@ bash <(wget -qO- -o- https://raw.githubusercontent.com/rsbench/IP-Hacker/refs/he
 
 ![alt text](https://53e534f.webp.li/p/hackerip/image-2.png)
 
-关于 Binary 的选择: 
+关于 Binary 的选择:
 
 `Windows x86_64` 直接选择 `IP-Hacker.exe`
 
 `Macos` 请根据自己的芯片选择:
+
 - `IP-Hacker-macos-amd64`
 - `IP-Hacker-macos-arm64`
 
@@ -140,6 +145,7 @@ bash <(wget -qO- -o- https://raw.githubusercontent.com/rsbench/IP-Hacker/refs/he
 当然，任意发行版均可运行带有 `musl` 后缀的 Binary
 
 ## Usage
+
 ```
 IP tools used by Russia's big hackers
 
@@ -178,7 +184,7 @@ Options:
   ./IP-Hacker
   ```
 
-  ![RIwPKKnQ3WNR5ZkEsc0sXTEgBPBXuhFZ.webp](https://www.nodeimage.com/i/9617/RIwPKKnQ3WNR5ZkEsc0sXTEgBPBXuhFZ.png)
+![RIwPKKnQ3WNR5ZkEsc0sXTEgBPBXuhFZ.webp](https://www.nodeimage.com/i/9617/RIwPKKnQ3WNR5ZkEsc0sXTEgBPBXuhFZ.png)
 
 </details>
 
@@ -189,21 +195,21 @@ Options:
   ./IP-Hacker --all
   ```
 
-  ![GNZSriny3WNR5bdCsc0sxIfaCZ0DjPnX.webp](https://www.nodeimage.com/i/9617/GNZSriny3WNR5bdCsc0sxIfaCZ0DjPnX.png)
+![GNZSriny3WNR5bdCsc0sxIfaCZ0DjPnX.webp](https://www.nodeimage.com/i/9617/GNZSriny3WNR5bdCsc0sxIfaCZ0DjPnX.png)
 
 </details>
 
 <details>
   <summary>只输出 Provider 与 IP 和 Country</summary>
 
-  > [!TIP]
-  > 还有更多的搭配，请自行尝试
+> [!TIP]
+> 还有更多的搭配，请自行尝试
 
   ```bash
   ./IP-Hacker --provider --ip --country
   ```
 
-  ![e2mVtKn13WNR5Zl9sc0smZwcLEFT92xw.webp](https://www.nodeimage.com/i/9617/e2mVtKn13WNR5Zl9sc0smZwcLEFT92xw.png)
+![e2mVtKn13WNR5Zl9sc0smZwcLEFT92xw.webp](https://www.nodeimage.com/i/9617/e2mVtKn13WNR5Zl9sc0smZwcLEFT92xw.png)
 
 </details>
 
@@ -214,7 +220,7 @@ Options:
   ./IP-Hacker --set-ip 11.45.1.4
   ```
 
-  ![IYeSaXnp3WNR5YfFsc0sIxtpkPjBXReA.webp](https://www.nodeimage.com/i/9617/IYeSaXnp3WNR5YfFsc0sIxtpkPjBXReA.png)
+![IYeSaXnp3WNR5YfFsc0sIxtpkPjBXReA.webp](https://www.nodeimage.com/i/9617/IYeSaXnp3WNR5YfFsc0sIxtpkPjBXReA.png)
 
 </details>
 
@@ -225,9 +231,9 @@ Options:
   ./IP-Hacker --json | jq
   ```
 
-  ![R1b4zpnR3WNR5WiGsc0s4UXMlVEG3NXV.webp](https://www.nodeimage.com/i/9617/R1b4zpnR3WNR5WiGsc0s4UXMlVEG3NXV.png)
+![R1b4zpnR3WNR5WiGsc0s4UXMlVEG3NXV.webp](https://www.nodeimage.com/i/9617/R1b4zpnR3WNR5WiGsc0s4UXMlVEG3NXV.png)
 
-  输出过多，仅截取部分
+输出过多，仅截取部分
 
 </details>
 
