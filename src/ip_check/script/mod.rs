@@ -59,6 +59,8 @@ pub mod realip_cc;
 pub mod reallyfreegeoip_org;
 pub mod taobao_com;
 pub mod vvhan_com;
+pub mod mullvad_net;
+pub mod airvpn_org;
 
 static CLIENT_IPV4: OnceCell<Client> = OnceCell::const_new();
 static CLIENT_IPV6: OnceCell<Client> = OnceCell::const_new();
