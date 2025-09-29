@@ -256,7 +256,7 @@ impl IpCheck for IpwCn {
             };
 
             let mut result_without_time =
-                fetch_and_parse_ip_details(&client_for_details, target_ipv6).await;
+                fetch_and_parse_ip_details(client_for_details, target_ipv6).await;
             result_without_time.used_time = Some(time_start.elapsed());
             result_without_time
         });

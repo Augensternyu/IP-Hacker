@@ -148,11 +148,10 @@ impl IpCheck for GeoapifyCom {
             if let Ok(r) = handle_v4.await {
                 results.push(r);
             }
-            if let Ok(r) = handle_v6.await {
-                if !results.iter().any(|res| res.success && res.ip == r.ip) {
+            if let Ok(r) = handle_v6.await
+                && !results.iter().any(|res| res.success && res.ip == r.ip) {
                     results.push(r);
                 }
-            }
             results
         }
     }

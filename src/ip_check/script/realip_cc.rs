@@ -144,11 +144,10 @@ impl IpCheck for RealipCc {
             }
             if let Ok(r_v6) = handle_v6.await {
                 let mut add_v6 = true;
-                if let Some(existing_res_v4) = results.first() {
-                    if existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
+                if let Some(existing_res_v4) = results.first()
+                    && existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
                         add_v6 = false;
                     }
-                }
                 if add_v6 {
                     results.push(r_v6);
                 }
@@ -208,9 +207,8 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
                 // 即使由于其他字段中意外的 null 导致完整解析失败，也尝试挽救 IP
                 if let Ok(partial_payload) =
                     serde_json::from_str::<serde_json::Value>(&response_text)
-                {
-                    if let Some(ip_val) = partial_payload.get("ip").and_then(|v| v.as_str()) {
-                        if let Ok(ip_addr) = ip_val.parse::<IpAddr>() {
+                    && let Some(ip_val) = partial_payload.get("ip").and_then(|v| v.as_str())
+                        && let Ok(ip_addr) = ip_val.parse::<IpAddr>() {
                             // 如果我们得到了 IP 但无法解析其余部分，则返回最小成功结果
                             return IpResult {
                                 success: true,
@@ -224,8 +222,6 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
                                 used_time: None,
                             };
                         }
-                    }
-                }
             }
             return json_parse_error_ip_result(
                 PROVIDER_NAME,

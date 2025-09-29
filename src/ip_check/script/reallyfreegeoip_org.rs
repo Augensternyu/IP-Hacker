@@ -127,11 +127,10 @@ impl IpCheck for ReallyfreegeoipOrg {
             }
             if let Ok(r_v6) = handle_v6.await {
                 let mut add_v6 = true;
-                if let Some(existing_res_v4) = results.first() {
-                    if existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
+                if let Some(existing_res_v4) = results.first()
+                    && existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
                         add_v6 = false;
                     }
-                }
                 if add_v6 {
                     results.push(r_v6);
                 }

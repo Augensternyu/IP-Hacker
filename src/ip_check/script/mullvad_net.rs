@@ -155,11 +155,10 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
     if payload.mullvad_exit_ip == Some(true) {
         risk_tags.push(RiskTag::Other("Mullvad VPN".to_string()));
     }
-    if let Some(bl) = payload.blacklisted {
-        if bl.blacklisted {
+    if let Some(bl) = payload.blacklisted
+        && bl.blacklisted {
             risk_tags.push(RiskTag::Other("Blacklisted".to_string()));
         }
-    }
 
     // 构建并返回 IpResult
     IpResult {

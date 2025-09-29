@@ -143,11 +143,10 @@ impl IpCheck for ApiipNet {
             }
             if let Ok(r_v6) = handle_v6.await {
                 let mut add_v6 = true;
-                if let Some(existing_res_v4) = results.first() {
-                    if existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
+                if let Some(existing_res_v4) = results.first()
+                    && existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
                         add_v6 = false;
                     }
-                }
                 if add_v6 {
                     results.push(r_v6);
                 }
@@ -191,11 +190,10 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
     };
 
     // API 可能返回 200 OK，但在响应体中包含错误消息，例如私有地址。
-    if let Some(message) = payload.message {
-        if message.to_lowercase().contains("error") || message.contains("private ip address") {
+    if let Some(message) = payload.message
+        && (message.to_lowercase().contains("error") || message.contains("private ip address")) {
             return request_error_ip_result(PROVIDER_NAME, &message);
         }
-    }
 
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,

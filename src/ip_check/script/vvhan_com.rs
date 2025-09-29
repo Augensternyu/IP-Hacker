@@ -109,11 +109,10 @@ impl IpCheck for VvhanCom {
                 // 避免在 IPv4 和 IPv6 客户端返回相同成功结果时重复添加
                 // (例如，系统只有 IPv4，IPv6 客户端回退并获取了相同数据)
                 let mut add_v6 = true;
-                if let Some(v4_res) = results.first() {
-                    if v4_res.success && r_v6.success && v4_res.ip == r_v6.ip {
+                if let Some(v4_res) = results.first()
+                    && v4_res.success && r_v6.success && v4_res.ip == r_v6.ip {
                         add_v6 = false;
                     }
-                }
                 if add_v6 {
                     results.push(r_v6);
                 }

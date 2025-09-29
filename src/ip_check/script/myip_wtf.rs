@@ -59,16 +59,14 @@ impl IpCheck for MyIpWtf {
             });
 
             let mut results = Vec::new();
-            if let Ok(result) = handle_v4.await {
-                if result.success {
+            if let Ok(result) = handle_v4.await
+                && result.success {
                     results.push(result);
                 }
-            }
-            if let Ok(result) = handle_v6.await {
-                if result.success {
+            if let Ok(result) = handle_v6.await
+                && result.success {
                     results.push(result);
                 }
-            }
             results
         }
     }

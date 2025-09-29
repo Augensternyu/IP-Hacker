@@ -232,11 +232,10 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     if data.icloud_private_relay == Some(true) {
         risk_tags_set.insert(Other("iCloud Relay".to_string()));
     }
-    if let Some(net_type) = sanitize_string_field(data.net_work_type) {
-        if net_type == "数据中心" {
+    if let Some(net_type) = sanitize_string_field(data.net_work_type)
+        && net_type == "数据中心" {
             risk_tags_set.insert(Hosting);
         }
-    }
     let risk_tags_vec: Vec<_> = risk_tags_set.into_iter().collect();
 
     // 构建 IpResult
