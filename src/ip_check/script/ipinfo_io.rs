@@ -155,8 +155,7 @@ async fn get_ipinfo_io(ip: Value) -> IpResult {
 
     // 使用正则表达式从组织信息中提取 ASN 和组织名称
     let re = Regex::new(r"^(AS\d+)\s+(.*)$").unwrap();
-    let Some((asn, org)) = (if org_str.is_some() {
-        let org_str = org_str.unwrap();
+    let Some((asn, org)) = (if let Some(org_str) = org_str {
         let caps = re.captures(&org_str);
         if let Some(caps) = caps {
             let asn = caps.get(1).unwrap().as_str().to_string();

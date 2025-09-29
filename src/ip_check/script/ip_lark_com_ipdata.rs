@@ -97,12 +97,12 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         country_name: Option<String>,
         latitude: Option<f64>,
         longitude: Option<f64>,
-        asn: ASN,
+        asn: Asn,
         time_zone: TimeZone,
         threat: Threat,
     }
     #[derive(Deserialize, Serialize)]
-    struct ASN {
+    struct Asn {
         asn: Option<String>,
         name: Option<String>,
     }
