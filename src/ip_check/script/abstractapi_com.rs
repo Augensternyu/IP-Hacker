@@ -1,26 +1,29 @@
 // src/ip_check/script/abstractapi_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Relay, Tor};
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
+use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Relay, Tor}; // 引入风险标签
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     Risk, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::collections::HashSet;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::collections::HashSet; // 引入 HashSet
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 AbstractapiCom 结构体
 pub struct AbstractapiCom;
 
-const PROVIDER_NAME: &str = "Abstractapi.com";
-const API_KEY: &str = "508d5e4564b64e2eb2d2a077c9bcb429";
-const API_BASE_URL: &str = "https://ip-intelligence.abstractapi.com/v1/";
+// 定义常量
+const PROVIDER_NAME: &str = "Abstractapi.com"; // 提供商名称
+const API_KEY: &str = "508d5e4564b64e2eb2d2a077c9bcb429"; // API 密钥
+const API_BASE_URL: &str = "https://ip-intelligence.abstractapi.com/v1/"; // API 基础 URL
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
@@ -29,7 +32,7 @@ struct TopLevelResp {
     asn: Option<ApiAsn>,
     location: Option<ApiLocation>,
     timezone: Option<ApiTimezone>,
-    error: Option<ApiError>, // To catch API-level errors
+    error: Option<ApiError>, // 用于捕获 API 级别的错误
 }
 
 #[derive(Deserialize, Debug)]
@@ -67,6 +70,7 @@ struct ApiError {
     message: String,
 }
 
+// 清理字符串字段，去除首尾空格，如果是空字符串则返回 None
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -78,9 +82,11 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 AbstractapiCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for AbstractapiCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
+        // 根据是否提供 IP 构建 URL
         let url = if let Some(ip_addr) = ip {
             format!("{API_BASE_URL}?api_key={API_KEY}&ip_address={ip_addr}")
         } else {
@@ -88,7 +94,7 @@ impl IpCheck for AbstractapiCom {
         };
 
         if ip.is_some() {
-            // --- Query specific IP ---
+            // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client = match create_reqwest_client(None).await {
@@ -108,7 +114,7 @@ impl IpCheck for AbstractapiCom {
                 request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")
             })]
         } else {
-            // --- Query local IP (v4 and v6) ---
+            // --- 查询本机 IP (v4 和 v6) ---
             let mut results = Vec::new();
             let url_v4 = url.clone();
             let url_v6 = url;
@@ -148,6 +154,7 @@ impl IpCheck for AbstractapiCom {
                 results.push(r);
             }
             if let Ok(r) = handle_v6.await {
+                // 避免重复添加相同的 IP
                 if !results.iter().any(|res| res.success && res.ip == r.ip) {
                     results.push(r);
                 }
@@ -157,6 +164,7 @@ impl IpCheck for AbstractapiCom {
     }
 }
 
+// 解析 Abstractapi.com 的 API 响应
 async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
     let status = response.status();
     let response_text = match response.text().await {
@@ -252,7 +260,7 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
         }
         let tags_vec: Vec<_> = tags_set.into_iter().collect();
         Risk {
-            risk: None, // API does not provide a numeric risk score
+            risk: None, // API 不提供数字风险评分
             tags: if tags_vec.is_empty() {
                 None
             } else {

@@ -1,21 +1,26 @@
 // src/ip_check/script/dashi_163_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 Dashi163Com 结构体
 pub struct Dashi163Com;
 
-const PROVIDER_NAME: &str = "Dashi.163.com";
-const API_URL: &str = "https://dashi.163.com/fgw/mailsrv-ipdetail/detail";
+// 定义常量
+const PROVIDER_NAME: &str = "Dashi.163.com"; // 提供商名称
+const API_URL: &str = "https://dashi.163.com/fgw/mailsrv-ipdetail/detail"; // API URL
+
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Debug)]
 struct ApiResultData {
@@ -33,11 +38,12 @@ struct ApiResultData {
 struct TopLevelResp {
     code: i32,
     #[serde(rename = "success")]
-    _success: String, // This field is unreliable, ignore its value.
+    _success: String, // 此字段不可靠，忽略其值
     result: Option<ApiResultData>,
     desc: Option<String>,
 }
 
+// 清理字符串字段，去除首尾空格和无效值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -49,50 +55,64 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 Dashi163Com 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for Dashi163Com {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
+            // 此 API 不支持查询指定 IP
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
         let mut results = Vec::new();
 
+        // 异步查询 IPv4 地址
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 创建仅使用 IPv4 的 reqwest 客户端
             let client_v4 = match create_reqwest_client(Some(false)).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
+            // 发送 GET 请求
             let response_result_v4 = client_v4.get(API_URL).send().await;
+            // 解析响应
             let mut result_v4 = match response_result_v4 {
                 Ok(r) => parse_dashi_163_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &format!("IPv4 request: {e}")),
             };
+            // 计算耗时
             result_v4.used_time = Some(time_start.elapsed());
             result_v4
         });
 
+        // 异步查询 IPv6 地址
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 创建仅使用 IPv6 的 reqwest 客户端
             let client_v6 = match create_reqwest_client(Some(true)).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
+            // 发送 GET 请求
             let response_result_v6 = client_v6.get(API_URL).send().await;
+            // 解析响应
             let mut result_v6 = match response_result_v6 {
                 Ok(r) => parse_dashi_163_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &format!("IPv6 request: {e}")),
             };
+            // 计算耗时
             result_v6.used_time = Some(time_start.elapsed());
             result_v6
         });
 
+        // 等待并收集结果
         if let Ok(r) = handle_v4.await {
             results.push(r);
         }
         if let Ok(r) = handle_v6.await {
+            // 避免重复添加相同的 IP
             if !results.iter().any(|res| res.success && res.ip == r.ip) {
                 results.push(r);
             }
@@ -101,6 +121,7 @@ impl IpCheck for Dashi163Com {
     }
 }
 
+// 解析 Dashi.163.com 的 API 响应
 async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -112,6 +133,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 将响应体解析为文本
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
@@ -122,6 +144,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // 将文本解析为 JSON
     let payload: TopLevelResp = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -133,9 +156,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         }
     };
 
-    // **FIXED LOGIC**: The API's `success` field is unreliable.
-    // We now consider `code == 200` as the primary success indicator.
-    // The check for `payload.result`'s existence will happen next.
+    // 检查 API 返回的状态码
     if payload.code != 200 {
         let err_msg = payload
             .desc
@@ -143,6 +164,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 获取数据部分
     let data = match payload.result {
         Some(d) => d,
         None => {
@@ -153,6 +175,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // 解析 IP 地址
     let parsed_ip = match data.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -163,6 +186,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // 清理地理位置和 ISP 信息
     let country = sanitize_string_field(data.country);
     let region = sanitize_string_field(data.province);
     let city = sanitize_string_field(data.city);
@@ -171,6 +195,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
 
     let autonomous_system = isp.map(|name| AS { number: 0, name });
 
+    // 解析坐标
     let coordinates = match (
         sanitize_string_field(data.latitude),
         sanitize_string_field(data.longitude),
@@ -179,6 +204,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         _ => None,
     };
 
+    // 构建 IpResult
     IpResult {
         success: true,
         error: No,

@@ -1,43 +1,74 @@
+# 包（crate）的元数据
 [package]
+# 包名
 name = "IP-Hacker"
+# 版本号
 version = "0.2.32"
+# Rust 版本
 edition = "2024"
+# 作者
 authors = ["GenshinMinecraft <gm@highp.ing>"]
+# 描述
 description = "IP tools used by Russia's big hackers"
+# README 文件
 readme = "README.md"
+# 代码仓库地址
 repository = "https://github.com/rsbench/IP-Hacker"
+# 许可证
 license = "WTFPL"
+# 主页
 homepage = "https://rsbench.github.io"
 
+# Debian 包的元数据
 [package.metadata.deb]
+# 维护者
 maintainer = "GenshinMinecraft"
 
+# crates.io 上的徽章
 [badges]
 maintenance = { status = "actively-developed" }
 
+# 依赖项
 [dependencies]
+# 延迟初始化的静态变量
 lazy_static = "1.5.0"
+# 正则表达式
 regex = { version = "1.11.1", default-features = false, features = ["unicode", "std"] }
+# HTTP 客户端
 reqwest = { version = "0.12.20", default-features = false, features = ["json", "rustls-tls", "cookies"] }
+# 跨平台终端操作
 crossterm = { version = "0.29.0", default-features = false, features = ["windows", "serde"] }
+# 日志 facade
 log = "0.4.27"
+# 漂亮的表格
 prettytable-rs = "0.10.0"
+# 命令行参数解析
 clap = { version = "4.5.40", default-features = false, features = ["help", "derive", "suggestions", "std"] }
+# 序列化和反序列化框架
 serde = { version = "1.0.219", features = ["derive"] }
+# JSON 序列化和反序列化
 serde_json = { version = "1.0.140", features = ["std"], default-features = false }
+# 异步运行时
 tokio = { version = "1.45.1", features = ["rt", "rt-multi-thread", "macros"] }
+# 异步 trait
 async-trait = "0.1.88"
 
+# cross-rs 的 Android aarch64 目标配置
 [workspace.metadata.cross.target.aarch64-linux-android]
 image = "genshinmc/rust-cross-new-ndk-aarch64-linux-android:0.0.1"
 
+# cross-rs 的构建环境变量
 [workspace.metadata.cross.build.env]
 passthrough = [
     "CROSS_PASTEBIN_URL",
     "CROSS_PASTEBIN_SECRET",
 ]
 
+# 构建配置
 [profile]
+# 开发配置
 dev = { opt-level = 3 }
+# 发布配置
 release = { opt-level = 3, lto = true, codegen-units = 1, panic = "abort" }
+# 最小化配置
 minimal = { inherits = "release", opt-level = "z", lto = true, codegen-units = 1, panic = "abort", debug = false }

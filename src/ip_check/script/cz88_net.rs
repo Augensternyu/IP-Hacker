@@ -1,28 +1,33 @@
 // src/ip_check/script/cz88_net.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag::{Hosting, Other, Proxy, Tor};
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
+use crate::ip_check::ip_result::RiskTag::{Hosting, Other, Proxy, Tor}; // 引入风险标签
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, Risk, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::collections::HashSet; // 引入 HashSet
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 Cz88Net 结构体
 pub struct Cz88Net;
 
-const PROVIDER_NAME: &str = "Cz88.net";
+// 定义常量
+const PROVIDER_NAME: &str = "Cz88.net"; // 提供商名称
+
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Cz88NetApiLocation {
     latitude: Option<String>,
     longitude: Option<String>,
-    // radius: Option<u32>, // Not used
+    // radius: Option<u32>, // 未使用
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -32,10 +37,10 @@ struct Cz88NetApiDataPayload {
     province: Option<String>,
     city: Option<String>,
     isp: Option<String>,
-    asn: Option<String>,     // More like a label or org name
-    company: Option<String>, // Also an org name
+    asn: Option<String>,     // 更像是一个标签或组织名称
+    company: Option<String>, // 也是一个组织名称
     locations: Option<Vec<Cz88NetApiLocation>>,
-    score: Option<String>, // Trust score, string "0"-"100"
+    score: Option<String>, // 信任分数，字符串 "0"-"100"
     vpn: Option<bool>,
     tor: Option<bool>,
     proxy: Option<bool>,
@@ -51,9 +56,10 @@ struct Cz88NetApiRespPayload {
     success: bool,
     message: Option<String>,
     data: Option<Cz88NetApiDataPayload>,
-    // time: Option<String>, // Not used
+    // time: Option<String>, // 未使用
 }
 
+// 清理字符串字段，去除首尾空格和无效值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -69,30 +75,33 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 Cz88Net 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for Cz88Net {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         let ip_addr = match ip {
             Some(i) => i,
-            None => return vec![not_support_error(PROVIDER_NAME)], // API requires a specific IP
+            None => return vec![not_support_error(PROVIDER_NAME)], // API 需要指定 IP
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
 
+            // 创建 reqwest 客户端
             let client = match create_reqwest_client(None).await {
-                // Default client
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
+            // 发送 GET 请求
             let url = format!("https://update.cz88.net/api/cz88/ip/base?ip={ip_addr}");
             let response = match client.get(url).send().await {
                 Ok(r) => r,
                 Err(e) => return request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
 
-            let mut result_without_time = parse_cz88_net_resp(response, ip_addr).await; // Pass ip_addr for context if needed
+            // 解析响应并计算耗时
+            let mut result_without_time = parse_cz88_net_resp(response, ip_addr).await;
             result_without_time.used_time = Some(time_start.elapsed());
             result_without_time
         });
@@ -107,12 +116,14 @@ impl IpCheck for Cz88Net {
     }
 }
 
+// 解析 Cz88.net 的 API 响应
 async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResult {
     if !response.status().is_success() {
         let err_msg = format!("HTTP Error: {}", response.status());
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 将响应体解析为文本
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
@@ -123,6 +134,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }
     };
 
+    // 将文本解析为 JSON
     let payload: Cz88NetApiRespPayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -134,6 +146,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }
     };
 
+    // 检查 API 返回的状态
     if !(payload.code == 200 && payload.success) {
         let err_msg = payload
             .message
@@ -141,6 +154,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 获取数据部分
     let data = match payload.data {
         Some(d) => d,
         None => {
@@ -151,6 +165,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }
     };
 
+    // 解析 IP 地址
     let parsed_ip = match data.ip.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,
         Err(_) => {
@@ -161,21 +176,24 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }
     };
 
+    // 清理地理位置信息
     let country = sanitize_string_field(data.country);
     let province = sanitize_string_field(data.province);
     let city = sanitize_string_field(data.city);
 
+    // 清理 ASN 和 ISP 信息
     let isp_name_opt = sanitize_string_field(data.isp);
     let company_name_opt = sanitize_string_field(data.company);
-    let asn_label_opt = sanitize_string_field(data.asn); // API's 'asn' is more of a label
+    let asn_label_opt = sanitize_string_field(data.asn);
 
     let as_name = isp_name_opt.or(company_name_opt).or(asn_label_opt);
 
     let autonomous_system = as_name.map(|name| AS {
-        number: 0, // API does not provide a clear numeric ASN
+        number: 0, // API 不提供 ASN 号码
         name,
     });
 
+    // 解析坐标
     let coordinates = data.locations.and_then(|locs| {
         locs.first().and_then(|loc| {
             match (
@@ -188,6 +206,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         })
     });
 
+    // 解析风险分数
     let risk_score = data
         .score
         .and_then(|s| s.parse::<u16>().ok())
@@ -196,9 +215,10 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
                 100
             } else {
                 100 - trust_score
-            } // Convert trust score to risk score
+            } // 将信任分数转换为风险分数
         });
 
+    // 解析风险标签
     let mut risk_tags_set = HashSet::new();
     if data.vpn == Some(true) {
         risk_tags_set.insert(Proxy);
@@ -215,13 +235,11 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     if let Some(net_type) = sanitize_string_field(data.net_work_type) {
         if net_type == "数据中心" {
             risk_tags_set.insert(Hosting);
-        } else if !net_type.is_empty() {
-            // Optionally add other network types if desired
-            // risk_tags_set.insert(Other(net_type.to_uppercase()));
         }
     }
     let risk_tags_vec: Vec<_> = risk_tags_set.into_iter().collect();
 
+    // 构建 IpResult
     IpResult {
         success: true,
         error: No,
@@ -233,7 +251,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
             region: province,
             city,
             coordinates,
-            time_zone: None, // API does not provide timezone
+            time_zone: None, // API 不提供时区
         }),
         risk: Some(Risk {
             risk: risk_score,
@@ -243,6 +261,6 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
                 Some(risk_tags_vec)
             },
         }),
-        used_time: None, // Will be set by the caller
+        used_time: None,
     }
 }

@@ -1,24 +1,27 @@
 // src/ip_check/script/airvpn_org.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
+use crate::ip_check::ip_result::RiskTag; // 引入风险标签
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, Risk, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 AirvpnOrg 结构体
 pub struct AirvpnOrg;
 
-const PROVIDER_NAME: &str = "Airvpn.org";
-const API_URL: &str = "https://airvpn.org/api/whatismyip/";
+// 定义常量
+const PROVIDER_NAME: &str = "Airvpn.org"; // 提供商名称
+const API_URL: &str = "https://airvpn.org/api/whatismyip/"; // API URL
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Debug)]
 struct GeoAdditional {
@@ -40,6 +43,7 @@ struct TopLevelResp {
     result: String,
 }
 
+// 清理字符串字段，去除首尾空格，如果是空字符串则返回 None
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -51,15 +55,16 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 AirvpnOrg 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for AirvpnOrg {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
-            // This API only supports checking the local IP.
+            // 此 API 仅支持检查本机 IP
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
-        // --- Query local IP (try IPv4 and IPv6) ---
+        // --- 查询本机 IP (尝试 IPv4 和 IPv6) ---
         let mut results = Vec::new();
 
         let handle_v4 = tokio::spawn(async move {
@@ -97,6 +102,7 @@ impl IpCheck for AirvpnOrg {
             results.push(r);
         }
         if let Ok(r) = handle_v6.await {
+            // 避免重复添加相同的 IP
             if !results.iter().any(|res| res.success && res.ip == r.ip) {
                 results.push(r);
             }
@@ -105,6 +111,7 @@ impl IpCheck for AirvpnOrg {
     }
 }
 
+// 解析 Airvpn.org 的 API 响应
 async fn parse_airvpn_org_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {

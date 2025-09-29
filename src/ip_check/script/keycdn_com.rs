@@ -1,24 +1,29 @@
 // src/ip_check/script/keycdn_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::{header, Response};
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::{header, Response}; // 引入 reqwest 的 header 和 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 KeycdnCom 结构体
 pub struct KeycdnCom;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Keycdn.com";
+// 定义 API 基础 URL
 const API_BASE_URL: &str = "https://tools.keycdn.com/geo.json";
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于匹配 API 嵌套 JSON 响应的 Serde 结构体 ---
 
+// 顶层响应结构体
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
     status: String,
@@ -26,11 +31,13 @@ struct TopLevelResp {
     data: Option<ApiData>,
 }
 
+// 数据部分结构体
 #[derive(Deserialize, Debug)]
 struct ApiData {
     geo: ApiGeo,
 }
 
+// 地理位置信息结构体
 #[derive(Deserialize, Debug)]
 struct ApiGeo {
     ip: String,
@@ -44,6 +51,7 @@ struct ApiGeo {
     timezone: Option<String>,
 }
 
+// 清理字符串字段，移除空字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -55,12 +63,14 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 KeycdnCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for KeycdnCom {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         let target_ip = match ip {
             Some(ip_addr) => ip_addr,
-            // API requires a specific IP.
+            // API 需要一个指定的 IP 地址
             None => return vec![not_support_error(PROVIDER_NAME)],
         };
 
@@ -73,7 +83,7 @@ impl IpCheck for KeycdnCom {
 
             let url = format!("{API_BASE_URL}?host={target_ip}");
             let mut headers = header::HeaderMap::new();
-            // The User-Agent is critical for this API.
+            // User-Agent 对此 API 至关重要
             headers.insert(
                 header::USER_AGENT,
                 "keycdn-tools:https://yoursite.com".parse().unwrap(),
@@ -85,7 +95,7 @@ impl IpCheck for KeycdnCom {
                 Ok(r) => parse_keycdn_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
-            result.used_time = Some(time_start.elapsed());
+            result.used_time = Some(time_start.elapsed()); // 记录耗时
             result
         });
 
@@ -99,6 +109,7 @@ impl IpCheck for KeycdnCom {
     }
 }
 
+// 解析 Keycdn.com 的 API 响应
 async fn parse_keycdn_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -173,6 +184,7 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
         _ => None,
     };
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -186,7 +198,7 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None, // API does not provide risk information
-        used_time: None,
+        risk: None, // API 不提供风险信息
+        used_time: None, // 耗时将在调用处设置
     }
 }

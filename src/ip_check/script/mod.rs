@@ -1,8 +1,12 @@
+// 引入 reqwest 库，用于发送 HTTP 请求
 use reqwest::Client;
+// 引入标准库中的 IP 地址和时间相关模块
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::time::Duration;
+// 引入 tokio 的 OnceCell，用于异步环境下的单次初始化
 use tokio::sync::OnceCell;
 
+// 声明所有 IP 查询脚本模块
 pub mod abstractapi_com;
 pub mod apiip_net;
 pub mod apilayer_com;
@@ -62,38 +66,48 @@ pub mod vvhan_com;
 pub mod mullvad_net;
 pub mod airvpn_org;
 
+// 使用 OnceCell 定义静态的 reqwest Client 实例，用于复用
+// 针对 IPv4 的客户端
 static CLIENT_IPV4: OnceCell<Client> = OnceCell::const_new();
+// 针对 IPv6 的客户端
 static CLIENT_IPV6: OnceCell<Client> = OnceCell::const_new();
+// 默认的客户端
 static CLIENT_DEFAULT: OnceCell<Client> = OnceCell::const_new();
 
+// 定义一个异步函数，用于创建或获取 reqwest 客户端
 pub async fn create_reqwest_client(ipv6: Option<bool>) -> Result<&'static Client, reqwest::Error> {
     match ipv6 {
+        // 如果指定使用 IPv6
         Some(true) => {
-            // 使用 get_or_try_init
+            // 尝试获取或初始化 IPv6 客户端
             CLIENT_IPV6
                 .get_or_try_init(|| async {
                     Client::builder()
-                        .timeout(Duration::from_secs(5))
-                        .cookie_store(true)
-                        .local_address(Some(IpAddr::V6(Ipv6Addr::UNSPECIFIED))) // 使用常量更佳
-                        .user_agent("curl/7.88.1")
-                        .build() // 返回 Result<Client, Error>，正好匹配
+                        .timeout(Duration::from_secs(5)) // 设置超时时间
+                        .cookie_store(true) // 启用 cookie
+                        .local_address(Some(IpAddr::V6(Ipv6Addr::UNSPECIFIED))) // 绑定到任意 IPv6 地址
+                        .user_agent("curl/7.88.1") // 设置 User-Agent
+                        .build() // 构建客户端
                 })
                 .await
         }
+        // 如果指定使用 IPv4
         Some(false) => {
+            // 尝试获取或初始化 IPv4 客户端
             CLIENT_IPV4
                 .get_or_try_init(|| async {
                     Client::builder()
                         .timeout(Duration::from_secs(5))
                         .cookie_store(true)
-                        .local_address(Some(IpAddr::V4(Ipv4Addr::UNSPECIFIED))) // 使用常量更佳
+                        .local_address(Some(IpAddr::V4(Ipv4Addr::UNSPECIFIED))) // 绑定到任意 IPv4 地址
                         .user_agent("curl/7.88.1")
                         .build()
                 })
                 .await
         }
+        // 如果未指定 IP 版本
         None => {
+            // 尝试获取或初始化默认客户端
             CLIENT_DEFAULT
                 .get_or_try_init(|| async {
                     Client::builder()

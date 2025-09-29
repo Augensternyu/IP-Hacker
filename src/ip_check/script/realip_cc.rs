@@ -1,31 +1,37 @@
 // src/ip_check/script/realip_cc.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 RealipCc 结构体
 pub struct RealipCc;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Realip.cc";
-const API_BASE_URL_LOCAL: &str = "https://realip.cc/json"; // For local IP
-const API_BASE_URL_SPECIFIC: &str = "https://realip.cc/"; // For specific IP, note the path
+// 定义本机 IP 查询的 API URL
+const API_BASE_URL_LOCAL: &str = "https://realip.cc/json";
+// 定义指定 IP 查询的 API 基础 URL
+const API_BASE_URL_SPECIFIC: &str = "https://realip.cc/";
 
+// 定义用于解析 API 响应的结构体
 #[derive(Deserialize, Serialize, Debug)]
 struct RealipCcApiRespPayload {
     ip: String,
     city: Option<String>,
-    province: Option<String>, // "regionName" equivalent
+    province: Option<String>, // 相当于 "regionName"
     country: Option<String>,
     // continent: Option<String>,
-    isp: Option<String>, // Can be ASN name or ISP name
+    isp: Option<String>, // 可以是 ASN 名称或 ISP 名称
     time_zone: Option<String>,
     latitude: Option<f64>,
     longitude: Option<f64>,
@@ -33,9 +39,10 @@ struct RealipCcApiRespPayload {
     // iso_code: Option<String>,
     // notice: Option<String>,
     // provider: Option<String>,
-    // -- Other fields not directly used by IpResult
+    // -- 其他 IpResult 未直接使用的字段
 }
 
+// 清理字符串字段，移除空字符串、"-"、"未知" 等无效值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -51,29 +58,26 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 RealipCc 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for RealipCc {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip_addr) = ip {
-            // --- Query specific IP ---
+            // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client = match create_reqwest_client(None).await {
-                    // Default client
+                    // 默认客户端
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
-                // For specific IP, the URL structure is different: realip.cc/?ip=...
-                // The API seems to expect the IP in the query parameter and might not need /json path
-                // However, the example shows "?ip=" which implies it might redirect or directly serve JSON based on Accept header or UA.
-                // Let's try sending to realip.cc/ and adding ?ip=...
-                // If it doesn't return JSON directly, we might need to adjust or check if it needs specific headers.
-                // The provided example "https://realip.cc/?ip=..." suggests it serves JSON directly for this path.
+                // 对于指定 IP，URL 结构不同：realip.cc/?ip=...
                 let url = format!("{API_BASE_URL_SPECIFIC}?ip={ip_addr}");
 
                 let response_result = client
                     .get(&url)
-                    .header("Accept", "application/json") // Explicitly request JSON
+                    .header("Accept", "application/json") // 明确请求 JSON
                     .send()
                     .await;
 
@@ -81,7 +85,7 @@ impl IpCheck for RealipCc {
                     Ok(r) => parse_realip_cc_resp(r).await,
                     Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
                 };
-                result_without_time.used_time = Some(time_start.elapsed());
+                result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
                 result_without_time
             });
 
@@ -93,18 +97,18 @@ impl IpCheck for RealipCc {
                 )],
             }
         } else {
-            // --- Query local IP (try IPv4 and IPv6) ---
+            // --- 查询本机 IP (尝试 IPv4 和 IPv6) ---
             let mut results = Vec::new();
 
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v4 = match create_reqwest_client(Some(false)).await {
-                    // Force IPv4
+                    // 强制使用 IPv4
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
 
-                let response_result_v4 = client_v4.get(API_BASE_URL_LOCAL).send().await; // Uses /json path
+                let response_result_v4 = client_v4.get(API_BASE_URL_LOCAL).send().await; // 使用 /json 路径
                 let mut result_v4 = match response_result_v4 {
                     Ok(r) => parse_realip_cc_resp(r).await,
                     Err(e) => {
@@ -119,12 +123,12 @@ impl IpCheck for RealipCc {
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v6 = match create_reqwest_client(Some(true)).await {
-                    // Force IPv6
+                    // 强制使用 IPv6
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
 
-                let response_result_v6 = client_v6.get(API_BASE_URL_LOCAL).send().await; // Uses /json path
+                let response_result_v6 = client_v6.get(API_BASE_URL_LOCAL).send().await; // 使用 /json 路径
                 let mut result_v6 = match response_result_v6 {
                     Ok(r) => parse_realip_cc_resp(r).await,
                     Err(e) => {
@@ -154,11 +158,12 @@ impl IpCheck for RealipCc {
     }
 }
 
+// 解析 Realip.cc 的 API 响应
 async fn parse_realip_cc_resp(response: Response) -> IpResult {
     let status = response.status();
 
     if !status.is_success() {
-        // The API might return plain text error or non-JSON for some errors
+        // API 可能会对某些错误返回纯文本错误或非 JSON
         let err_text = response
             .text()
             .await
@@ -181,7 +186,7 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
         }
     };
 
-    // Check for common plain text errors if API returns them
+    // 检查 API 返回的常见纯文本错误
     if response_text.to_lowercase().contains("error")
         && !response_text.trim_start().starts_with('{')
     {
@@ -198,22 +203,21 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
         Ok(p) => p,
         Err(e) => {
             let snippet = response_text.chars().take(100).collect::<String>();
-            // If the response text contains "notice", it might be a successful JSON response even if other fields are null
-            // This is a bit of a heuristic for this specific API's "null-heavy" success responses.
+            // 如果响应文本包含 "notice"，即使其他字段为 null，它也可能是成功的 JSON 响应
             if response_text.contains("\"notice\":") && response_text.contains("\"ip\":") {
-                // Try to salvage IP if possible, even if full parse fails due to unexpected nulls in other fields Serde might choke on
+                // 即使由于其他字段中意外的 null 导致完整解析失败，也尝试挽救 IP
                 if let Ok(partial_payload) =
                     serde_json::from_str::<serde_json::Value>(&response_text)
                 {
                     if let Some(ip_val) = partial_payload.get("ip").and_then(|v| v.as_str()) {
                         if let Ok(ip_addr) = ip_val.parse::<IpAddr>() {
-                            // Return a minimal success if we got an IP but couldn't parse the rest
+                            // 如果我们得到了 IP 但无法解析其余部分，则返回最小成功结果
                             return IpResult {
                                 success: true,
                                 error: No,
                                 provider: PROVIDER_NAME.to_string(),
                                 ip: Some(ip_addr),
-                                // ... other fields None ...
+                                // ... 其他字段为 None ...
                                 autonomous_system: None,
                                 region: None,
                                 risk: None,
@@ -241,14 +245,14 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
     };
 
     let country = sanitize_string_field(payload.country);
-    let province = sanitize_string_field(payload.province); // regionName equivalent
+    let province = sanitize_string_field(payload.province); // 相当于 regionName
     let city = sanitize_string_field(payload.city);
     let time_zone = sanitize_string_field(payload.time_zone);
 
-    // The 'isp' field can sometimes be just an ASN (like "CLOUDFLARENET") or a full name.
-    // We'll treat it as the AS name. API doesn't provide a separate ASN number.
+    // 'isp' 字段有时可能只是一个 ASN (如 "CLOUDFLARENET") 或一个全名。
+    // 我们将其视为 AS 名称。API 不提供单独的 ASN 号码。
     let autonomous_system = sanitize_string_field(payload.isp).map(|name| AS {
-        number: 0, // No ASN number provided
+        number: 0, // 未提供 ASN 号码
         name,
     });
 
@@ -273,7 +277,7 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None,      // API does not provide explicit risk information
-        used_time: None, // Will be set by the caller
+        risk: None,      // API 不提供明确的风险信息
+        used_time: None, // 将由调用者设置
     }
 }

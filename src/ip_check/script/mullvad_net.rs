@@ -1,30 +1,36 @@
 // src/ip_check/script/mullvad_net.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
+use crate::ip_check::ip_result::RiskTag; // 引入风险标签枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, Risk, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 MullvadNet 结构体
 pub struct MullvadNet;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Mullvad.net";
+// 定义 API URL
 const API_URL: &str = "https://am.i.mullvad.net/json";
 
-// --- Serde Structs to match the API's JSON response ---
+// --- 用于匹配 API JSON 响应的 Serde 结构体 ---
 
+// 黑名单信息结构体
 #[derive(Deserialize, Debug)]
 struct BlacklistedInfo {
     blacklisted: bool,
 }
 
+// Mullvad API 响应结构体
 #[derive(Deserialize, Debug)]
 struct MullvadApiRespPayload {
     ip: String,
@@ -37,6 +43,7 @@ struct MullvadApiRespPayload {
     organization: Option<String>,
 }
 
+// 清理字符串字段，移除空字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -48,19 +55,21 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 MullvadNet 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for MullvadNet {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
-            // This API only supports checking the local IP.
+            // 此 API 仅支持检查本机 IP。
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
-        // --- Query local IP (only IPv4 is supported by the API) ---
+        // --- 查询本机 IP (API 仅支持 IPv4) ---
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 根据提示强制使用 IPv4
             let client_v4 = match create_reqwest_client(None).await {
-                // Force IPv4 as per prompt
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
@@ -70,7 +79,7 @@ impl IpCheck for MullvadNet {
                 Ok(r) => parse_mullvad_net_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
-            result.used_time = Some(time_start.elapsed());
+            result.used_time = Some(time_start.elapsed()); // 记录耗时
             result
         });
 
@@ -84,6 +93,7 @@ impl IpCheck for MullvadNet {
     }
 }
 
+// 解析 Mullvad.net 的 API 响应
 async fn parse_mullvad_net_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -126,7 +136,7 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
     };
 
     let autonomous_system = sanitize_string_field(payload.organization).map(|name| AS {
-        number: 0, // API does not provide ASN number
+        number: 0, // API 不提供 ASN 号码
         name,
     });
 
@@ -151,6 +161,7 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
         }
     }
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -159,10 +170,10 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region: None, // API does not provide region
+            region: None, // API 不提供地区信息
             city,
             coordinates,
-            time_zone: None, // API does not provide timezone
+            time_zone: None, // API 不提供时区信息
         }),
         risk: Some(Risk {
             risk: None,
@@ -172,6 +183,6 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
                 Some(risk_tags)
             },
         }),
-        used_time: None,
+        used_time: None, // 耗时将在调用处设置
     }
 }

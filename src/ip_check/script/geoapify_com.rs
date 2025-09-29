@@ -1,24 +1,27 @@
 // src/ip_check/script/geoapify_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult,
     Region,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 GeoapifyCom 结构体
 pub struct GeoapifyCom;
 
-const PROVIDER_NAME: &str = "Geoapify.com";
-const API_KEY: &str = "14ab66e396a34871bc315a19447af81f";
-const API_BASE_URL: &str = "https://api.geoapify.com/v1/ipinfo";
+// 定义常量
+const PROVIDER_NAME: &str = "Geoapify.com"; // 提供商名称
+const API_KEY: &str = "14ab66e396a34871bc315a19447af81f"; // API 密钥
+const API_BASE_URL: &str = "https://api.geoapify.com/v1/ipinfo"; // API 基础 URL
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
@@ -27,7 +30,7 @@ struct TopLevelResp {
     country: Option<ApiNameObject>,
     location: Option<ApiLocation>,
     state: Option<ApiNameObject>,
-    // Add a field to catch potential error messages
+    // 添加一个字段来捕获潜在的错误消息
     #[serde(rename = "error")]
     api_error: Option<ApiError>,
 }
@@ -49,6 +52,7 @@ struct ApiError {
     // code: String,
 }
 
+// 清理字符串字段，去除首尾空格
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -60,9 +64,11 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 GeoapifyCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for GeoapifyCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
+        // 根据是否提供 IP 构建 URL
         let url = if let Some(ip_addr) = ip {
             format!("{API_BASE_URL}?apiKey={API_KEY}&ip={ip_addr}")
         } else {
@@ -70,7 +76,7 @@ impl IpCheck for GeoapifyCom {
         };
 
         if ip.is_some() {
-            // --- Query specific IP ---
+            // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client = match create_reqwest_client(None).await {
@@ -95,7 +101,7 @@ impl IpCheck for GeoapifyCom {
                 )],
             }
         } else {
-            // --- Query local IP (v4 and v6) ---
+            // --- 查询本机 IP (v4 和 v6) ---
             let mut results = Vec::new();
 
             let handle_v4 = tokio::spawn({
@@ -152,6 +158,7 @@ impl IpCheck for GeoapifyCom {
     }
 }
 
+// 解析 Geoapify.com 的 API 响应
 async fn parse_geoapify_com_resp(response: Response) -> IpResult {
     let status = response.status();
     let response_text = match response.text().await {
@@ -164,7 +171,7 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
         }
     };
 
-    // Geoapify returns 200 OK even for errors, with the error in the body.
+    // Geoapify 即使出错也返回 200 OK，错误信息在响应体中。
     let payload: TopLevelResp = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -209,15 +216,15 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
         error: No,
         provider: PROVIDER_NAME.to_string(),
         ip: Some(parsed_ip),
-        autonomous_system: None, // API does not provide ASN/ISP in demo
+        autonomous_system: None, // API 演示不提供 ASN/ISP
         region: Some(Region {
             country,
             region,
             city,
             coordinates,
-            time_zone: None, // API does not provide a standard timezone ID in demo
+            time_zone: None, // API 演示不提供标准时区 ID
         }),
-        risk: None, // API does not provide risk information
+        risk: None, // API 不提供风险信息
         used_time: None,
     }
 }

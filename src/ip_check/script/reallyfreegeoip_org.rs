@@ -1,23 +1,27 @@
 // src/ip_check/script/reallyfreegeoip_org.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-// Corrected unused import
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult,
     Region,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 ReallyfreegeoipOrg 结构体
 pub struct ReallyfreegeoipOrg;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "ReallyFreeGeoIP.org";
+// 定义 API 基础 URL
 const API_BASE_URL: &str = "https://reallyfreegeoip.org/json/";
 
+// 定义用于解析 API 响应的结构体
 #[derive(Deserialize, Serialize, Debug)]
 struct ReallyfreegeoipOrgApiRespPayload {
     ip: String,
@@ -31,6 +35,7 @@ struct ReallyfreegeoipOrgApiRespPayload {
     longitude: Option<f64>,
 }
 
+// 清理字符串字段，移除空字符串、"-"、"未知" 等无效值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -46,8 +51,10 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 ReallyfreegeoipOrg 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for ReallyfreegeoipOrg {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip_addr) = ip {
             let handle = tokio::spawn(async move {
@@ -65,7 +72,7 @@ impl IpCheck for ReallyfreegeoipOrg {
                     Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
                 };
 
-                result_without_time.used_time = Some(time_start.elapsed());
+                result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
                 result_without_time
             });
 
@@ -134,8 +141,9 @@ impl IpCheck for ReallyfreegeoipOrg {
     }
 }
 
+// 解析 ReallyFreeGeoIP.org 的 API 响应
 async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
-    // Store status before consuming response for text
+    // 在消费响应以获取文本之前存储状态
     let status = response.status();
 
     if !status.is_success() {
@@ -154,7 +162,7 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
-            // This case might be less likely if status.is_success() was true, but good to handle
+            // 如果 status.is_success() 为 true，这种情况可能不太可能发生，但最好处理
             return request_error_ip_result(
                 PROVIDER_NAME,
                 &format!("Failed to read response text (status was {status}): {e}"),
@@ -208,7 +216,7 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
         error: No,
         provider: PROVIDER_NAME.to_string(),
         ip: Some(parsed_ip),
-        autonomous_system: None,
+        autonomous_system: None, // API 不提供 ASN 信息
         region: Some(Region {
             country,
             region: region_name,
@@ -216,7 +224,7 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None,
-        used_time: None,
+        risk: None, // API 不提供风险信息
+        used_time: None, // 耗时将在调用处设置
     }
 }

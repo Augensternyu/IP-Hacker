@@ -1,11 +1,21 @@
+// src/utils/report.rs
+
+// 引入 lazy_static 宏
 use lazy_static::lazy_static;
+// 引入 regex 库
 use regex::Regex;
+// 引入 reqwest 客户端
 use reqwest::Client;
+// 引入 Mutex 用于线程安全
 use std::sync::Mutex;
+// 引入 Duration 用于超时
 use std::time::Duration;
 
+// 获取使用次数
 pub async fn get_usage_count() -> Result<(u64, u64), String> {
+    // 创建一个新的 reqwest 客户端
     let client = Client::new();
+    // 发送 GET 请求并获取响应文本
     let text = match client.get("https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Frsbench%2Frsbench&label=&icon=github&color=%23160d27")
         .timeout(Duration::from_secs(1)).send().await {
         Ok(res) => {
@@ -21,6 +31,7 @@ pub async fn get_usage_count() -> Result<(u64, u64), String> {
         }
     };
 
+    // 使用正则表达式匹配数字
     let re = Regex::new(r"\d+\s/\s\d+").unwrap();
     let line = if let Some(text) = re.find(&text) {
         text.as_str()
@@ -28,6 +39,7 @@ pub async fn get_usage_count() -> Result<(u64, u64), String> {
         return Err("Can not parse response".to_string());
     };
 
+    // 分割字符串并解析为 u64
     let vec = line.split('/').collect::<Vec<&str>>();
 
     Ok((
@@ -36,10 +48,12 @@ pub async fn get_usage_count() -> Result<(u64, u64), String> {
     ))
 }
 
+// 使用 lazy_static! 宏定义一个全局的、线程安全的字符串
 lazy_static! {
     pub static ref GLOBAL_STRING: Mutex<String> = Mutex::new(String::new());
 }
 
+// 定义一个宏，用于向全局字符串中打印内容
 #[macro_export]
 macro_rules! global_print {
     ($($arg:tt)*) => {{
@@ -48,6 +62,7 @@ macro_rules! global_print {
     }}
 }
 
+// 定义一个宏，用于向全局字符串中打印内容并换行
 #[macro_export]
 macro_rules! global_println {
     ($($arg:tt)*) => {{
@@ -56,9 +71,11 @@ macro_rules! global_println {
     }}
 }
 
+// 将内容上传到 pastebin
 #[allow(clippy::await_holding_lock)]
 pub async fn _post_to_pastebin() -> Result<String, String> {
     // https://pastebin.highp.ing
+    // 从环境变量中获取 pastebin 的 URL
     let url = if let Some(url) = option_env!("CROSS_PASTEBIN_URL") {
         url
     } else {
@@ -69,6 +86,7 @@ pub async fn _post_to_pastebin() -> Result<String, String> {
     };
 
     // If you see this password, please do not share it with others. (๑•̀ㅂ•́)و✧
+    // 从环境变量中获取 pastebin 的密钥
     let secret = if let Some(secret) = option_env!("CROSS_PASTEBIN_SECRET") {
         secret
     } else {
@@ -78,13 +96,16 @@ pub async fn _post_to_pastebin() -> Result<String, String> {
         );
     };
 
+    // 创建一个新的 reqwest 客户端
     let client = Client::new();
+    // 发送 POST 请求
     let resp = client
         .post(format!("{url}/upload"))
         .header("Authorization", secret)
         .body(GLOBAL_STRING.lock().unwrap().clone())
         .send()
         .await;
+    // 解析响应文本
     let text = if let Ok(res) = resp {
         if !res.status().is_success() {
             return Err("Upload: You have no permission to upload".to_string());
@@ -97,6 +118,7 @@ pub async fn _post_to_pastebin() -> Result<String, String> {
         return Err("Upload: Can not parse response".to_string());
     };
 
+    // 解析 ID 并返回 URL
     let id = text.trim().parse::<String>().unwrap();
     Ok(format!("{url}/{id}"))
 }

@@ -1,26 +1,31 @@
 // src/ip_check/script/ipapi_is.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
-use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Tor};
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
+use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy, Tor}; // 引入风险标签
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     Risk, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::collections::HashSet;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::collections::HashSet; // 引入 HashSet
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 IpapiIs 结构体
 pub struct IpapiIs;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Ipapi.is";
+// 定义 API 基础 URL
 const API_BASE_URL: &str = "https://api.ipapi.is/";
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于匹配 API 嵌套 JSON 响应的 Serde 结构体 ---
 
+// 顶层响应结构体
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
     ip: String,
@@ -32,21 +37,24 @@ struct TopLevelResp {
     company: Option<ApiCompany>,
     asn: Option<ApiAsn>,
     location: Option<ApiLocation>,
-    // Error field is not standard, we check response status
+    // Error 字段不是标准的，我们通过检查响应状态来处理错误
 }
 
+// 公司信息结构体
 #[derive(Deserialize, Debug)]
 struct ApiCompany {
     name: Option<String>,
-    // Other fields are not used for IpResult
+    // 其他字段不用于 IpResult
 }
 
+// ASN 信息结构体
 #[derive(Deserialize, Debug)]
 struct ApiAsn {
     asn: Option<u32>,
     org: Option<String>,
 }
 
+// 地理位置信息结构体
 #[derive(Deserialize, Debug)]
 struct ApiLocation {
     country: Option<String>,
@@ -57,6 +65,7 @@ struct ApiLocation {
     timezone: Option<String>,
 }
 
+// 清理字符串字段，移除空字符串或只包含空白的字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -68,9 +77,12 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 IpapiIs 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for IpapiIs {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
+        // 根据是否提供了 IP 地址来构建 URL
         let url = if let Some(ip_addr) = ip {
             format!("{API_BASE_URL}?q={ip_addr}")
         } else {
@@ -78,10 +90,10 @@ impl IpCheck for IpapiIs {
         };
 
         if ip.is_some() {
-            // --- Query specific IP ---
+            // --- 查询指定的 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                // API can be accessed via IPv4 or IPv6, client choice is default
+                // API 可以通过 IPv4 或 IPv6 访问，客户端选择默认
                 let client = match create_reqwest_client(None).await {
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
@@ -92,18 +104,19 @@ impl IpCheck for IpapiIs {
                     Ok(r) => parse_ipapi_is_resp(r).await,
                     Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
                 };
-                result_without_time.used_time = Some(time_start.elapsed());
+                result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
                 result_without_time
             });
             vec![handle.await.unwrap_or_else(|_| {
                 request_error_ip_result(PROVIDER_NAME, "Task panicked or was cancelled.")
             })]
         } else {
-            // --- Query local IP (v4 and v6) ---
+            // --- 查询本地 IP (v4 和 v6) ---
             let mut results = Vec::new();
             let url_v4 = url.clone();
             let url_v6 = url;
 
+            // 创建查询 IPv4 的任务
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v4 = match create_reqwest_client(Some(false)).await {
@@ -120,6 +133,7 @@ impl IpCheck for IpapiIs {
                 result_v4
             });
 
+            // 创建查询 IPv6 的任务
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v6 = match create_reqwest_client(Some(true)).await {
@@ -135,10 +149,12 @@ impl IpCheck for IpapiIs {
                 result_v6
             });
 
+            // 等待并收集结果
             if let Ok(r) = handle_v4.await {
                 results.push(r);
             }
             if let Ok(r) = handle_v6.await {
+                // 如果 IPv6 的结果与已有的结果 IP 不同，则添加
                 if !results.iter().any(|res| res.success && res.ip == r.ip) {
                     results.push(r);
                 }
@@ -148,6 +164,7 @@ impl IpCheck for IpapiIs {
     }
 }
 
+// 解析 Ipapi.is 的 API 响应
 async fn parse_ipapi_is_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -159,11 +176,13 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 解析 JSON
     let payload: TopLevelResp = match response.json().await {
         Ok(p) => p,
         Err(e) => return json_parse_error_ip_result(PROVIDER_NAME, &e.to_string()),
     };
 
+    // 解析 IP 地址
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -174,21 +193,23 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
         }
     };
 
+    // 解析 ASN 信息
     let autonomous_system = match payload.asn {
         Some(asn_data) => {
-            // Prioritize the 'org' field from ASN, fallback to company name
+            // 优先使用 ASN 中的 'org' 字段，否则回退到公司名称
             let name = sanitize_string_field(asn_data.org)
                 .or_else(|| payload.company.and_then(|c| sanitize_string_field(c.name)));
 
             match (asn_data.asn, name) {
                 (Some(number), Some(name)) => Some(AS { number, name }),
-                (None, Some(name)) => Some(AS { number: 0, name }),
+                (None, Some(name)) => Some(AS { number: 0, name }), // 如果没有 ASN 编号但有名称
                 _ => None,
             }
         }
         None => None,
     };
 
+    // 解析地理位置信息
     let (country, region, city, coordinates, time_zone) = if let Some(loc) = payload.location {
         (
             sanitize_string_field(loc.country),
@@ -207,6 +228,7 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
         (None, None, None, None, None)
     };
 
+    // 解析风险标签
     let mut tags_set = HashSet::new();
     if payload.is_mobile == Some(true) {
         tags_set.insert(Mobile);
@@ -221,11 +243,12 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
         tags_set.insert(Proxy);
     }
     if payload.is_vpn == Some(true) {
-        tags_set.insert(Proxy);
+        tags_set.insert(Proxy); // VPN 也归类为代理
     }
 
     let tags_vec: Vec<_> = tags_set.into_iter().collect();
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -240,13 +263,13 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
             time_zone,
         }),
         risk: Some(Risk {
-            risk: None, // API provides abuser_score, but we're not using it as a direct risk score for now.
+            risk: None, // API 提供了 abuser_score，但我们暂时不将其用作直接的风险评分
             tags: if tags_vec.is_empty() {
                 None
             } else {
                 Some(tags_vec)
             },
         }),
-        used_time: None,
+        used_time: None, // 耗时将在调用处设置
     }
 }

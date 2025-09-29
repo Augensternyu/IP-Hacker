@@ -1,39 +1,44 @@
 // src/ip_check/script/hsselite_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 HsseliteCom 结构体
 pub struct HsseliteCom;
 
-const PROVIDER_NAME: &str = "Hsselite.com";
-const API_URL: &str = "https://www.hsselite.com/ipinfo";
+// 定义常量
+const PROVIDER_NAME: &str = "Hsselite.com"; // 提供商名称
+const API_URL: &str = "https://www.hsselite.com/ipinfo"; // API URL
 
+// --- 用于反序列化 API JSON 响应的结构体 ---
 #[derive(Deserialize, Debug)]
 struct HsseliteComApiRespPayload {
     asn: Option<u32>,
-    // aso: Option<String>, // Redundant with organization or isp
+    // aso: Option<String>, // 与 organization 或 isp 重复
     city: Option<String>,
     // continent_code: Option<String>,
     // country_code: Option<String>,
     country_name: Option<String>,
     ip: String,
-    // is_hotspotshield_connected: bool, // Could be a risk tag if needed
+    // is_hotspotshield_connected: bool, // 如果需要，可以作为风险标签
     isp: Option<String>,
     latitude: Option<f64>,
     longitude: Option<f64>,
     organization: Option<String>,
-    region: Option<String>, // This is a region code, not full name
+    region: Option<String>, // 这是区域代码，不是全名
 }
 
+// 清理字符串字段，去除首尾空格和空值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -45,32 +50,37 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 HsseliteCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for HsseliteCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
-            // This API only supports checking the local IP.
+            // 此 API 仅支持检查本地 IP。
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
-        // --- Query local IP (only IPv4 is supported by the API) ---
+        // --- 查询本地 IP (API 仅支持 IPv4) ---
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 创建仅使用 IPv4 的 reqwest 客户端
             let client_v4 = match create_reqwest_client(Some(false)).await {
-                // Force IPv4
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
+            // 发送 GET 请求
             let response_result = client_v4.get(API_URL).send().await;
+            // 解析响应
             let mut result = match response_result {
                 Ok(r) => parse_hsselite_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
+            // 计算耗时
             result.used_time = Some(time_start.elapsed());
             result
         });
 
+        // 等待并返回结果
         match handle_v4.await {
             Ok(result) => vec![result],
             Err(_) => vec![request_error_ip_result(
@@ -81,6 +91,7 @@ impl IpCheck for HsseliteCom {
     }
 }
 
+// 解析 Hsselite.com 的 API 响应
 async fn parse_hsselite_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -92,6 +103,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
+    // 将响应体解析为文本
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
@@ -102,6 +114,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // 将文本解析为 JSON
     let payload: HsseliteComApiRespPayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -113,6 +126,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // 解析 IP 地址
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -123,23 +137,28 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         }
     };
 
+    // API 仅返回 IPv4 地址
     if !parsed_ip.is_ipv4() {
         return request_error_ip_result(PROVIDER_NAME, "API returned a non-IPv4 address.");
     }
 
+    // 合并 ISP 和组织信息作为 AS 名称
     let as_name =
         sanitize_string_field(payload.isp).or(sanitize_string_field(payload.organization));
 
+    // 构建 AS 信息
     let autonomous_system = match (payload.asn, as_name) {
         (Some(number), Some(name)) => Some(AS { number, name }),
         (None, Some(name)) => Some(AS { number: 0, name }),
         _ => None,
     };
 
+    // 清理地理位置信息
     let country = sanitize_string_field(payload.country_name);
     let region = sanitize_string_field(payload.region);
     let city = sanitize_string_field(payload.city);
 
+    // 解析坐标
     let coordinates = match (payload.latitude, payload.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
             lat: lat.to_string(),
@@ -148,6 +167,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         _ => None,
     };
 
+    // 构建 IpResult
     IpResult {
         success: true,
         error: No,
@@ -156,12 +176,12 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region, // Note: This is a region code like "TPE"
+            region, // 注意: 这是区域代码，如 "TPE"
             city,
             coordinates,
-            time_zone: None, // API does not provide timezone
+            time_zone: None, // API 不提供时区
         }),
-        risk: None, // API does not provide explicit risk flags, besides the hotspotshield one
+        risk: None, // API 不提供明确的风险标志，除了 hotspotshield 相关的
         used_time: None,
     }
 }

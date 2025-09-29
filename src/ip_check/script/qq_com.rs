@@ -1,22 +1,27 @@
 // src/ip_check/script/qq_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 QqCom 结构体
 pub struct QqCom;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "QQ";
+// 定义 API URL
 const API_URL: &str = "https://r.inews.qq.com/api/ip2city?otype=json";
 
+// 定义用于解析 API 响应的结构体
 #[derive(Deserialize, Debug)]
 struct QqComApiRespPayload {
     ret: i32,
@@ -29,6 +34,7 @@ struct QqComApiRespPayload {
     isp: Option<String>,
 }
 
+// 清理字符串字段，移除空字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -40,21 +46,24 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 QqCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for QqCom {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
-            // This API only supports checking the local IP.
+            // 此 API 仅支持检查本机 IP。
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
-        // --- Query local IP (try IPv4 and IPv6) ---
+        // --- 查询本机 IP (尝试 IPv4 和 IPv6) ---
         let mut results = Vec::new();
 
+        // --- 检查本机 IPv4 ---
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 强制使用 IPv4
             let client_v4 = match create_reqwest_client(Some(false)).await {
-                // Force IPv4
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
@@ -64,14 +73,15 @@ impl IpCheck for QqCom {
                 Ok(r) => parse_qq_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &format!("IPv4 request: {e}")),
             };
-            result_v4.used_time = Some(time_start.elapsed());
+            result_v4.used_time = Some(time_start.elapsed()); // 记录耗时
             result_v4
         });
 
+        // --- 检查本机 IPv6 ---
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 强制使用 IPv6
             let client_v6 = match create_reqwest_client(Some(true)).await {
-                // Force IPv6
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
@@ -88,6 +98,7 @@ impl IpCheck for QqCom {
             results.push(r);
         }
         if let Ok(r) = handle_v6.await {
+            // 如果 IPv4 和 IPv6 的结果 IP 相同，则不重复添加
             if !results.iter().any(|res| res.success && res.ip == r.ip) {
                 results.push(r);
             }
@@ -96,6 +107,7 @@ impl IpCheck for QqCom {
     }
 }
 
+// 解析 QQ.com 的 API 响应
 async fn parse_qq_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -107,8 +119,8 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
-    // The API might return non-JSON with a callback wrapper, e.g., "callback({...})"
-    // Need to handle this case.
+    // API 可能返回带有回调包装器的非 JSON 响应，例如 "callback({...})"
+    // 需要处理这种情况。
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
@@ -119,7 +131,7 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
         }
     };
 
-    // Extract JSON from potential "callback(...)" wrapper
+    // 从潜在的 "callback(...)" 包装器中提取 JSON
     let json_text = if response_text.starts_with("callback(") && response_text.ends_with(')') {
         &response_text["callback(".len()..response_text.len() - 1]
     } else {
@@ -160,6 +172,7 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
 
     let autonomous_system = isp.map(|name| AS { number: 0, name });
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -170,10 +183,10 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
             country,
             region,
             city,
-            coordinates: None,
-            time_zone: None,
+            coordinates: None, // API不提供坐标信息
+            time_zone: None,   // API不提供时区信息
         }),
-        risk: None,
-        used_time: None,
+        risk: None, // API不提供风险信息
+        used_time: None, // 耗时将在调用处设置
     }
 }

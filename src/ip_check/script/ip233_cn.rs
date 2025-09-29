@@ -1,46 +1,55 @@
 // src/ip_check/script/ip233_cn.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use regex::Regex;
-use reqwest::header::HeaderMap;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use regex::Regex; // 引入 regex 库用于正则表达式
+use reqwest::header::HeaderMap; // 引入 reqwest 的 HeaderMap
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 Ip233Cn 结构体
 pub struct Ip233Cn;
 
-const PROVIDER_NAME: &str = "Ip233.cn";
-const API_URL_V4: &str = "https://ip.ip233.cn/ip";
-const API_URL_V6: &str = "https://ip6.ip233.cn/ip";
+// 定义常量
+const PROVIDER_NAME: &str = "Ip233.cn"; // 提供商名称
+const API_URL_V4: &str = "https://ip.ip233.cn/ip"; // IPv4 API URL
+const API_URL_V6: &str = "https://ip6.ip233.cn/ip"; // IPv6 API URL
 
+// 为 Ip233Cn 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for Ip233Cn {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if ip.is_some() {
+            // 此 API 不支持查询指定 IP
             return vec![not_support_error(PROVIDER_NAME)];
         }
 
         let mut results = Vec::new();
 
+        // 异步查询 IPv4 地址
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 创建仅使用 IPv4 的 reqwest 客户端
             let client_v4 = match create_reqwest_client(Some(false)).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
+            // 发送 GET 请求
             let response_result = client_v4
                 .get(API_URL_V4)
                 .headers(ip233_style_headers().await)
                 .send()
                 .await;
+            // 解析响应并计算耗时
             let mut result = match response_result {
                 Ok(r) => parse_ip233_style_resp(r, PROVIDER_NAME).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &format!("IPv4 request: {e}")),
@@ -49,18 +58,22 @@ impl IpCheck for Ip233Cn {
             result
         });
 
+        // 异步查询 IPv6 地址
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
+            // 创建仅使用 IPv6 的 reqwest 客户端
             let client_v6 = match create_reqwest_client(Some(true)).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
 
+            // 发送 GET 请求
             let response_result = client_v6
                 .get(API_URL_V6)
                 .headers(ip233_style_headers().await)
                 .send()
                 .await;
+            // 解析响应并计算耗时
             let mut result = match response_result {
                 Ok(r) => parse_ip233_style_resp(r, PROVIDER_NAME).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &format!("IPv6 request: {e}")),
@@ -69,6 +82,7 @@ impl IpCheck for Ip233Cn {
             result
         });
 
+        // 等待并收集结果
         if let Ok(r) = handle_v4.await {
             results.push(r);
         }
@@ -81,6 +95,7 @@ impl IpCheck for Ip233Cn {
     }
 }
 
+// --- 用于反序列化 API JSON 响应的结构体 ---
 #[derive(Deserialize, Debug)]
 struct Ip233StylePayload {
     ip: String,
@@ -92,6 +107,7 @@ struct Ip233StylePayload {
     timezone: Option<String>,
 }
 
+// 清理字符串字段，去除空值
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -103,6 +119,7 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 从组织字符串中解析 ASN 信息
 fn parse_asn_from_org(org_string_opt: Option<String>) -> Option<AS> {
     org_string_opt.and_then(|org_str| {
         let re = Regex::new(r"^(AS)?(\d+)\s*(.*)$").unwrap();
@@ -120,11 +137,12 @@ fn parse_asn_from_org(org_string_opt: Option<String>) -> Option<AS> {
             Some(AS {
                 number: 0,
                 name: org_str,
-            }) // The whole string is the name
+            }) // 整个字符串都是名称
         }
     })
 }
 
+// 解析 ip233 风格的 API 响应
 pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -135,6 +153,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         return request_error_ip_result(provider_name, &format!("HTTP Error {status}: {err_text}"));
     }
 
+    // 将响应体解析为文本
     let response_text = match response.text().await {
         Ok(text) => text,
         Err(e) => {
@@ -145,6 +164,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         }
     };
 
+    // 将文本解析为 JSON
     let payload: Ip233StylePayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -156,6 +176,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         }
     };
 
+    // 解析 IP 地址
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -166,12 +187,14 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         }
     };
 
+    // 解析 ASN、地理位置等信息
     let autonomous_system = parse_asn_from_org(sanitize_string_field(payload.org));
     let country = sanitize_string_field(payload.country_name);
     let region = sanitize_string_field(payload.region);
     let city = sanitize_string_field(payload.city);
     let time_zone = sanitize_string_field(payload.timezone);
 
+    // 解析坐标
     let coordinates = sanitize_string_field(payload.loc).and_then(|loc_str| {
         loc_str.split_once(',').map(|(lat, lon)| Coordinates {
             lat: lat.trim().to_string(),
@@ -179,6 +202,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         })
     });
 
+    // 构建 IpResult
     IpResult {
         success: true,
         error: No,
@@ -197,6 +221,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
     }
 }
 
+// 构建 ip233 风格的请求头
 pub async fn ip233_style_headers() -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(

@@ -1,23 +1,27 @@
 // src/ip_check/script/apiip_net.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult,
     Region,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 ApiipNet 结构体
 pub struct ApiipNet;
 
-const PROVIDER_NAME: &str = "Apiip.net";
-const API_KEY: &str = "3cfeed82-9b17-4b57-996f-65d11429120a";
-const API_BASE_URL: &str = "https://apiip.net/api/check";
+// 定义常量
+const PROVIDER_NAME: &str = "Apiip.net"; // 提供商名称
+const API_KEY: &str = "3cfeed82-9b17-4b57-996f-65d11429120a"; // API 密钥
+const API_BASE_URL: &str = "https://apiip.net/api/check"; // API 基础 URL
 
+// 用于反序列化 API JSON 响应的结构体
 #[derive(Deserialize, Serialize, Debug)]
 struct ApiipNetApiRespPayload {
     ip: String,
@@ -28,15 +32,15 @@ struct ApiipNetApiRespPayload {
     city: Option<String>,
     latitude: Option<f64>,
     longitude: Option<f64>,
-    // The user's demo shows no timezone, ISP, or ASN fields.
-    // We add a 'message' field to catch potential JSON-formatted error messages.
+    // 用户的演示中没有时区、ISP 或 ASN 字段。
+    // 我们添加一个 'message' 字段来捕获潜在的 JSON 格式的错误消息。
     message: Option<String>,
 }
 
+// 清理字符串字段，去除首尾空格，处理空字符串和 "null" 字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
-        // Handle empty strings and explicit "null" strings
         if trimmed.is_empty() || trimmed.to_lowercase() == "null" {
             None
         } else {
@@ -45,9 +49,11 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 ApiipNet 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for ApiipNet {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
+        // 根据是否提供 IP 构建 URL
         let url = if let Some(ip_addr) = ip {
             format!("{API_BASE_URL}?accessKey={API_KEY}&ip={ip_addr}")
         } else {
@@ -55,11 +61,11 @@ impl IpCheck for ApiipNet {
         };
 
         if ip.is_some() {
-            // --- Query specific IP ---
+            // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client = match create_reqwest_client(None).await {
-                    // Default client
+                    // 默认客户端
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -82,7 +88,7 @@ impl IpCheck for ApiipNet {
                 )],
             }
         } else {
-            // --- Query local IP (try IPv4 and IPv6) ---
+            // --- 查询本机 IP (尝试 IPv4 和 IPv6) ---
             let mut results = Vec::new();
 
             let handle_v4 = tokio::spawn({
@@ -90,7 +96,7 @@ impl IpCheck for ApiipNet {
                 async move {
                     let time_start = tokio::time::Instant::now();
                     let client_v4 = match create_reqwest_client(Some(false)).await {
-                        // Force IPv4
+                        // 强制 IPv4
                         Ok(c) => c,
                         Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                     };
@@ -114,7 +120,7 @@ impl IpCheck for ApiipNet {
                 async move {
                     let time_start = tokio::time::Instant::now();
                     let client_v6 = match create_reqwest_client(Some(true)).await {
-                        // Force IPv6
+                        // 强制 IPv6
                         Ok(c) => c,
                         Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                     };
@@ -151,6 +157,7 @@ impl IpCheck for ApiipNet {
     }
 }
 
+// 解析 Apiip.net 的 API 响应
 async fn parse_apiip_net_resp(response: Response) -> IpResult {
     let status = response.status();
     let response_text = match response.text().await {
@@ -183,7 +190,7 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
         }
     };
 
-    // The API might return 200 OK but with an error message in the body, e.g., for private addresses.
+    // API 可能返回 200 OK，但在响应体中包含错误消息，例如私有地址。
     if let Some(message) = payload.message {
         if message.to_lowercase().contains("error") || message.contains("private ip address") {
             return request_error_ip_result(PROVIDER_NAME, &message);
@@ -217,15 +224,15 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
         error: No,
         provider: PROVIDER_NAME.to_string(),
         ip: Some(parsed_ip),
-        autonomous_system: None, // Demo does not provide ASN/ISP info
+        autonomous_system: None, // 演示不提供 ASN/ISP 信息
         region: Some(Region {
             country,
             region: region_name,
             city,
             coordinates,
-            time_zone: None, // Demo does not provide timezone
+            time_zone: None, // 演示不提供时区
         }),
-        risk: None,      // Demo does not provide risk information
-        used_time: None, // Will be set by the caller
+        risk: None,      // 演示不提供风险信息
+        used_time: None, // 将由调用者设置
     }
 }

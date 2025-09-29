@@ -1,21 +1,25 @@
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 IpwhoIs 结构体
 pub struct IpwhoIs;
 
+// 为 IpwhoIs 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for IpwhoIs {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        // This API does not support being accessed over IPv6, so all handles will force IPv4.
+        // 此 API 不支持通过 IPv6 访问，因此所有句柄都将强制使用 IPv4。
         if let Some(ip) = ip {
             // --- 检查指定IP ---
             let handle = tokio::spawn(async move {
@@ -31,7 +35,7 @@ impl IpCheck for IpwhoIs {
                 };
 
                 let mut result_without_time = parse_ipwho_is_resp(result).await;
-                result_without_time.used_time = Some(time_start.elapsed());
+                result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
                 result_without_time
             });
             vec![handle.await.unwrap()]
@@ -59,7 +63,9 @@ impl IpCheck for IpwhoIs {
     }
 }
 
+// 解析 Ipwho.is 的 API 响应
 async fn parse_ipwho_is_resp(response: Response) -> IpResult {
+    // 定义用于解析 JSON 响应的内部结构体
     #[derive(Deserialize, Serialize)]
     struct Resp {
         success: bool,
@@ -83,10 +89,12 @@ async fn parse_ipwho_is_resp(response: Response) -> IpResult {
         id: Option<String>,
     }
 
+    // 解析 JSON
     let Ok(json) = response.json::<Resp>().await else {
         return json_parse_error_ip_result("Ipwho.is", "Unable to parse result into Json");
     };
 
+    // 检查 API 是否返回成功
     if !json.success {
         let err_msg = json
             .message
@@ -94,6 +102,7 @@ async fn parse_ipwho_is_resp(response: Response) -> IpResult {
         return request_error_ip_result("Ipwho.is", &err_msg);
     }
 
+    // 检查响应中是否包含 IP 地址
     if json.ip.is_none() {
         return request_error_ip_result("Ipwho.is", "API response did not contain an IP address.");
     }
@@ -102,6 +111,7 @@ async fn parse_ipwho_is_resp(response: Response) -> IpResult {
     let asn_num = connection.and_then(|c| c.asn);
     let isp_name = connection.and_then(|c| c.isp.clone());
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -129,6 +139,6 @@ async fn parse_ipwho_is_resp(response: Response) -> IpResult {
             time_zone: json.timezone.and_then(|tz| tz.id),
         }),
         risk: None, // API不提供风险信息
-        used_time: None,
+        used_time: None, // 耗时将在调用处设置
     }
 }

@@ -1,22 +1,27 @@
 // src/ip_check/script/iplocation_net.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 IplocationNet 结构体
 pub struct IplocationNet;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Iplocation.net";
+// 定义 API 基础 URL
 const API_BASE_URL: &str = "https://api.iplocation.net/?ip=";
 
+// 定义用于解析 API 响应的结构体
 #[derive(Deserialize, Debug)]
 struct IplocationNetApiRespPayload {
     ip: String,
@@ -26,6 +31,7 @@ struct IplocationNetApiRespPayload {
     response_message: String,
 }
 
+// 清理字符串字段，移除空字符串
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -37,18 +43,20 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 IplocationNet 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for IplocationNet {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
+        // API 需要一个指定的 IP 地址
         let target_ip = match ip {
             Some(ip_addr) => ip_addr,
-            // API requires a specific IP.
-            None => return vec![not_support_error(PROVIDER_NAME)],
+            None => return vec![not_support_error(PROVIDER_NAME)], // 如果没有提供 IP，则返回不支持的错误
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            // API can be accessed via IPv4 or IPv6, client choice is default
+            // API 可以通过 IPv4 或 IPv6 访问，客户端选择默认
             let client = match create_reqwest_client(None).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
@@ -61,7 +69,7 @@ impl IpCheck for IplocationNet {
                 Ok(r) => parse_iplocation_net_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
-            result_without_time.used_time = Some(time_start.elapsed());
+            result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
             result_without_time
         });
 
@@ -75,6 +83,7 @@ impl IpCheck for IplocationNet {
     }
 }
 
+// 解析 Iplocation.net 的 API 响应
 async fn parse_iplocation_net_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -96,6 +105,7 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
         }
     };
 
+    // 解析 JSON
     let payload: IplocationNetApiRespPayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -107,11 +117,12 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
         }
     };
 
-    // Check the API's internal response code
+    // 检查 API 内部的响应码
     if payload.response_code != "200" {
         return request_error_ip_result(PROVIDER_NAME, &payload.response_message);
     }
 
+    // 解析 IP 地址
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -122,11 +133,14 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
         }
     };
 
+    // 清理和解析字段
     let country = sanitize_string_field(payload.country_name);
     let isp = sanitize_string_field(payload.isp);
 
-    let autonomous_system = isp.map(|name| AS { number: 0, name });
+    // 将 ISP 信息用作 ASN 名称
+    let autonomous_system = isp.map(|name| AS { number: 0, name }); // ASN 编号未知，设为 0
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -135,13 +149,13 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            // API does not provide region, city, coordinates, or timezone
+            // API 不提供地区、城市、坐标或时区信息
             region: None,
             city: None,
             coordinates: None,
             time_zone: None,
         }),
-        risk: None, // API does not provide risk information
-        used_time: None,
+        risk: None, // API 不提供风险信息
+        used_time: None, // 耗时将在调用处设置
     }
 }

@@ -1,24 +1,27 @@
 // src/ip_check/script/apilayer_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::{header, Response};
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::{header, Response}; // 引入 reqwest 的 header 和 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 ApilayerCom 结构体
 pub struct ApilayerCom;
 
-const PROVIDER_NAME: &str = "Apilayer.com";
-const API_BASE_URL: &str = "https://api.apilayer.com/ip_to_location/";
-const API_KEY: &str = "Mk25YMojGmhBUpu422bBXR0w2UT4ihc8";
+// 定义常量
+const PROVIDER_NAME: &str = "Apilayer.com"; // 提供商名称
+const API_BASE_URL: &str = "https://api.apilayer.com/ip_to_location/"; // API 基础 URL
+const API_KEY: &str = "Mk25YMojGmhBUpu422bBXR0w2UT4ihc8"; // API 密钥
 
-// --- Serde Structs to match the API's nested JSON response ---
+// --- 用于反序列化 API JSON 响应的结构体 ---
 
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
@@ -31,7 +34,7 @@ struct TopLevelResp {
     longitude: Option<f64>,
     connection: Option<ApiConnection>,
     timezones: Option<Vec<String>>,
-    message: Option<String>, // For error messages
+    message: Option<String>, // 用于错误消息
 }
 
 #[derive(Deserialize, Debug)]
@@ -40,6 +43,7 @@ struct ApiConnection {
     isp: Option<String>,
 }
 
+// 清理字符串字段，去除首尾空格，如果是空字符串则返回 None
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -51,26 +55,27 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 ApilayerCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for ApilayerCom {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         let target_ip = match ip {
             Some(ip_addr) => {
                 if ip_addr.is_ipv6() {
-                    // Based on "supports ipv4 data" in prompt, let's assume it doesn't support v6 for now.
-                    // If it does, this check can be removed.
+                    // 根据提示中的“支持 ipv4 数据”，我们暂时假设它不支持 v6。
+                    // 如果支持，可以移除此检查。
                     return vec![not_support_error(PROVIDER_NAME)];
                 }
                 ip_addr
             }
-            // `ip` must be specified for this provider
+            // 此提供商必须指定 `ip`
             None => return vec![not_support_error(PROVIDER_NAME)],
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             let client = match create_reqwest_client(None).await {
-                // Default client, as API supports IPv4/6 access
+                // 默认客户端，因为 API 支持 IPv4/6 访问
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
             };
@@ -99,6 +104,7 @@ impl IpCheck for ApilayerCom {
     }
 }
 
+// 解析 Apilayer.com 的 API 响应
 async fn parse_apilayer_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -156,7 +162,7 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
     let country = sanitize_string_field(payload.country_name);
     let region = sanitize_string_field(payload.region_name);
     let city = sanitize_string_field(payload.city);
-    // Take the first timezone from the list if available
+    // 从列表中获取第一个时区（如果可用）
     let time_zone = payload.timezones.and_then(|tzs| tzs.first().cloned());
 
     let coordinates = match (payload.latitude, payload.longitude) {
@@ -180,7 +186,7 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None, // API does not provide explicit risk information
+        risk: None, // API 不提供明确的风险信息
         used_time: None,
     }
 }

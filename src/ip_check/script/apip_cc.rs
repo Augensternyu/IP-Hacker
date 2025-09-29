@@ -1,40 +1,45 @@
 // src/ip_check/script/apip_cc.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use regex::Regex;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入错误处理函数和结果结构体
+use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use regex::Regex; // 引入 regex 库
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 ApipCc 结构体
 pub struct ApipCc;
 
-const PROVIDER_NAME: &str = "Apip.cc";
-const API_BASE_URL_LOCAL: &str = "https://apip.cc/json";
-const API_BASE_URL_SPECIFIC: &str = "https://apip.cc/api-json/";
+// 定义常量
+const PROVIDER_NAME: &str = "Apip.cc"; // 提供商名称
+const API_BASE_URL_LOCAL: &str = "https://apip.cc/json"; // 查询本机 IP 的 URL
+const API_BASE_URL_SPECIFIC: &str = "https://apip.cc/api-json/"; // 查询指定 IP 的 URL
 
+// 用于反序列化 API JSON 响应的结构体
 #[derive(Deserialize, Debug)]
-#[allow(non_snake_case)] // To match the API's PascalCase field names
+#[allow(non_snake_case)] // 允许非蛇形命名法以匹配 API 的 PascalCase 字段名
 struct ApipCcApiRespPayload {
     status: String,
     query: String,
     CountryName: Option<String>,
     RegionName: Option<String>,
     City: Option<String>,
-    Latitude: Option<String>, // API returns these as strings
+    Latitude: Option<String>, // API 将这些作为字符串返回
     Longitude: Option<String>,
     TimeZone: Option<String>,
-    asn: Option<String>, // e.g., "AS3462"
+    asn: Option<String>, // 例如 "AS3462"
     org: Option<String>,
-    message: Option<String>, // For error cases
+    message: Option<String>, // 用于错误情况
 }
 
+// 清理字符串字段，去除首尾空格，如果是空字符串则返回 None
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
@@ -46,6 +51,7 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 从字符串中解析 ASN 号码
 fn parse_asn_number(asn_str_opt: Option<String>) -> Option<u32> {
     asn_str_opt.and_then(|s| {
         let re = Regex::new(r"^(AS)?(\d+)$").unwrap();
@@ -57,18 +63,19 @@ fn parse_asn_number(asn_str_opt: Option<String>) -> Option<u32> {
     })
 }
 
+// 为 ApipCc 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for ApipCc {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        // API itself is accessed via IPv4, but can query IPv4/IPv6 data
+        // API 本身通过 IPv4 访问，但可以查询 IPv4/IPv6 数据
         let client = match create_reqwest_client(Some(false)).await {
-            // Force IPv4 for API access
+            // 强制使用 IPv4 访问 API
             Ok(c) => c,
             Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
         };
 
         if let Some(ip_addr) = ip {
-            // --- Query specific IP ---
+            // --- 查询指定 IP ---
             let url = format!("{API_BASE_URL_SPECIFIC}{ip_addr}");
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
@@ -90,12 +97,12 @@ impl IpCheck for ApipCc {
                 )],
             }
         } else {
-            // --- Query local IP ---
-            // This API has different endpoints for local v4 and v6, so we only need one call.
+            // --- 查询本机 IP ---
+            // 此 API 对本机 v4 和 v6 有不同的端点，因此我们只需要一次调用。
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
 
-                let response_result = client.get(API_BASE_URL_LOCAL).send().await; // Path is /json
+                let response_result = client.get(API_BASE_URL_LOCAL).send().await; // 路径是 /json
                 let mut result_without_time = match response_result {
                     Ok(r) => parse_apip_cc_resp(r).await,
                     Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
@@ -115,6 +122,7 @@ impl IpCheck for ApipCc {
     }
 }
 
+// 解析 Apip.cc 的 API 响应
 async fn parse_apip_cc_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -199,7 +207,7 @@ async fn parse_apip_cc_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None, // API does not provide risk information
+        risk: None, // API 不提供风险信息
         used_time: None,
     }
 }

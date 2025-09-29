@@ -1,22 +1,27 @@
 // src/ip_check/script/ipleak_net.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 IpleakNet 结构体
 pub struct IpleakNet;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Ipleak.net";
+// 定义 API 基础 URL
 const API_BASE_URL: &str = "https://ipleak.net/?mode=json&style=dns";
 
+// 定义用于解析 API 响应的结构体
 #[derive(Deserialize, Serialize, Debug)]
 struct IpleakNetApiRespPayload {
     as_number: Option<u32>,
@@ -34,16 +39,17 @@ struct IpleakNetApiRespPayload {
     // accuracy_radius: Option<u32>,
     time_zone: Option<String>,
     // metro_code: Option<u32>,
-    ip: String, // The IP address returned by the API for the query
-    // query_text: String, // The original query text, could be IP or domain
-    // query_type: String, // "ip" or "domain"
-    // error fields are not explicitly defined, relying on HTTP status or lack of expected fields
+    ip: String, // API 为查询返回的 IP 地址
+    // query_text: String, // 原始查询文本，可以是 IP 或域名
+    // query_type: String, // "ip" 或 "domain"
+    // 错误字段未明确定义，依赖于 HTTP 状态或缺少预期字段
 }
 
+// 清理字符串字段，移除空字符串、"-"、"未知" 或 "unknown"
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
-        // Ipleak.net seems to use null for empty/unknown rather than "-", but good to keep robust
+        // Ipleak.net 似乎对空/未知使用 null 而不是 "-"，但保持健壮性是好的
         if trimmed.is_empty()
             || trimmed == "-"
             || trimmed == "未知"
@@ -56,15 +62,17 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 IpleakNet 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for IpleakNet {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         if let Some(ip_addr) = ip {
-            // --- Query specific IP ---
+            // --- 查询指定的 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client = match create_reqwest_client(None).await {
-                    // Default client
+                    // 默认客户端
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -76,7 +84,7 @@ impl IpCheck for IpleakNet {
                     Ok(r) => parse_ipleak_net_resp(r).await,
                     Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
                 };
-                result_without_time.used_time = Some(time_start.elapsed());
+                result_without_time.used_time = Some(time_start.elapsed()); // 记录耗时
                 result_without_time
             });
 
@@ -88,13 +96,13 @@ impl IpCheck for IpleakNet {
                 )],
             }
         } else {
-            // --- Query local IP (try IPv4 and IPv6) ---
+            // --- 查询本地 IP (尝试 IPv4 和 IPv6) ---
             let mut results = Vec::new();
 
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v4 = match create_reqwest_client(Some(false)).await {
-                    // Force IPv4
+                    // 强制 IPv4
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -114,7 +122,7 @@ impl IpCheck for IpleakNet {
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
                 let client_v6 = match create_reqwest_client(Some(true)).await {
-                    // Force IPv6
+                    // 强制 IPv6
                     Ok(c) => c,
                     Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
                 };
@@ -136,6 +144,7 @@ impl IpCheck for IpleakNet {
             if let Ok(r_v6) = handle_v6.await {
                 let mut add_v6 = true;
                 if let Some(existing_res_v4) = results.first() {
+                    // 如果 IPv4 和 IPv6 的结果 IP 相同，则不重复添加
                     if existing_res_v4.success && r_v6.success && existing_res_v4.ip == r_v6.ip {
                         add_v6 = false;
                     }
@@ -149,6 +158,7 @@ impl IpCheck for IpleakNet {
     }
 }
 
+// 解析 Ipleak.net 的 API 响应
 async fn parse_ipleak_net_resp(response: Response) -> IpResult {
     let status = response.status();
 
@@ -160,7 +170,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         let err_msg = format!(
             "HTTP Error {}: {}",
             status,
-            err_text.chars().take(100).collect::<String>()
+            err_text.chars().take(100).collect::<String>() // 截取前100个字符
         );
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
@@ -175,11 +185,11 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         }
     };
 
-    // Check for "Too many requests" or other plain text errors
+    // 检查是否包含 "Too many requests" 或其他纯文本错误
     if response_text.to_lowercase().contains("too many requests") {
         return request_error_ip_result(PROVIDER_NAME, "API rate limit: Too many requests.");
     }
-    // The API might return an empty response or non-JSON for certain errors
+    // API 可能会在某些错误情况下返回空响应或非 JSON 响应
     if response_text.trim().is_empty() || !response_text.trim_start().starts_with('{') {
         return json_parse_error_ip_result(
             PROVIDER_NAME,
@@ -190,6 +200,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         );
     }
 
+    // 解析 JSON
     let payload: IpleakNetApiRespPayload = match serde_json::from_str(&response_text) {
         Ok(p) => p,
         Err(e) => {
@@ -201,6 +212,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         }
     };
 
+    // 解析 IP 地址
     let parsed_ip = match payload.ip.parse::<IpAddr>() {
         Ok(ip_addr) => ip_addr,
         Err(_) => {
@@ -211,21 +223,24 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         }
     };
 
+    // 清理和解析地理位置信息
     let country = sanitize_string_field(payload.country_name);
     let region_name = sanitize_string_field(payload.region_name);
     let city = sanitize_string_field(payload.city_name);
-    let time_zone = sanitize_string_field(payload.time_zone.map(|tz| tz.replace("\\/", "/"))); // Fix escaped slashes
+    let time_zone = sanitize_string_field(payload.time_zone.map(|tz| tz.replace("\\/", "/"))); // 修复转义的斜杠
 
+    // 解析 ASN 信息
     let autonomous_system = match (payload.as_number, sanitize_string_field(payload.isp_name)) {
         (Some(number), Some(name)) => Some(AS { number, name }),
         (None, Some(name)) => Some(AS { number: 0, name }),
         (Some(number), None) => Some(AS {
             number,
-            name: format!("AS{number}"),
-        }), // Fallback name
+            name: format!("AS{number}"), // 回退名称
+        }),
         (None, None) => None,
     };
 
+    // 解析坐标
     let coordinates = match (payload.latitude, payload.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
             lat: lat.to_string(),
@@ -234,6 +249,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         _ => None,
     };
 
+    // 构建并返回 IpResult
     IpResult {
         success: true,
         error: No,
@@ -247,7 +263,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
             coordinates,
             time_zone,
         }),
-        risk: None,      // API does not provide explicit risk information
-        used_time: None, // Will be set by the caller
+        risk: None,      // API 不提供明确的风险信息
+        used_time: None, // 将由调用者设置
     }
 }

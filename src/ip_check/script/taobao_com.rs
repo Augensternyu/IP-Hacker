@@ -1,32 +1,37 @@
 // src/ip_check/script/taobao_com.rs
 
-use crate::ip_check::ip_result::IpCheckError::No;
+// 引入项目内的模块和外部库
+use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, not_support_error, request_error_ip_result, IpResult,
     Region, AS,
-};
-use crate::ip_check::script::create_reqwest_client;
-use crate::ip_check::IpCheck;
-use async_trait::async_trait;
-use reqwest::Response;
-use serde::Deserialize;
-use std::net::IpAddr;
+}; // 引入IP检查结果相关的结构体和函数
+use crate::ip_check::script::create_reqwest_client; // 引入创建 reqwest 客户端的函数
+use crate::ip_check::IpCheck; // 引入 IpCheck trait
+use async_trait::async_trait; // 引入 async_trait 宏
+use reqwest::Response; // 引入 reqwest 的 Response
+use serde::Deserialize; // 引入 serde 的 Deserialize
+use std::net::IpAddr; // 引入 IpAddr
 
+// 定义 TaobaoCom 结构体
 pub struct TaobaoCom;
 
+// 定义提供商名称
 const PROVIDER_NAME: &str = "Taobao.com";
-// URL structure from provided example
+// 根据提供的示例定义 API URL 结构
 const API_URL_BASE: &str = "https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc&ip=";
 
+// 定义用于解析 API 数据部分的结构体
 #[derive(Deserialize, Debug)]
 struct ApiDataPayload {
     country: Option<String>,
-    region: Option<String>, // province
+    region: Option<String>, // 省份
     city: Option<String>,
     isp: Option<String>,
     ip: String,
 }
 
+// 定义用于解析顶层响应的结构体
 #[derive(Deserialize, Debug)]
 struct TopLevelResp {
     code: i32,
@@ -34,11 +39,11 @@ struct TopLevelResp {
     data: Option<ApiDataPayload>,
 }
 
+// 清理字符串字段，移除空字符串或 "XX" (淘宝 API 用于表示未知 ISP)
 fn sanitize_string_field(value: Option<String>) -> Option<String> {
     value.and_then(|s| {
         let trimmed = s.trim();
         if trimmed.is_empty() || trimmed == "XX" {
-            // Taobao API uses "XX" for unknown ISP
             None
         } else {
             Some(trimmed.to_string())
@@ -46,25 +51,27 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
     })
 }
 
+// 为 TaobaoCom 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for TaobaoCom {
+    // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        // This API only supports checking a specific IP and is accessed via IPv4.
+        // 此 API 仅支持检查指定的 IP，并通过 IPv4 访问。
         let target_ip = match ip {
             Some(ip_addr) => {
                 if ip_addr.is_ipv6() {
-                    // The API seems to be for IPv4 only based on examples and common knowledge.
+                    // 根据示例和常识，该 API 似乎仅适用于 IPv4。
                     return vec![not_support_error(PROVIDER_NAME)];
                 }
                 ip_addr
             }
-            // `ip` must be specified for this provider
+            // 此提供商必须指定 `ip`
             None => return vec![not_support_error(PROVIDER_NAME)],
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            // Force IPv4 for API access as it's an older API
+            // 强制使用 IPv4 访问 API，因为这是一个较旧的 API
             let client = match create_reqwest_client(Some(false)).await {
                 Ok(c) => c,
                 Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
@@ -77,7 +84,7 @@ impl IpCheck for TaobaoCom {
                 Ok(r) => parse_taobao_com_resp(r).await,
                 Err(e) => request_error_ip_result(PROVIDER_NAME, &e.to_string()),
             };
-            result.used_time = Some(time_start.elapsed());
+            result.used_time = Some(time_start.elapsed()); // 记录耗时
             result
         });
 
@@ -91,6 +98,7 @@ impl IpCheck for TaobaoCom {
     }
 }
 
+// 解析 Taobao.com 的 API 响应
 async fn parse_taobao_com_resp(response: Response) -> IpResult {
     let status = response.status();
     if !status.is_success() {
@@ -163,10 +171,10 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
             country,
             region,
             city,
-            coordinates: None, // API does not provide coordinates
-            time_zone: None,   // API does not provide timezone
+            coordinates: None, // API 不提供坐标信息
+            time_zone: None,   // API 不提供时区信息
         }),
-        risk: None,
-        used_time: None,
+        risk: None, // API 不提供风险信息
+        used_time: None, // 耗时将在调用处设置
     }
 }
