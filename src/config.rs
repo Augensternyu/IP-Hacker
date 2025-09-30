@@ -2,6 +2,7 @@
 use clap::Parser;
 
 // 使用 clap 的 Parser 派生宏，定义命令行参数的结构体
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 // 定义命令的名称、版本和关于信息
 #[command(name = "IP-Hacker", version, about)]

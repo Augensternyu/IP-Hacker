@@ -1,4 +1,4 @@
-// #![warn(clippy::all, clippy::pedantic)] // 这行是 Clippy 的 lint 配置，用于代码检查，默认被注释掉了
+#![warn(clippy::all, clippy::pedantic)] // 这行是 Clippy 的 lint 配置，用于代码检查，默认被注释掉了
 
 use std::fmt::Write; // 引入标准库中的 Write trait，用于字符串格式化
 mod config; // 引入 config 模块
