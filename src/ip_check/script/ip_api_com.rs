@@ -114,14 +114,11 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
     }
 
     // 将响应体解析为 JSON
-    let json: IpApiComResp = match resp.json().await {
-        Ok(p) => p,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                "Ip-Api.com",
-                "Unable to parse the returned result into Json",
-            );
-        }
+    let Ok(json) = resp.json::<IpApiComResp>().await else {
+        return json_parse_error_ip_result(
+            "Ip-Api.com",
+            "Unable to parse the returned result into Json",
+        );
     };
 
     // 检查 API 返回的状态
@@ -158,10 +155,10 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
             region: json.region_name,
             city: json.city,
             coordinates: {
-                if let (Some(lat), Some(lon)) = (json.lat, json.lon) {
+                if let (Some(latitude), Some(longitude)) = (json.lat, json.lon) {
                     Some(Coordinates {
-                        lat: lat.to_string(),
-                        lon: lon.to_string(),
+                        latitude: latitude.to_string(),
+                        longitude: longitude.to_string(),
                     })
                 } else {
                     None

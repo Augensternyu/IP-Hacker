@@ -182,8 +182,8 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: lat.to_string(),
+                    longitude: lon.to_string(),
                 })
             } else {
                 None

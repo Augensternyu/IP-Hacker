@@ -24,7 +24,7 @@ pub trait IpCheck {
 }
 
 // 定义一个异步函数 check_all，用于执行所有 IP 查询
-pub async fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<IpResult> {
+pub fn check_all(_config: &Config, ip: Option<IpAddr>) -> mpsc::Receiver<IpResult> {
     // 创建一个包含所有 IP 查询提供者的列表
     let provider_list: Vec<Box<dyn IpCheck + Send + Sync>> = vec![
         Box::new(ip_checking::IpChecking),
@@ -127,9 +127,9 @@ impl Display for IpCheckError {
             // JSON 解析错误
             IpCheckError::JsonParse(message) => write!(f, "Json: {message}"),
             // 请求错误
-            IpCheckError::Request(message) => write!(f, "Request: {message}"),
-            // IP 地址解析错误
-            IpCheckError::ParseIP(message) => write!(f, "Request: {message}"),
+            IpCheckError::Request(message) | IpCheckError::ParseIP(message) => {
+                write!(f, "Request: {message}")
+            }
             // 创建 Reqwest 客户端错误
             IpCheckError::CreateReqwestClient => write!(f, "Create Reqwest Client Error"),
             // 不支持指定 IP 的错误

@@ -123,8 +123,8 @@ async fn parse_ip_lark_com_moon(response: Response) -> IpResult {
             city: json.data.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.data.latitude, json.data.longitude) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: lat.to_string(),
+                    longitude: lon.to_string(),
                 })
             } else {
                 None

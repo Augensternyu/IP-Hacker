@@ -1,13 +1,11 @@
 // src/utils/report.rs
 
-// 引入 lazy_static 宏
-use lazy_static::lazy_static;
 // 引入 regex 库
 use regex::Regex;
 // 引入 reqwest 客户端
 use reqwest::Client;
 // 引入 Mutex 用于线程安全
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 // 引入 Duration 用于超时
 use std::time::Duration;
 
@@ -48,10 +46,7 @@ pub async fn get_usage_count() -> Result<(u64, u64), String> {
     ))
 }
 
-// 使用 lazy_static! 宏定义一个全局的、线程安全的字符串
-lazy_static! {
-    pub static ref GLOBAL_STRING: Mutex<String> = Mutex::new(String::new());
-}
+pub static GLOBAL_STRING: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 
 // 定义一个宏，用于向全局字符串中打印内容
 #[macro_export]
@@ -76,22 +71,18 @@ macro_rules! global_println {
 pub async fn _post_to_pastebin() -> Result<String, String> {
     // https://pastebin.highp.ing
     // 从环境变量中获取 pastebin 的 URL
-    let url = if let Some(url) = option_env!("CROSS_PASTEBIN_URL") {
-        url
-    } else {
+    let Some(url) = option_env!("CROSS_PASTEDIN_URL") else {
         return Err(
-            "Upload: Compiling without specifying `CROSS_PASTEBIN_URL` will now skip Pastebin uploads"
+            "Upload: Compiling without specifying `CROSS_PASTEDIN_URL` will now skip Pastebin uploads"
                 .to_string(),
         );
     };
 
     // If you see this password, please do not share it with others. (๑•̀ㅂ•́)و✧
     // 从环境变量中获取 pastebin 的密钥
-    let secret = if let Some(secret) = option_env!("CROSS_PASTEBIN_SECRET") {
-        secret
-    } else {
+    let Some(secret) = option_env!("CROSS_PASTEDIN_SECRET") else {
         return Err(
-            "Upload: Compiling without specifying `CROSS_PASTEBIN_SECRET` will now skip Pastebin uploads"
+            "Upload: Compiling without specifying `CROSS_PASTEDIN_SECRET` will now skip Pastebin uploads"
                 .to_string(),
         );
     };

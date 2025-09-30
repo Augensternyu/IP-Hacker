@@ -122,8 +122,8 @@ pub struct Region {
 // 定义坐标的结构体
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Coordinates {
-    pub lat: String, // 纬度
-    pub lon: String, // 经度
+    pub latitude: String, // 纬度
+    pub longitude: String, // 经度
 }
 
 // 定义风险信息的结构体

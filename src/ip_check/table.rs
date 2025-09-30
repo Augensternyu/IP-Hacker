@@ -193,7 +193,10 @@ pub(crate) fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row
             region.region.unwrap_or(String::new()),
             region.city.unwrap_or(String::new()),
             if let Some(coordinates) = region.coordinates {
-                (coordinates.lat.to_string(), coordinates.lon.to_string())
+                (
+                    coordinates.latitude.to_string(),
+                    coordinates.longitude.to_string(),
+                )
             } else {
                 (String::new(), String::new())
             },

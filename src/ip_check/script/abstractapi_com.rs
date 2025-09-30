@@ -224,9 +224,9 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
             sanitize_string_field(loc.region),
             sanitize_string_field(loc.city),
             match (loc.latitude, loc.longitude) {
-                (Some(lat), Some(lon)) => Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                (Some(latitude), Some(longitude)) => Some(Coordinates {
+                    latitude: latitude.to_string(),
+                    longitude: longitude.to_string(),
                 }),
                 _ => None,
             },

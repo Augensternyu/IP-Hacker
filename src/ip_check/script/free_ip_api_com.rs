@@ -150,10 +150,10 @@ async fn parse_free_ip_api_com_resp(response: Response) -> IpResult {
             region: json.region_name,
             city: json.city_name,
             coordinates: {
-                if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
+                if let (Some(latitude), Some(longitude)) = (json.latitude, json.longitude) {
                     Some(Coordinates {
-                        lat: lat.to_string(),
-                        lon: lon.to_string(),
+                        latitude: latitude.to_string(),
+                        longitude: longitude.to_string(),
                     })
                 } else {
                     None

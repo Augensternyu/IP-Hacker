@@ -128,8 +128,8 @@ async fn parse_ipwhois_app_resp(response: Response) -> IpResult {
             coordinates: {
                 if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                     Some(Coordinates {
-                        lat: lat.to_string(),
-                        lon: lon.to_string(),
+                        latitude: lat.to_string(),
+                        longitude: lon.to_string(),
                     })
                 } else {
                     None

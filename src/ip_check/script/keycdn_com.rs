@@ -178,8 +178,8 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
 
     let coordinates = match (geo_data.latitude, geo_data.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+            latitude: lat.to_string(),
+            longitude: lon.to_string(),
         }),
         _ => None,
     };

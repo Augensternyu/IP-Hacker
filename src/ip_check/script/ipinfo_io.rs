@@ -181,7 +181,7 @@ fn get_ipinfo_io(ip: Value) -> IpResult {
     };
 
     let temp = loc.unwrap_or(String::new());
-    let (lat, lon) = temp.split_once(',').unwrap();
+    let (latitude, longitude) = temp.split_once(',').unwrap();
 
     // 解析时区
     let time_zone = if let Some(time_zone) = ip.get("timezone") {
@@ -205,8 +205,8 @@ fn get_ipinfo_io(ip: Value) -> IpResult {
             region,
             city,
             coordinates: Some(Coordinates {
-                lat: lat.to_string(),
-                lon: lon.to_string(),
+                latitude: latitude.to_string(),
+                longitude: longitude.to_string(),
             }),
             time_zone,
         }),

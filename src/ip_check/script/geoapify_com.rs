@@ -79,9 +79,8 @@ impl IpCheck for GeoapifyCom {
             // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result = client.get(&url).send().await;
@@ -108,9 +107,8 @@ impl IpCheck for GeoapifyCom {
                 let url = url.clone();
                 async move {
                     let time_start = tokio::time::Instant::now();
-                    let client_v4 = match create_reqwest_client(Some(false)).await {
-                        Ok(c) => c,
-                        Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                        return create_reqwest_client_error(PROVIDER_NAME);
                     };
 
                     let response_result_v4 = client_v4.get(&url).send().await;
@@ -129,9 +127,8 @@ impl IpCheck for GeoapifyCom {
                 let url = url.clone();
                 async move {
                     let time_start = tokio::time::Instant::now();
-                    let client_v6 = match create_reqwest_client(Some(true)).await {
-                        Ok(c) => c,
-                        Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                        return create_reqwest_client_error(PROVIDER_NAME);
                     };
                     let response_result_v6 = client_v6.get(&url).send().await;
                     let mut result_v6 = match response_result_v6 {
@@ -186,14 +183,11 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &error.message);
     }
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     let country = payload.country.and_then(|c| sanitize_string_field(c.name));
@@ -203,9 +197,9 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
     let coordinates = payload
         .location
         .and_then(|loc| match (loc.latitude, loc.longitude) {
-            (Some(lat), Some(lon)) => Some(Coordinates {
-                lat: lat.to_string(),
-                lon: lon.to_string(),
+            (Some(latitude), Some(longitude)) => Some(Coordinates {
+                latitude: latitude.to_string(),
+                longitude: longitude.to_string(),
             }),
             _ => None,
         });

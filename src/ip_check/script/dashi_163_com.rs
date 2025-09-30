@@ -70,9 +70,8 @@ impl IpCheck for Dashi163Com {
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 创建仅使用 IPv4 的 reqwest 客户端
-            let client_v4 = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             // 发送 GET 请求
@@ -91,9 +90,8 @@ impl IpCheck for Dashi163Com {
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 创建仅使用 IPv6 的 reqwest 客户端
-            let client_v6 = match create_reqwest_client(Some(true)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
             // 发送 GET 请求
             let response_result_v6 = client_v6.get(API_URL).send().await;
@@ -165,42 +163,36 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
     }
 
     // 获取数据部分
-    let data = match payload.result {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API code was 200 but 'result' field is missing.",
-            );
-        }
+    let Some(ref data) = payload.result else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "API code was 200 but 'result' field is missing.",
+        );
     };
 
     // 解析 IP 地址
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
-            );
-        }
+    let Ok(parsed_ip) = data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", data.ip),
+        );
     };
 
     // 清理地理位置和 ISP 信息
-    let country = sanitize_string_field(data.country);
-    let region = sanitize_string_field(data.province);
-    let city = sanitize_string_field(data.city);
-    let isp = sanitize_string_field(data.isp);
-    let time_zone = sanitize_string_field(data.timezone);
+    let country = sanitize_string_field(data.country.clone());
+    let region = sanitize_string_field(data.province.clone());
+    let city = sanitize_string_field(data.city.clone());
+    let isp = sanitize_string_field(data.isp.clone());
+    let time_zone = sanitize_string_field(data.timezone.clone());
 
     let autonomous_system = isp.map(|name| AS { number: 0, name });
 
     // 解析坐标
     let coordinates = match (
-        sanitize_string_field(data.latitude),
-        sanitize_string_field(data.longitude),
+        sanitize_string_field(payload.result.as_ref().and_then(|r| r.latitude.clone())),
+        sanitize_string_field(payload.result.as_ref().and_then(|r| r.longitude.clone())),
     ) {
-        (Some(lat), Some(lon)) => Some(Coordinates { lat, lon }),
+        (Some(latitude), Some(longitude)) => Some(Coordinates { latitude, longitude }),
         _ => None,
     };
 

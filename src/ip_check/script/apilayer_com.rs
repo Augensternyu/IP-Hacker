@@ -162,9 +162,9 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
     let time_zone = payload.timezones.and_then(|tzs| tzs.first().cloned());
 
     let coordinates = match (payload.latitude, payload.longitude) {
-        (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+        (Some(latitude), Some(longitude)) => Some(Coordinates {
+            latitude: latitude.to_string(),
+            longitude: longitude.to_string(),
         }),
         _ => None,
     };

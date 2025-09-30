@@ -159,9 +159,9 @@ async fn parse_maptiler_com_resp(response: Response, is_ipv6_request: bool) -> I
         // 一个更好的方法是返回一个特定的错误或一个没有 IP 的结果。
         // 让我们遵循请求：设置为 0.0.0.0。对于 IPv6 请求来说，这在技术上是错误的，
         // 但它满足了显示*某些内容*并避免解析错误的要求。
-        IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))
+        IpAddr::V4(Ipv4Addr::UNSPECIFIED)
     } else {
-        IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))
+        IpAddr::V4(Ipv4Addr::UNSPECIFIED)
     };
 
     let country = sanitize_string_field(payload.country);
@@ -171,8 +171,8 @@ async fn parse_maptiler_com_resp(response: Response, is_ipv6_request: bool) -> I
 
     let coordinates = match (payload.latitude, payload.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+            latitude: lat.to_string(),
+            longitude: lon.to_string(),
         }),
         _ => None,
     };

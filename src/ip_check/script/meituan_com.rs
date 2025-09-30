@@ -175,8 +175,8 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
 
     let coordinates = match (data.lat, data.lng) {
         (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+            latitude: lat.to_string(),
+            longitude: lon.to_string(),
         }),
         _ => None,
     };

@@ -105,7 +105,7 @@ async fn parse_myip_la_info(response: Response) -> IpResult {
             coordinates: if let (Some(lat), Some(lon)) =
                 (json.location.latitude, json.location.longitude)
             {
-                Some(Coordinates { lat, lon })
+                Some(Coordinates { latitude: lat, longitude: lon })
             } else {
                 None
             },

@@ -106,11 +106,8 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
     }
 
     // 解析 JSON
-    let json: Resp = match response.json().await {
-        Ok(p) => p,
-        Err(_) => {
-            return json_parse_error_ip_result("IpData.co", "Unable to parse result into Json");
-        }
+    let Ok(json) = response.json::<Resp>().await else {
+        return json_parse_error_ip_result("IpData.co", "Unable to parse result into Json");
     };
 
     // 检查 API 是否返回错误信息
@@ -178,10 +175,10 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
             country: json.country_name,
             region: json.region,
             city: json.city,
-            coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
+            coordinates: if let (Some(latitude), Some(longitude)) = (json.latitude, json.longitude) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: latitude.to_string(),
+                    longitude: longitude.to_string(),
                 })
             } else {
                 None

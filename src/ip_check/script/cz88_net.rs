@@ -79,18 +79,16 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
 #[async_trait]
 impl IpCheck for Cz88Net {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        let ip_addr = match ip {
-            Some(i) => i,
-            None => return vec![not_support_error(PROVIDER_NAME)], // API 需要指定 IP
-        };
+        let Some(ip_addr) = ip else {
+            return vec![not_support_error(PROVIDER_NAME)];
+        }; // API 需要指定 IP
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
 
             // 创建 reqwest 客户端
-            let client = match create_reqwest_client(None).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client) = create_reqwest_client(None).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             // 发送 GET 请求
@@ -155,25 +153,19 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     }
 
     // 获取数据部分
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API success but 'data' field is missing.",
-            );
-        }
+    let Some(data) = payload.data else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "API success but 'data' field is missing.",
+        );
     };
 
     // 解析 IP 地址
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse IP string from API data: '{}'", data.ip),
-            );
-        }
+    let Ok(parsed_ip) = data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse IP string from API data: '{}'", data.ip),
+        );
     };
 
     // 清理地理位置信息
@@ -200,7 +192,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
                 sanitize_string_field(loc.latitude.clone()),
                 sanitize_string_field(loc.longitude.clone()),
             ) {
-                (Some(lat), Some(lon)) => Some(Coordinates { lat, lon }),
+                (Some(latitude), Some(longitude)) => Some(Coordinates { latitude, longitude }),
                 _ => None,
             }
         })

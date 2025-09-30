@@ -90,10 +90,8 @@ pub struct Config {
 
 // 定义一个函数，用于处理默认配置
 pub fn default_config(config: Config) -> Config {
-    // 如果指定了 json 输出
     if config.json {
-        // 返回一个包含所有信息、json 输出、无 logo、不清屏、不上传、无日志的配置
-        Config {
+        return Config {
             all: true,
             json: true,
             no_logo: true,
@@ -101,9 +99,9 @@ pub fn default_config(config: Config) -> Config {
             no_upload: true,
             logger: false,
             ..config
-        }
-    // 如果指定了任何一个显示项
-    } else if config.provider
+        };
+    }
+    if config.provider
         || config.ip
         || config.asn
         || config.isp
@@ -116,12 +114,10 @@ pub fn default_config(config: Config) -> Config {
         || config.tags
         || config.time
     {
-        // 直接返回原始配置
-        config
-    // 如果指定了显示所有信息
-    } else if config.all {
-        // 返回一个包含所有详细信息的配置
-        Config {
+        return config;
+    }
+    if config.all {
+        return Config {
             provider: true,
             ip: true,
             asn: true,
@@ -135,11 +131,10 @@ pub fn default_config(config: Config) -> Config {
             tags: true,
             time: true,
             ..config
-        }
-    // 如果是为 GUI 提供特殊支持
-    } else if config.special_for_gui {
-        // 返回一个为 GUI 优化的配置
-        Config {
+        };
+    }
+    if config.special_for_gui {
+        return Config {
             all: true,
             json: false,
             no_logo: true,
@@ -147,23 +142,21 @@ pub fn default_config(config: Config) -> Config {
             no_upload: true,
             logger: false,
             ..config
-        }
-    // 否则，返回默认的配置
-    } else {
-        Config {
-            all: false,
-            provider: true,
-            ip: true,
-            asn: true,
-            isp: true,
-            country: true,
-            region: true,
-            city: true,
-            coordinates: false,
-            time_zone: false,
-            risk: false,
-            tags: false,
-            ..config
-        }
+        };
+    }
+    Config {
+        all: false,
+        provider: true,
+        ip: true,
+        asn: true,
+        isp: true,
+        country: true,
+        region: true,
+        city: true,
+        coordinates: false,
+        time_zone: false,
+        risk: false,
+        tags: false,
+        ..config
     }
 }

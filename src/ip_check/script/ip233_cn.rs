@@ -196,8 +196,8 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
     // 解析坐标
     let coordinates = sanitize_string_field(payload.loc).and_then(|loc_str| {
         loc_str.split_once(',').map(|(lat, lon)| Coordinates {
-            lat: lat.trim().to_string(),
-            lon: lon.trim().to_string(),
+            latitude: lat.trim().to_string(),
+            longitude: lon.trim().to_string(),
         })
     });
 

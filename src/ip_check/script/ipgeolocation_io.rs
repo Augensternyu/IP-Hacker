@@ -115,8 +115,8 @@ async fn parse_ipgeolocation_io_resp(response: Response) -> IpResult {
                 country: loc.country_name,
                 region: loc.state_prov,
                 city: loc.city,
-                coordinates: if let (Some(lat), Some(lon)) = (loc.latitude, loc.longitude) {
-                    Some(Coordinates { lat, lon })
+                coordinates: if let (Some(latitude), Some(longitude)) = (loc.latitude, loc.longitude) {
+                    Some(Coordinates { latitude, longitude })
                 } else {
                     None
                 },

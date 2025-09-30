@@ -146,10 +146,10 @@ async fn parse_ipapi_co_info(response: Response) -> IpResult {
             country: json.country_name,
             region: json.region,
             city: json.city,
-            coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
+            coordinates: if let (Some(latitude), Some(longitude)) = (json.latitude, json.longitude) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: latitude.to_string(),
+                    longitude: longitude.to_string(),
                 })
             } else {
                 None

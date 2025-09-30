@@ -225,8 +225,8 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
             region,
             city,
             coordinates: {
-                if let (Some(lat), Some(lon)) = (lat, lon) {
-                    Some(Coordinates { lat, lon })
+                if let (Some(latitude), Some(longitude)) = (lat, lon) {
+                    Some(Coordinates { latitude, longitude })
                 } else {
                     None
                 }

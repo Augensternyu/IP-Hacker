@@ -204,9 +204,9 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
     let city = sanitize_string_field(payload.city);
 
     let coordinates = match (payload.latitude, payload.longitude) {
-        (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+        (Some(latitude), Some(longitude)) => Some(Coordinates {
+            latitude: latitude.to_string(),
+            longitude: longitude.to_string(),
         }),
         _ => None,
     };

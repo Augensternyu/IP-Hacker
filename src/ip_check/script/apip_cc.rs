@@ -186,7 +186,7 @@ async fn parse_apip_cc_resp(response: Response) -> IpResult {
         sanitize_string_field(payload.Latitude),
         sanitize_string_field(payload.Longitude),
     ) {
-        (Some(lat), Some(lon)) => Some(Coordinates { lat, lon }),
+        (Some(latitude), Some(longitude)) => Some(Coordinates { latitude, longitude }),
         _ => None,
     };
 

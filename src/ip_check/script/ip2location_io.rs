@@ -145,10 +145,10 @@ async fn parse_ip2location_io_resp(response: Response) -> IpResult {
             country: json.country_name,
             region: json.region_name,
             city: json.city_name,
-            coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
+            coordinates: if let (Some(latitude), Some(longitude)) = (json.latitude, json.longitude) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: latitude.to_string(),
+                    longitude: longitude.to_string(),
                 })
             } else {
                 None

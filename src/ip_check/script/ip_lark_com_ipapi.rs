@@ -160,8 +160,8 @@ async fn parse_ip_lark_com_ipapi(response: Response) -> IpResult {
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.lat, json.lon) {
                 Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                    latitude: lat.to_string(),
+                    longitude: lon.to_string(),
                 })
             } else {
                 None

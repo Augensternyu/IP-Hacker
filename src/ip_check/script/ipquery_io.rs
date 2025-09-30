@@ -42,7 +42,7 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                let mut result_without_time = get_ipquery_io_info(json).await;
+                let mut result_without_time = get_ipquery_io_info(json);
                 let end_time = time_start.elapsed();
                 result_without_time.used_time = Some(end_time); // 记录耗时
                 result_without_time
@@ -71,7 +71,7 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                let mut result_without_time = get_ipquery_io_info(json).await;
+                let mut result_without_time = get_ipquery_io_info(json);
                 let end_time = time_start.elapsed();
                 result_without_time.used_time = Some(end_time);
                 result_without_time
@@ -95,7 +95,7 @@ impl IpCheck for IpQueryIo {
                     return parse_ip_error_ip_result("Ipquery.io", "Unable to parse json");
                 };
 
-                let mut result_without_time = get_ipquery_io_info(json).await;
+                let mut result_without_time = get_ipquery_io_info(json);
                 let end_time = time_start.elapsed();
                 result_without_time.used_time = Some(end_time);
                 result_without_time
@@ -114,7 +114,7 @@ impl IpCheck for IpQueryIo {
 }
 
 // 解析 Ipquery.io 的 API 响应
-async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
+fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
     // 定义用于解析 JSON 响应的内部结构体
     #[derive(Debug, Serialize, Deserialize)]
     struct IpQuery {
@@ -204,8 +204,8 @@ async fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
                 let longitude = json_parsed.location.longitude;
                 if let (Some(latitude), Some(longitude)) = (latitude, longitude) {
                     Some(Coordinates {
-                        lat: latitude.to_string(),
-                        lon: longitude.to_string(),
+                        latitude: latitude.to_string(),
+                        longitude: longitude.to_string(),
                     })
                 } else {
                     None

@@ -124,8 +124,10 @@ async fn parse_bilibili(response: Response) -> IpResult {
             country: json.data.country,
             region: json.data.province,
             city: json.data.city,
-            coordinates: if let (Some(lat), Some(lon)) = (json.data.latitude, json.data.longitude) {
-                Some(Coordinates { lat, lon })
+            coordinates: if let (Some(latitude), Some(longitude)) =
+                (json.data.latitude, json.data.longitude)
+            {
+                Some(Coordinates { latitude, longitude })
             } else {
                 None
             },

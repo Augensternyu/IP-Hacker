@@ -172,8 +172,8 @@ async fn parse_airvpn_org_resp(response: Response) -> IpResult {
                 sanitize_string_field(geo.city_name),
                 match (geo.latitude, geo.longitude) {
                     (Some(lat), Some(lon)) => Some(Coordinates {
-                        lat: lat.to_string(),
-                        lon: lon.to_string(),
+                        latitude: lat.to_string(),
+                        longitude: lon.to_string(),
                     }),
                     _ => None,
                 },

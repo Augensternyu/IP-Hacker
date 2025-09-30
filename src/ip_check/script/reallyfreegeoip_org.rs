@@ -204,8 +204,8 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
 
     let coordinates = match (payload.latitude, payload.longitude) {
         (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+            latitude: lat.to_string(),
+            longitude: lon.to_string(),
         }),
         _ => None,
     };

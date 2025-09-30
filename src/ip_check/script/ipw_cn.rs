@@ -164,8 +164,8 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
             city: data.city.or(data.district), // 优先使用 city，回退到 district
             coordinates: match (data.lat, data.lng) {
                 (Some(lat_str), Some(lon_str)) => Some(Coordinates {
-                    lat: lat_str,
-                    lon: lon_str,
+                    latitude: lat_str,
+                    longitude: lon_str,
                 }),
                 _ => None,
             },

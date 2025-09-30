@@ -203,8 +203,8 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
     // 解析坐标
     let coordinates = match (payload.lat, payload.lon) {
         (Some(lat), Some(lon)) => Some(Coordinates {
-            lat: lat.to_string(),
-            lon: lon.to_string(),
+            latitude: lat.to_string(),
+            longitude: lon.to_string(),
         }),
         _ => None,
     };

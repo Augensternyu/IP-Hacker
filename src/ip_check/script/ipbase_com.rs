@@ -250,9 +250,9 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
             loc.region.and_then(|r| sanitize_string_field(r.name)),
             loc.city.and_then(|c| sanitize_string_field(c.name)),
             match (loc.latitude, loc.longitude) {
-                (Some(lat), Some(lon)) => Some(Coordinates {
-                    lat: lat.to_string(),
-                    lon: lon.to_string(),
+                (Some(latitude), Some(longitude)) => Some(Coordinates {
+                    latitude: latitude.to_string(),
+                    longitude: longitude.to_string(),
                 }),
                 _ => None,
             },
