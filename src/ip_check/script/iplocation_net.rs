@@ -49,17 +49,15 @@ impl IpCheck for IplocationNet {
     // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         // API 需要一个指定的 IP 地址
-        let target_ip = match ip {
-            Some(ip_addr) => ip_addr,
-            None => return vec![not_support_error(PROVIDER_NAME)], // 如果没有提供 IP，则返回不支持的错误
+        let Some(target_ip) = ip else {
+            return vec![not_support_error(PROVIDER_NAME)]; // 如果没有提供 IP，则返回不支持的错误
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // API 可以通过 IPv4 或 IPv6 访问，客户端选择默认
-            let client = match create_reqwest_client(None).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client) = create_reqwest_client(None).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let url = format!("{API_BASE_URL}{target_ip}");
@@ -123,14 +121,11 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
     }
 
     // 解析 IP 地址
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     // 清理和解析字段

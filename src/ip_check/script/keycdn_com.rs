@@ -68,17 +68,15 @@ fn sanitize_string_field(value: Option<String>) -> Option<String> {
 impl IpCheck for KeycdnCom {
     // 异步检查 IP 地址
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
-        let target_ip = match ip {
-            Some(ip_addr) => ip_addr,
+        let Some(target_ip) = ip else {
             // API 需要一个指定的 IP 地址
-            None => return vec![not_support_error(PROVIDER_NAME)],
+            return vec![not_support_error(PROVIDER_NAME)];
         };
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client = match create_reqwest_client(None).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client) = create_reqwest_client(None).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let url = format!("{API_BASE_URL}?host={target_ip}");
@@ -155,14 +153,11 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
         }
     };
 
-    let parsed_ip = match geo_data.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", geo_data.ip),
-            );
-        }
+    let Ok(parsed_ip) = geo_data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", geo_data.ip),
+        );
     };
 
     let autonomous_system = match (geo_data.asn, sanitize_string_field(geo_data.isp)) {

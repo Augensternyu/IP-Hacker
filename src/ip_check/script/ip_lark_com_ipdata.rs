@@ -87,6 +87,7 @@ impl IpCheck for IpLarkComIpData {
 }
 
 // 解析 IpLark.com IpData 的 API 响应
+#[allow(clippy::too_many_lines)]
 async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
     // 定义用于反序列化 API 响应的结构体
     #[derive(Deserialize, Serialize)]

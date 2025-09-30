@@ -27,20 +27,15 @@ impl IpCheck for IpInfoIo {
                 return vec![create_reqwest_client_error("Ipinfo.io")];
             };
 
-            let res = if let Ok(res) = client_v4
+            let Ok(res) = client_v4
                 .get(format!("https://ipinfo.io/{ip}"))
                 .send()
-                .await
-            {
-                res
-            } else {
+                .await else {
                 return vec![request_error_ip_result("Ipinfo.io", "Unable to connect")];
             };
 
             if res.status() == 200 {
-                let json = if let Ok(json) = res.json::<Value>().await {
-                    json
-                } else {
+                let Ok(json) = res.json::<Value>().await else {
                     return vec![parse_ip_error_ip_result(
                         "Ipinfo.io",
                         "Unable to parse json",
@@ -48,7 +43,7 @@ impl IpCheck for IpInfoIo {
                 };
 
                 vec![{
-                    let mut result_without_time = get_ipinfo_io(json);
+                    let mut result_without_time = get_ipinfo_io(&json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time); // 记录耗时
                     result_without_time
@@ -72,12 +67,10 @@ impl IpCheck for IpInfoIo {
                 };
 
                 if result.status() == 200 {
-                    let json = if let Ok(json) = result.json::<Value>().await {
-                        json
-                    } else {
+                    let Ok(json) = result.json::<Value>().await else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    let mut result_without_time = get_ipinfo_io(json);
+                    let mut result_without_time = get_ipinfo_io(&json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time);
                     result_without_time
@@ -97,12 +90,10 @@ impl IpCheck for IpInfoIo {
                 };
 
                 if result.status() == 200 {
-                    let json = if let Ok(json) = result.json::<Value>().await {
-                        json
-                    } else {
+                    let Ok(json) = result.json::<Value>().await else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    let mut result_without_time = get_ipinfo_io(json);
+                    let mut result_without_time = get_ipinfo_io(&json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time);
                     result_without_time
@@ -124,7 +115,7 @@ impl IpCheck for IpInfoIo {
 }
 
 // 解析 Ipinfo.io 的 API 响应
-fn get_ipinfo_io(ip: Value) -> IpResult {
+fn get_ipinfo_io(ip: &Value) -> IpResult {
     // 解析国家
     let country = if let Some(country) = ip.get("country") {
         country.as_str().map(std::string::ToString::to_string)

@@ -14,6 +14,12 @@ use std::net::IpAddr; // 引入 IpAddr
 // 定义 HttpBinOrg 结构体
 pub struct HttpBinOrg;
 
+// 定义用于反序列化 API 响应的结构体
+#[derive(Deserialize, Serialize)]
+struct HttpBinOrgResp {
+    origin: IpAddr,
+}
+
 // 为 HttpBinOrg 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for HttpBinOrg {
@@ -35,12 +41,6 @@ impl IpCheck for HttpBinOrg {
                 let Ok(result) = client_v4.get("https://httpbin.org/ip").send().await else {
                     return request_error_ip_result("HttpBin.org", "Unable to connect");
                 };
-
-                // 定义用于反序列化 API 响应的结构体
-                #[derive(Deserialize, Serialize)]
-                struct HttpBinOrgResp {
-                    origin: IpAddr,
-                }
 
                 // 解析 JSON 响应
                 let ip = result

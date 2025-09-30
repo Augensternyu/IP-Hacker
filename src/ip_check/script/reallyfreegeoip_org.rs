@@ -59,9 +59,8 @@ impl IpCheck for ReallyfreegeoipOrg {
         if let Some(ip_addr) = ip {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let url = format!("{API_BASE_URL}{ip_addr}");
@@ -88,9 +87,8 @@ impl IpCheck for ReallyfreegeoipOrg {
 
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v4 = client_v4.get(API_BASE_URL).send().await;
@@ -106,9 +104,8 @@ impl IpCheck for ReallyfreegeoipOrg {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v6 = client_v6.get(API_BASE_URL).send().await;
@@ -187,14 +184,11 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
         }
     };
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
+        );
     };
 
     let country = sanitize_string_field(payload.country_name);

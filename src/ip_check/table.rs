@@ -131,6 +131,7 @@ pub(crate) fn make_table_cells(config: &Config) -> Vec<Cell> {
 }
 
 // 定义一个函数 make_table_row，用于根据单个 IP 检查结果创建表格行
+#[allow(clippy::too_many_lines)]
 pub(crate) fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row> {
     let mut rows_vec = Vec::new();
 

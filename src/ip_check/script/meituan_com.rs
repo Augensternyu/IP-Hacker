@@ -86,9 +86,8 @@ impl IpCheck for MeituanCom {
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 强制使用 IPv4
-            let client = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let url = format!("{API_URL_BASE}{target_ip}");
@@ -145,21 +144,15 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         }
     };
 
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(PROVIDER_NAME, "API response missing 'data' field.");
-        }
+    let Some(data) = payload.data else {
+        return json_parse_error_ip_result(PROVIDER_NAME, "API response missing 'data' field.");
     };
 
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
-            );
-        }
+    let Ok(parsed_ip) = data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", data.ip),
+        );
     };
 
     let (country, region, city) = if let Some(rgeo) = data.rgeo {

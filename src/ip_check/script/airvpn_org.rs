@@ -69,9 +69,8 @@ impl IpCheck for AirvpnOrg {
 
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client_v4 = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let response_result = client_v4.get(API_URL).send().await;
@@ -85,9 +84,8 @@ impl IpCheck for AirvpnOrg {
 
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client_v6 = match create_reqwest_client(Some(true)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
             let response_result = client_v6.get(API_URL).send().await;
             let mut result = match response_result {
@@ -147,14 +145,11 @@ async fn parse_airvpn_org_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, "API result was not 'ok'.");
     }
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     let geo_data = payload.geo_additional;

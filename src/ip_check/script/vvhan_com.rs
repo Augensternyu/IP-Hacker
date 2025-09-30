@@ -29,9 +29,8 @@ impl IpCheck for VvhanCom {
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
 
-                let client = match create_reqwest_client(None).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response = match client
@@ -59,10 +58,9 @@ impl IpCheck for VvhanCom {
             // 查询本机 IP (尝试 IPv4 和 IPv6)
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     // 强制使用 IPv4
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response = match client_v4
@@ -81,10 +79,9 @@ impl IpCheck for VvhanCom {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     // 强制使用 IPv6
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response = match client_v6
@@ -188,34 +185,25 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
     }
 
     // 如果 success == true，我们期望 'ip' 和 'info' 字段存在且有效
-    let ip_str = match payload.ip {
-        Some(s) => s,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API success=true but 'ip' field is missing.",
-            );
-        }
+    let Some(ip_str) = payload.ip else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "API success=true but 'ip' field is missing.",
+        );
     };
 
-    let parsed_ip = match ip_str.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse IP string from API: '{ip_str}'"),
-            );
-        }
+    let Ok(parsed_ip) = ip_str.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse IP string from API: '{ip_str}'"),
+        );
     };
 
-    let api_info_data = match payload.info {
-        Some(info_data) => info_data,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API success=true but 'info' field is missing.",
-            );
-        }
+    let Some(api_info_data) = payload.info else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "API success=true but 'info' field is missing.",
+        );
     };
 
     // 处理 "-", 空字符串, "unknown", "未知" 等表示无效数据的情况

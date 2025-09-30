@@ -35,9 +35,8 @@ impl IpCheck for Nameless13Xyz {
         // --- 检查本机 IPv4 ---
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client_v4 = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let response_result = client_v4
@@ -56,9 +55,8 @@ impl IpCheck for Nameless13Xyz {
         // --- 检查本机 IPv6 ---
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client_v6 = match create_reqwest_client(Some(true)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let response_result = client_v6

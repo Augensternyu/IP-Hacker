@@ -72,9 +72,8 @@ impl IpCheck for TaobaoCom {
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 强制使用 IPv4 访问 API，因为这是一个较旧的 API
-            let client = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let url = format!("{API_URL_BASE}{target_ip}");
@@ -134,24 +133,18 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &payload.msg);
     }
 
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "API code was 0 but 'data' field is missing.",
-            );
-        }
+    let Some(data) = payload.data else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "API code was 0 but 'data' field is missing.",
+        );
     };
 
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
-            );
-        }
+    let Ok(parsed_ip) = data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", data.ip),
+        );
     };
 
     let country = sanitize_string_field(data.country);

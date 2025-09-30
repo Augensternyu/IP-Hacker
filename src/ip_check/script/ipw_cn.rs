@@ -122,14 +122,11 @@ async fn fetch_and_parse_ip_details(client: &reqwest::Client, target_ip: Ipv6Add
         return err_res;
     }
 
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                "Details API success but 'data' field is missing.",
-            );
-        }
+    let Some(data) = payload.data else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            "Details API success but 'data' field is missing.",
+        );
     };
 
     // 确保响应中的 IP 与查询的 IP 匹配，或可解析
@@ -189,10 +186,9 @@ impl IpCheck for IpwCn {
             }
             None => {
                 // 需要获取本机 IPv6
-                let client_for_myip = match create_reqwest_client(Some(true)).await {
+                let Ok(client_for_myip) = create_reqwest_client(Some(true)).await else {
                     // 必须使用 IPv6 客户端
-                    Ok(c) => c,
-                    Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
+                    return vec![create_reqwest_client_error(PROVIDER_NAME)];
                 };
                 match client_for_myip
                     .get("https://6.ipw.cn/api/ip/myip?json")
@@ -232,9 +228,7 @@ impl IpCheck for IpwCn {
             }
         };
 
-        let target_ipv6 = if let Some(ipv6) = target_ipv6_opt {
-            ipv6
-        } else {
+        let Some(target_ipv6) = target_ipv6_opt else {
             // 如果 'ip' 为 None 且无法获取本机 IPv6，则无法继续
             let mut res = not_support_error(PROVIDER_NAME);
             res.error = IpCheckError::Request(
@@ -250,9 +244,8 @@ impl IpCheck for IpwCn {
             // 然而，由于 API 本身是 IPv6 特定的 (rest.ipw.cn/api/aw/v1/ipv6)，
             // 如果主机有 IPv6，可能隐式需要一个可以发出 IPv6 请求的客户端。
             // 使用 `None` for create_reqwest_client 是 "默认"。
-            let client_for_details = match create_reqwest_client(None).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_for_details) = create_reqwest_client(None).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let mut result_without_time =

@@ -122,9 +122,8 @@ impl IpCheck for IpbaseCom {
             // --- 查询指定的 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result = client.get(&url).send().await;
@@ -147,9 +146,8 @@ impl IpCheck for IpbaseCom {
             // 创建查询 IPv4 的任务
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v4 = client_v4.get(&url_v4).send().await;
@@ -164,9 +162,8 @@ impl IpCheck for IpbaseCom {
             // 创建查询 IPv6 的任务
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
                 let response_result_v6 = client_v6.get(&url_v6).send().await;
                 let mut result_v6 = match response_result_v6 {
@@ -216,22 +213,16 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
     }
 
     // 获取数据部分
-    let data = match payload.data {
-        Some(d) => d,
-        None => {
-            return json_parse_error_ip_result(PROVIDER_NAME, "API response missing 'data' field.");
-        }
+    let Some(data) = payload.data else {
+        return json_parse_error_ip_result(PROVIDER_NAME, "API response missing 'data' field.");
     };
 
     // 解析 IP 地址
-    let parsed_ip = match data.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", data.ip),
-            );
-        }
+    let Ok(parsed_ip) = data.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", data.ip),
+        );
     };
 
     // 解析 ASN 信息

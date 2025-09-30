@@ -63,9 +63,8 @@ impl IpCheck for HsseliteCom {
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 创建仅使用 IPv4 的 reqwest 客户端
-            let client_v4 = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             // 发送 GET 请求
@@ -127,14 +126,11 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
     };
 
     // 解析 IP 地址
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     // API 仅返回 IPv4 地址

@@ -127,7 +127,7 @@ fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
     #[derive(Debug, Serialize, Deserialize)]
     struct Isp {
         asn: Option<String>,
-        isp: Option<String>,
+        name: Option<String>,
         org: Option<String>,
     }
 
@@ -185,7 +185,7 @@ fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
                 .isp
                 .asn
                 .map(|asn| asn.replace("AS", "").parse::<u32>().unwrap_or(0));
-            let isp = json_parsed.isp.isp;
+            let isp = json_parsed.isp.name;
             if let (Some(asn), Some(isp)) = (asn, isp) {
                 Some(AS {
                     number: asn,

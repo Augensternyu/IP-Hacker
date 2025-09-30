@@ -90,10 +90,9 @@ fn parse_asn_from_string(asn_string_opt: Option<String>) -> (Option<u32>, Option
 impl IpCheck for Ip125Com {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         // API 本身通过 IPv4 访问，但可以查询 IPv4 或 IPv6 的数据
-        let client = match create_reqwest_client(Some(false)).await {
+        let Ok(client) = create_reqwest_client(Some(false)).await else {
             // 强制使用 IPv4 访问 API
-            Ok(c) => c,
-            Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
+            return vec![create_reqwest_client_error(PROVIDER_NAME)];
         };
 
         // 根据是否提供 IP 构建 URL
@@ -169,14 +168,11 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
     }
 
     // 解析查询的 IP 地址
-    let parsed_ip = match payload.query.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse 'query' IP from API: '{}'", payload.query),
-            );
-        }
+    let Ok(parsed_ip) = payload.query.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse 'query' IP from API: '{}'", payload.query),
+        );
     };
 
     // 清理地理位置信息

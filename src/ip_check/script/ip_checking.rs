@@ -3,13 +3,12 @@
 // 引入项目内的模块和外部库
 use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
 use crate::ip_check::ip_result::{
-    create_reqwest_client_error, json_parse_error_ip_result, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
+    create_reqwest_client_error, parse_ip_error_ip_result, request_error_ip_result, Coordinates, IpResult,
     Region, AS,
 }; // 引入错误处理函数和结果结构体
 use crate::ip_check::script::create_reqwest_client; // 引入 reqwest 客户端创建函数
 use crate::ip_check::IpCheck; // 引入 IpCheck trait
 use async_trait::async_trait; // 引入 async_trait 宏
-use reqwest::header; // 引入 reqwest 的 header 模块
 use serde::{Deserialize, Serialize}; // 引入 serde 的 Deserialize 和 Serialize
 use std::net::IpAddr; // 引入 IpAddr
 use std::str::FromStr; // 引入 FromStr trait
@@ -109,6 +108,19 @@ impl IpCheck for IpChecking {
     }
 }
 
+// 定义用于反序列化 API 响应的结构体
+#[derive(Deserialize, Serialize)]
+struct IpCheckingResp {
+    ip: IpAddr,
+    city: Option<String>,
+    country_name: Option<String>,
+    region: Option<String>,
+    latitude: Option<f64>,
+    longitude: Option<f64>,
+    asn: Option<String>,
+    org: Option<String>,
+}
+
 // 获取 IpCheck.ing 的 IP 地理位置信息
 async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     // 创建 reqwest 客户端
@@ -117,7 +129,7 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     };
 
     // 设置请求头
-    let mut headers = header::HeaderMap::new();
+    let mut headers = reqwest::header::HeaderMap::new();
     headers.insert("referer", "https://ipcheck.ing/".parse().unwrap());
     headers.insert("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36".parse().unwrap());
     headers.insert("content-type", "application/json".parse().unwrap());
@@ -134,22 +146,9 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
         return request_error_ip_result("IpCheck.ing", "Unable to connect");
     };
 
-    // 定义用于反序列化 API 响应的结构体
-    #[derive(Deserialize, Serialize)]
-    struct IpCheckingResp {
-        ip: IpAddr,
-        city: Option<String>,
-        country_name: Option<String>,
-        region: Option<String>,
-        latitude: Option<f64>,
-        longitude: Option<f64>,
-        asn: Option<String>,
-        org: Option<String>,
-    }
-
     // 将响应体解析为 JSON
     let Ok(json) = res.json::<IpCheckingResp>().await else {
-        return json_parse_error_ip_result(
+        return crate::ip_check::ip_result::json_parse_error_ip_result(
             "IpCheck.ing",
             "Unable to parse the returned result into Json",
         );
@@ -158,6 +157,7 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
     // 解析 ASN
     let asn = json
         .asn
+        .as_ref()
         .map(|asn| asn.replace("AS", "").trim().parse::<u32>().unwrap_or(0));
 
     // 构建 IpResult

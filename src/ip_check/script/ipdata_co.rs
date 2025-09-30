@@ -68,6 +68,7 @@ impl IpCheck for IpdataCo {
 }
 
 // 解析 Ipdata.co 的 API 响应
+#[allow(clippy::too_many_lines)]
 async fn parse_ipdata_co_resp(response: Response) -> IpResult {
     // 定义用于解析 JSON 响应的内部结构体
     #[derive(Deserialize, Serialize)]
@@ -94,15 +95,15 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
     }
     #[derive(Deserialize, Serialize)]
     struct ThreatData {
-        is_tor: Option<bool>,
-        is_icloud_relay: Option<bool>,
-        is_proxy: Option<bool>,
-        is_datacenter: Option<bool>,
-        is_anonymous: Option<bool>,
-        is_known_attacker: Option<bool>,
-        is_known_abuser: Option<bool>,
-        is_threat: Option<bool>,
-        is_bogon: Option<bool>,
+        tor: Option<bool>,
+        icloud_relay: Option<bool>,
+        proxy: Option<bool>,
+        datacenter: Option<bool>,
+        anonymous: Option<bool>,
+        known_attacker: Option<bool>,
+        known_abuser: Option<bool>,
+        threat: Option<bool>,
+        bogon: Option<bool>,
     }
 
     // 解析 JSON
@@ -121,31 +122,31 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
     // 解析风险标签
     let mut risk_tags = Vec::new();
     if let Some(threat) = json.threat {
-        if threat.is_tor.unwrap_or(false) {
+        if threat.tor.unwrap_or(false) {
             risk_tags.push(Tor);
         }
-        if threat.is_proxy.unwrap_or(false) {
+        if threat.proxy.unwrap_or(false) {
             risk_tags.push(Proxy);
         }
-        if threat.is_icloud_relay.unwrap_or(false) {
+        if threat.icloud_relay.unwrap_or(false) {
             risk_tags.push(Other("iCLOUD RELAY".to_string()));
         }
-        if threat.is_datacenter.unwrap_or(false) {
+        if threat.datacenter.unwrap_or(false) {
             risk_tags.push(Hosting);
         }
-        if threat.is_anonymous.unwrap_or(false) {
+        if threat.anonymous.unwrap_or(false) {
             risk_tags.push(Other("ANONYMOUS".to_string()));
         }
-        if threat.is_known_attacker.unwrap_or(false) {
+        if threat.known_attacker.unwrap_or(false) {
             risk_tags.push(Other("ATTACKER".to_string()));
         }
-        if threat.is_known_abuser.unwrap_or(false) {
+        if threat.known_abuser.unwrap_or(false) {
             risk_tags.push(Other("ABUSER".to_string()));
         }
-        if threat.is_threat.unwrap_or(false) {
+        if threat.threat.unwrap_or(false) {
             risk_tags.push(Other("THREAT".to_string()));
         }
-        if threat.is_bogon.unwrap_or(false) {
+        if threat.bogon.unwrap_or(false) {
             risk_tags.push(Other("BOGON".to_string()));
         }
     }

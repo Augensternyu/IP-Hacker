@@ -69,9 +69,8 @@ impl IpCheck for MullvadNet {
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 根据提示强制使用 IPv4
-            let client_v4 = match create_reqwest_client(None).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(None).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let response_result = client_v4.get(API_URL).send().await;
@@ -125,14 +124,11 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
         }
     };
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     let autonomous_system = sanitize_string_field(payload.organization).map(|name| AS {

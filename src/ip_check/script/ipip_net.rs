@@ -36,13 +36,11 @@ impl IpCheck for IpIpNet {
                 return request_error_ip_result("Ipip.Net", "Unable to connect");
             };
 
-            let json = if let Ok(json) = result.json::<Value>().await {
-                json
-            } else {
+            let Ok(json) = result.json::<Value>().await else {
                 return request_error_ip_result("Ipip.Net", "Unable to parse json");
             };
 
-            let mut result_without_time = get_ipip_net_info(json);
+            let mut result_without_time = get_ipip_net_info(&json);
             let end_time = time_start.elapsed();
             result_without_time.used_time = Some(end_time); // 记录耗时
             result_without_time
@@ -56,11 +54,9 @@ impl IpCheck for IpIpNet {
 }
 
 // 解析 Ipip.net 的 API 响应
-fn get_ipip_net_info(json: Value) -> IpResult {
+fn get_ipip_net_info(json: &Value) -> IpResult {
     // 解析 "data" 字段
-    let data = if let Some(data) = json.get("data") {
-        data
-    } else {
+    let Some(data) = json.get("data") else {
         return request_error_ip_result("Ipip.Net", "Unable to parse json");
     };
 

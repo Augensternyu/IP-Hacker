@@ -12,6 +12,12 @@ use std::net::IpAddr; // 引入 IpAddr
 // 定义 ItDogCn 结构体
 pub struct ItDogCn;
 
+// 定义用于解析 JSON 响应的内部结构体
+#[derive(Deserialize, Serialize)]
+struct HttpBinOrgResp {
+    ip: IpAddr,
+}
+
 // 为 ItDogCn 实现 IpCheck trait
 #[async_trait]
 impl IpCheck for ItDogCn {
@@ -32,12 +38,6 @@ impl IpCheck for ItDogCn {
                 let Ok(result) = client_v4.get("https://ipv6.itdog.cn/").send().await else {
                     return request_error_ip_result("Itdog.cn", "Unable to connect");
                 };
-
-                // 定义用于解析 JSON 响应的内部结构体
-                #[derive(Deserialize, Serialize)]
-                struct HttpBinOrgResp {
-                    ip: IpAddr,
-                }
 
                 // 解析 JSON 并获取 IP 地址
                 let ip = result.json::<HttpBinOrgResp>().await.map(|resp| resp.ip);

@@ -67,10 +67,8 @@ impl IpCheck for RealipCc {
             // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
-                    // 默认客户端
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
                 // 对于指定 IP，URL 结构不同：realip.cc/?ip=...
                 let url = format!("{API_BASE_URL_SPECIFIC}?ip={ip_addr}");
@@ -102,10 +100,9 @@ impl IpCheck for RealipCc {
 
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await {
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                     // 强制使用 IPv4
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v4 = client_v4.get(API_BASE_URL_LOCAL).send().await; // 使用 /json 路径
@@ -122,10 +119,9 @@ impl IpCheck for RealipCc {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await {
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                     // 强制使用 IPv6
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v6 = client_v6.get(API_BASE_URL_LOCAL).send().await; // 使用 /json 路径
@@ -158,6 +154,7 @@ impl IpCheck for RealipCc {
 }
 
 // 解析 Realip.cc 的 API 响应
+#[allow(clippy::too_many_lines)]
 async fn parse_realip_cc_resp(response: Response) -> IpResult {
     let status = response.status();
 
@@ -230,14 +227,11 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
         }
     };
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
+        );
     };
 
     let country = sanitize_string_field(payload.country);
