@@ -48,7 +48,7 @@ impl IpCheck for IpInfoIo {
                 };
 
                 vec![{
-                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let mut result_without_time = get_ipinfo_io(json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time); // 记录耗时
                     result_without_time
@@ -77,7 +77,7 @@ impl IpCheck for IpInfoIo {
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let mut result_without_time = get_ipinfo_io(json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time);
                     result_without_time
@@ -102,7 +102,7 @@ impl IpCheck for IpInfoIo {
                     } else {
                         return parse_ip_error_ip_result("Ipinfo.io", "Unable to parse json");
                     };
-                    let mut result_without_time = get_ipinfo_io(json).await;
+                    let mut result_without_time = get_ipinfo_io(json);
                     let end_time = time_start.elapsed();
                     result_without_time.used_time = Some(end_time);
                     result_without_time
@@ -124,7 +124,7 @@ impl IpCheck for IpInfoIo {
 }
 
 // 解析 Ipinfo.io 的 API 响应
-async fn get_ipinfo_io(ip: Value) -> IpResult {
+fn get_ipinfo_io(ip: Value) -> IpResult {
     // 解析国家
     let country = if let Some(country) = ip.get("country") {
         country.as_str().map(std::string::ToString::to_string)

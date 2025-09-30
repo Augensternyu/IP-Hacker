@@ -74,10 +74,9 @@ impl IpCheck for ApilayerCom {
 
         let handle = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
-            let client = match create_reqwest_client(None).await {
+            let Ok(client) = create_reqwest_client(None).await else {
                 // 默认客户端，因为 API 支持 IPv4/6 访问
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             let url = format!("{API_BASE_URL}{target_ip}");
@@ -140,14 +139,11 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &message);
     }
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip),
+        );
     };
 
     let autonomous_system =

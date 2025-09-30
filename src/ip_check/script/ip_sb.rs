@@ -122,8 +122,11 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
     }
 
     // 将响应体解析为 JSON
-    let Ok(json) = response.json::<serde_json::Value>().await else {
-        return request_error_ip_result("IP.sb", "Unable to parse the returned result into Json");
+    let json: serde_json::Value = match response.json().await {
+        Ok(p) => p,
+        Err(_) => {
+            return request_error_ip_result("IP.sb", "Unable to parse the returned result into Json");
+        }
     };
 
     // 从 JSON 中提取 IP 地址

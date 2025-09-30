@@ -103,11 +103,14 @@ async fn parse_bilibili(response: Response) -> IpResult {
     }
 
     // 将响应体解析为 JSON
-    let Ok(json) = response.json::<BilibiliResp>().await else {
-        return json_parse_error_ip_result(
-            "Bilibili",
-            "Unable to parse the returned result into Json",
-        );
+    let json: BilibiliResp = match response.json().await {
+        Ok(p) => p,
+        Err(_) => {
+            return json_parse_error_ip_result(
+                "Bilibili",
+                "Unable to parse the returned result into Json",
+            );
+        }
     };
 
     // 构建 IpResult

@@ -64,10 +64,9 @@ impl IpCheck for ApiipNet {
             // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
+                let Ok(client) = create_reqwest_client(None).await else {
                     // 默认客户端
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result = client.get(&url).send().await;
@@ -95,10 +94,9 @@ impl IpCheck for ApiipNet {
                 let url = url.clone();
                 async move {
                     let time_start = tokio::time::Instant::now();
-                    let client_v4 = match create_reqwest_client(Some(false)).await {
+                    let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
                         // 强制 IPv4
-                        Ok(c) => c,
-                        Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                        return create_reqwest_client_error(PROVIDER_NAME);
                     };
 
                     let response_result_v4 = client_v4.get(&url).send().await;
@@ -119,10 +117,9 @@ impl IpCheck for ApiipNet {
                 let url = url.clone();
                 async move {
                     let time_start = tokio::time::Instant::now();
-                    let client_v6 = match create_reqwest_client(Some(true)).await {
+                    let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
                         // 强制 IPv6
-                        Ok(c) => c,
-                        Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                        return create_reqwest_client_error(PROVIDER_NAME);
                     };
 
                     let response_result_v6 = client_v6.get(&url).send().await;
@@ -195,14 +192,11 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
             return request_error_ip_result(PROVIDER_NAME, &message);
         }
 
-    let parsed_ip = match payload.ip.parse::<IpAddr>() {
-        Ok(ip_addr) => ip_addr,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Failed to parse 'ip' from API: '{}'", payload.ip),
+        );
     };
 
     let country = sanitize_string_field(payload.country_name);

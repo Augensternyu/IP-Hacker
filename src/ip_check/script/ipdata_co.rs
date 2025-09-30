@@ -106,8 +106,11 @@ async fn parse_ipdata_co_resp(response: Response) -> IpResult {
     }
 
     // 解析 JSON
-    let Ok(json) = response.json::<Resp>().await else {
-        return json_parse_error_ip_result("IpData.co", "Unable to parse result into Json");
+    let json: Resp = match response.json().await {
+        Ok(p) => p,
+        Err(_) => {
+            return json_parse_error_ip_result("IpData.co", "Unable to parse result into Json");
+        }
     };
 
     // 检查 API 是否返回错误信息

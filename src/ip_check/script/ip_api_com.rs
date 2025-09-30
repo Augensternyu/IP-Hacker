@@ -2,7 +2,7 @@
 
 // 引入项目内的模块和外部库
 use crate::ip_check::ip_result::IpCheckError::No; // 引入无错误枚举
-use crate::ip_check::ip_result::RiskTag::{Mobile, Proxy}; // 引入风险标签
+use crate::ip_check::ip_result::RiskTag::{Hosting, Mobile, Proxy}; // 引入风险标签
 use crate::ip_check::ip_result::{
     create_reqwest_client_error, json_parse_error_ip_result, request_error_ip_result, Coordinates, IpResult, Region,
     Risk, AS,
@@ -114,11 +114,14 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
     }
 
     // 将响应体解析为 JSON
-    let Ok(json) = resp.json::<IpApiComResp>().await else {
-        return json_parse_error_ip_result(
-            "Ip-Api.com",
-            "Unable to parse the returned result into Json",
-        );
+    let json: IpApiComResp = match resp.json().await {
+        Ok(p) => p,
+        Err(_) => {
+            return json_parse_error_ip_result(
+                "Ip-Api.com",
+                "Unable to parse the returned result into Json",
+            );
+        }
     };
 
     // 检查 API 返回的状态
@@ -175,7 +178,7 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
                 tags.push(Mobile);
             }
             if json.hosting {
-                tags.push(Mobile); // 注意：这里原文将 hosting 也标记为 Mobile，可能是一个笔误
+                tags.push(Hosting);
             }
             Some(Risk {
                 risk: None,

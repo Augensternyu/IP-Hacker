@@ -68,10 +68,9 @@ fn parse_asn_number(asn_str_opt: Option<String>) -> Option<u32> {
 impl IpCheck for ApipCc {
     async fn check(&self, ip: Option<IpAddr>) -> Vec<IpResult> {
         // API 本身通过 IPv4 访问，但可以查询 IPv4/IPv6 数据
-        let client = match create_reqwest_client(Some(false)).await {
+        let Ok(client) = create_reqwest_client(Some(false)).await else {
             // 强制使用 IPv4 访问 API
-            Ok(c) => c,
-            Err(_) => return vec![create_reqwest_client_error(PROVIDER_NAME)],
+            return vec![create_reqwest_client_error(PROVIDER_NAME)];
         };
 
         if let Some(ip_addr) = ip {
@@ -162,14 +161,11 @@ async fn parse_apip_cc_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &err_msg);
     }
 
-    let parsed_ip = match payload.query.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.query),
-            );
-        }
+    let Ok(parsed_ip) = payload.query.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.query),
+        );
     };
 
     let asn_number = parse_asn_number(sanitize_string_field(payload.asn));

@@ -37,12 +37,18 @@ struct TopLevelResp {
 
 #[derive(Deserialize, Debug)]
 struct ApiSecurity {
-    is_vpn: Option<bool>,
-    is_proxy: Option<bool>,
-    is_tor: Option<bool>,
-    is_hosting: Option<bool>,
-    is_relay: Option<bool>,
-    is_mobile: Option<bool>,
+    #[serde(rename = "is_vpn")]
+    vpn: Option<bool>,
+    #[serde(rename = "is_proxy")]
+    proxy: Option<bool>,
+    #[serde(rename = "is_tor")]
+    tor: Option<bool>,
+    #[serde(rename = "is_hosting")]
+    hosting: Option<bool>,
+    #[serde(rename = "is_relay")]
+    relay: Option<bool>,
+    #[serde(rename = "is_mobile")]
+    mobile: Option<bool>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -97,9 +103,8 @@ impl IpCheck for AbstractapiCom {
             // --- 查询指定 IP ---
             let handle = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client = match create_reqwest_client(None).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client) = create_reqwest_client(None).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result = client.get(&url).send().await;
@@ -121,9 +126,8 @@ impl IpCheck for AbstractapiCom {
 
             let handle_v4 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v4 = match create_reqwest_client(Some(false)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
 
                 let response_result_v4 = client_v4.get(&url_v4).send().await;
@@ -137,9 +141,8 @@ impl IpCheck for AbstractapiCom {
 
             let handle_v6 = tokio::spawn(async move {
                 let time_start = tokio::time::Instant::now();
-                let client_v6 = match create_reqwest_client(Some(true)).await {
-                    Ok(c) => c,
-                    Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+                let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                    return create_reqwest_client_error(PROVIDER_NAME);
                 };
                 let response_result_v6 = client_v6.get(&url_v6).send().await;
                 let mut result_v6 = match response_result_v6 {
@@ -165,6 +168,7 @@ impl IpCheck for AbstractapiCom {
 }
 
 // 解析 Abstractapi.com 的 API 响应
+#[allow(clippy::too_many_lines)]
 async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
     let status = response.status();
     let response_text = match response.text().await {
@@ -199,14 +203,11 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
         return request_error_ip_result(PROVIDER_NAME, &error.message);
     }
 
-    let parsed_ip = match payload.ip_address.parse::<IpAddr>() {
-        Ok(ip) => ip,
-        Err(_) => {
-            return json_parse_error_ip_result(
-                PROVIDER_NAME,
-                &format!("Could not parse IP from API: {}", payload.ip_address),
-            );
-        }
+    let Ok(parsed_ip) = payload.ip_address.parse::<IpAddr>() else {
+        return json_parse_error_ip_result(
+            PROVIDER_NAME,
+            &format!("Could not parse IP from API: {}", payload.ip_address),
+        );
     };
 
     let autonomous_system = payload.asn.and_then(|asn_data| {
@@ -240,22 +241,22 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
 
     let risk = payload.security.map(|sec| {
         let mut tags_set = HashSet::new();
-        if sec.is_vpn == Some(true) {
+        if sec.vpn == Some(true) {
             tags_set.insert(Proxy);
         }
-        if sec.is_proxy == Some(true) {
+        if sec.proxy == Some(true) {
             tags_set.insert(Proxy);
         }
-        if sec.is_tor == Some(true) {
+        if sec.tor == Some(true) {
             tags_set.insert(Tor);
         }
-        if sec.is_hosting == Some(true) {
+        if sec.hosting == Some(true) {
             tags_set.insert(Hosting);
         }
-        if sec.is_relay == Some(true) {
+        if sec.relay == Some(true) {
             tags_set.insert(Relay);
         }
-        if sec.is_mobile == Some(true) {
+        if sec.mobile == Some(true) {
             tags_set.insert(Mobile);
         }
         let tags_vec: Vec<_> = tags_set.into_iter().collect();

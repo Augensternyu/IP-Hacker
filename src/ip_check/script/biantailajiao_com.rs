@@ -33,9 +33,8 @@ impl IpCheck for BiantailajiaoCom {
         let handle_v4 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 创建仅使用 IPv4 的 reqwest 客户端
-            let client_v4 = match create_reqwest_client(Some(false)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v4) = create_reqwest_client(Some(false)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             // 发送 GET 请求
@@ -58,9 +57,8 @@ impl IpCheck for BiantailajiaoCom {
         let handle_v6 = tokio::spawn(async move {
             let time_start = tokio::time::Instant::now();
             // 创建仅使用 IPv6 的 reqwest 客户端
-            let client_v6 = match create_reqwest_client(Some(true)).await {
-                Ok(c) => c,
-                Err(_) => return create_reqwest_client_error(PROVIDER_NAME),
+            let Ok(client_v6) = create_reqwest_client(Some(true)).await else {
+                return create_reqwest_client_error(PROVIDER_NAME);
             };
 
             // 发送 GET 请求
