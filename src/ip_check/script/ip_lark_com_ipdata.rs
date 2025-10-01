@@ -121,7 +121,8 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         is_anonymous: Option<bool>,
         is_known_attacker: Option<bool>,
             is_known_abuser: Option<bool>,
-            is_a_threat: Option<bool>,
+            #[serde(rename = "is_a_threat")]
+            is_threat_flag: Option<bool>,
             is_bogon: Option<bool>,        scores: Scores,
     }
     #[derive(Deserialize, Serialize)]
@@ -163,7 +164,7 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
     if let Some(true) = json.threat.is_known_abuser {
         risk_tags.push(Other("ABUSER".to_string()));
     }
-    if let Some(true) = json.threat.is_a_threat {
+    if let Some(true) = json.threat.is_threat_flag {
         risk_tags.push(Other("Threat".to_string()));
     }
     if let Some(true) = json.threat.is_bogon {

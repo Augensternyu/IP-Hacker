@@ -115,6 +115,7 @@ impl IpCheck for Cz88Net {
 }
 
 // 解析 Cz88.net 的 API 响应
+#[allow(clippy::too_many_lines)]
 async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResult {
     if !response.status().is_success() {
         let err_msg = format!("HTTP Error: {}", response.status());
