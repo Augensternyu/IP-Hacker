@@ -239,7 +239,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         autonomous_system,
         region: Some(Region {
             country,
-            region: province,
+            province,
             city,
             coordinates,
             time_zone: None, // API 不提供时区
