@@ -50,7 +50,7 @@ async fn handle_gui_output(rx: &mut mpsc::Receiver<IpResult>) {
                         format!(
                             "{}|{}|{}|{}",
                             region.country.unwrap_or_default(),
-                            region.region.unwrap_or_default(),
+                            region.province.unwrap_or_default(),
                             region.city.unwrap_or_default(),
                             region.time_zone.unwrap_or_default()
                         )

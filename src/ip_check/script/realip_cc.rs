@@ -262,7 +262,7 @@ async fn parse_realip_cc_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region: province,
+            province,
             city,
             coordinates,
             time_zone,

@@ -145,7 +145,7 @@ async fn parse_iplocation_net_resp(response: Response) -> IpResult {
         region: Some(Region {
             country,
             // API 不提供地区、城市、坐标或时区信息
-            region: None,
+            province: None,
             city: None,
             coordinates: None,
             time_zone: None,

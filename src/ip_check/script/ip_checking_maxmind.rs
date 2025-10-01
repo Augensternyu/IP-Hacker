@@ -109,6 +109,19 @@ impl IpCheck for Maxmind {
     }
 }
 
+// 定义用于反序列化 API 响应的结构体
+#[derive(Deserialize, Serialize)]
+struct MaxmindResp {
+    ip: IpAddr,
+    city: Option<String>,
+    country_name: Option<String>,
+    region: Option<String>,
+    latitude: Option<f64>,
+    longitude: Option<f64>,
+    asn: Option<String>,
+    org: Option<String>,
+}
+
 // 获取 Maxmind 的 IP 地理位置信息
 async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     // 创建 reqwest 客户端
@@ -131,19 +144,6 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
     else {
         return request_error_ip_result("IpCheck.ing Maxmind", "Unable to connect");
     };
-
-    // 定义用于反序列化 API 响应的结构体
-    #[derive(Deserialize, Serialize)]
-    struct MaxmindResp {
-        ip: IpAddr,
-        city: Option<String>,
-        country_name: Option<String>,
-        region: Option<String>,
-        latitude: Option<f64>,
-        longitude: Option<f64>,
-        asn: Option<String>,
-        org: Option<String>,
-    }
 
     // 将响应体解析为 JSON
     let Ok(json) = res.json::<MaxmindResp>().await else {
@@ -176,7 +176,7 @@ async fn get_maxmind_info(ip: IpAddr) -> IpResult {
         },
         region: Some(Region {
             country: json.country_name,
-            region: json.region,
+            province: json.region,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {

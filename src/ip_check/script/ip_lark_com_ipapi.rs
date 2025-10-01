@@ -156,7 +156,7 @@ async fn parse_ip_lark_com_ipapi(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country,
-            region: json.region_name,
+            province: json.region_name,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.lat, json.lon) {
                 Some(Coordinates {

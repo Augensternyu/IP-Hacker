@@ -184,7 +184,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
     // 解析 ASN、地理位置等信息
     let autonomous_system = parse_asn_from_org(sanitize_string_field(payload.org));
     let country = sanitize_string_field(payload.country_name);
-    let region = sanitize_string_field(payload.region);
+    let province = sanitize_string_field(payload.region);
     let city = sanitize_string_field(payload.city);
     let time_zone = sanitize_string_field(payload.timezone);
 
@@ -205,7 +205,7 @@ pub async fn parse_ip233_style_resp(response: Response, provider_name: &str) -> 
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

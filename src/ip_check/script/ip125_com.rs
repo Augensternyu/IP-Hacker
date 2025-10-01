@@ -214,7 +214,7 @@ async fn parse_ip125_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region: region_name, // 使用 regionName，因为它更具描述性
+            province: region_name, // 使用 regionName，因为它更具描述性
             city,
             coordinates,
             time_zone: timezone,

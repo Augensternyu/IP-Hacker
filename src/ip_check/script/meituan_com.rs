@@ -155,7 +155,7 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         );
     };
 
-    let (country, region, city) = if let Some(rgeo) = data.rgeo {
+    let (country, province, city) = if let Some(rgeo) = data.rgeo {
         (
             sanitize_string_field(rgeo.country),
             sanitize_string_field(rgeo.province),
@@ -183,7 +183,7 @@ async fn parse_meituan_com_resp(response: Response) -> IpResult {
         autonomous_system: None, // API 不提供 ASN/ISP
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone: None, // API 不提供时区

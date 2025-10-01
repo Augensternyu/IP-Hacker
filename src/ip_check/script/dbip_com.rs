@@ -118,7 +118,7 @@ async fn get_db_ip_com_info(resp: Response) -> IpResult {
         autonomous_system: None,
         region: Some(Region {
             country: json.country_name,
-            region: json.state_prov,
+            province: json.state_prov,
             city: json.city,
             coordinates: None,
             time_zone: None,

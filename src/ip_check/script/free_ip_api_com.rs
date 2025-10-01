@@ -147,7 +147,7 @@ async fn parse_free_ip_api_com_resp(response: Response) -> IpResult {
         autonomous_system: None,
         region: Some(Region {
             country: json.country_name,
-            region: json.region_name,
+            province: json.region_name,
             city: json.city_name,
             coordinates: {
                 if let (Some(latitude), Some(longitude)) = (json.latitude, json.longitude) {

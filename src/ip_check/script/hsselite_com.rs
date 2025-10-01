@@ -151,7 +151,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
 
     // 清理地理位置信息
     let country = sanitize_string_field(payload.country_name);
-    let region = sanitize_string_field(payload.region);
+    let province = sanitize_string_field(payload.region);
     let city = sanitize_string_field(payload.city);
 
     // 解析坐标
@@ -172,7 +172,7 @@ async fn parse_hsselite_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region, // 注意: 这是区域代码，如 "TPE"
+            province, // 注意: 这是区域代码，如 "TPE"
             city,
             coordinates,
             time_zone: None, // API 不提供时区

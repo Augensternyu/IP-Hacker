@@ -156,7 +156,7 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
     };
 
     // 从 JSON 中提取区域信息
-    let region = if let Some(region) = json.get("region") {
+    let province = if let Some(region) = json.get("region") {
         region.as_str().map(std::string::ToString::to_string)
     } else {
         None
@@ -222,7 +222,7 @@ async fn get_ip_sb_info(response: Response) -> IpResult {
         },
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates: {
                 if let (Some(latitude), Some(longitude)) = (lat, lon) {

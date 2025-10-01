@@ -116,7 +116,7 @@ async fn parse_ip_lark_com_moe(response: Response) -> IpResult {
         autonomous_system: None,
         region: Some(Region {
             country: json.country_name,
-            region: json.region_name,
+            province: json.region_name,
             city: json.city_name,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {

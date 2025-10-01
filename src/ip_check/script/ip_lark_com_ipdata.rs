@@ -120,10 +120,9 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         is_datacenter: Option<bool>,
         is_anonymous: Option<bool>,
         is_known_attacker: Option<bool>,
-        is_known_abuser: Option<bool>,
-        is_threat: Option<bool>,
-        is_bogon: Option<bool>,
-        scores: Scores,
+            is_known_abuser: Option<bool>,
+            is_a_threat: Option<bool>,
+            is_bogon: Option<bool>,        scores: Scores,
     }
     #[derive(Deserialize, Serialize)]
     struct Scores {
@@ -164,8 +163,8 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
     if let Some(true) = json.threat.is_known_abuser {
         risk_tags.push(Other("ABUSER".to_string()));
     }
-    if let Some(true) = json.threat.is_threat {
-        risk_tags.push(Other("THREAT".to_string()));
+    if let Some(true) = json.threat.is_a_threat {
+        risk_tags.push(Other("Threat".to_string()));
     }
     if let Some(true) = json.threat.is_bogon {
         risk_tags.push(Other("BOGON".to_string()));
@@ -199,7 +198,7 @@ async fn parse_ip_lark_com_ipdata(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country_name,
-            region: json.region,
+            province: json.region,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {

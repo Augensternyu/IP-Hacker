@@ -156,7 +156,7 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
             });
 
     let country = sanitize_string_field(payload.country_name);
-    let region = sanitize_string_field(payload.region_name);
+    let province = sanitize_string_field(payload.region_name);
     let city = sanitize_string_field(payload.city);
     // 从列表中获取第一个时区（如果可用）
     let time_zone = payload.timezones.and_then(|tzs| tzs.first().cloned());
@@ -177,7 +177,7 @@ async fn parse_apilayer_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

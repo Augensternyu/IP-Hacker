@@ -251,7 +251,7 @@ async fn parse_ipleak_net_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region: region_name,
+            province: region_name,
             city,
             coordinates,
             time_zone,

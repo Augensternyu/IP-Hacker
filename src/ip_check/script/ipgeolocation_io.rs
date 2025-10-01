@@ -113,7 +113,7 @@ async fn parse_ipgeolocation_io_resp(response: Response) -> IpResult {
         region: {
             location.map(|loc| Region {
                 country: loc.country_name,
-                region: loc.state_prov,
+                province: loc.state_prov,
                 city: loc.city,
                 coordinates: if let (Some(latitude), Some(longitude)) = (loc.latitude, loc.longitude) {
                     Some(Coordinates { latitude, longitude })

@@ -122,7 +122,7 @@ async fn parse_bilibili(response: Response) -> IpResult {
         autonomous_system: None,
         region: Some(Region {
             country: json.data.country,
-            region: json.data.province,
+            province: json.data.province,
             city: json.data.city,
             coordinates: if let (Some(latitude), Some(longitude)) =
                 (json.data.latitude, json.data.longitude)

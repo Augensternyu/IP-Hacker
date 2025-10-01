@@ -159,7 +159,7 @@ async fn parse_geoplugin_net_resp(response: Response) -> IpResult {
 
     // 清理地理位置信息
     let country = sanitize_string_field(payload.country_name);
-    let region = sanitize_string_field(payload.region_name);
+    let province = sanitize_string_field(payload.region_name);
     let city = sanitize_string_field(payload.city);
     let time_zone = sanitize_string_field(payload.timezone);
 
@@ -181,7 +181,7 @@ async fn parse_geoplugin_net_resp(response: Response) -> IpResult {
         autonomous_system: None, // API 不提供 ASN/ISP
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

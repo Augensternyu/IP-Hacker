@@ -197,7 +197,7 @@ fn get_ipquery_io_info(json: serde_json::Value) -> IpResult {
         },
         region: Some(Region {
             country: json_parsed.location.country,
-            region: json_parsed.location.state,
+            province: json_parsed.location.state,
             city: json_parsed.location.city,
             coordinates: {
                 let latitude = json_parsed.location.latitude;

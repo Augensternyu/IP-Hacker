@@ -178,7 +178,7 @@ async fn parse_ip_lark_com_digital_element(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country,
-            region: None,
+            province: None,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {

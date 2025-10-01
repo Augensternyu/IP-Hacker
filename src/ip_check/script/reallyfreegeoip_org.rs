@@ -212,7 +212,7 @@ async fn parse_reallyfreegeoip_org_resp(response: Response) -> IpResult {
         autonomous_system: None, // API 不提供 ASN 信息
         region: Some(Region {
             country,
-            region: region_name,
+            province: region_name,
             city,
             coordinates,
             time_zone,

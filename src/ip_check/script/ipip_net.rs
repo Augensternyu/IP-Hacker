@@ -94,7 +94,7 @@ fn get_ipip_net_info(json: &Value) -> IpResult {
     };
 
     // 解析地区
-    let region = if let Some(region) = location.get(1) {
+    let province = if let Some(region) = location.get(1) {
         region.as_str().map(std::string::ToString::to_string)
     } else {
         None
@@ -116,7 +116,7 @@ fn get_ipip_net_info(json: &Value) -> IpResult {
         autonomous_system: None, // API不提供ASN信息
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates: None, // API不提供坐标信息
             time_zone: None,   // API不提供时区信息

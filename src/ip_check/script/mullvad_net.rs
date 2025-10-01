@@ -165,7 +165,7 @@ async fn parse_mullvad_net_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region: None, // API 不提供地区信息
+            province: None, // API 不提供地区信息
             city,
             coordinates,
             time_zone: None, // API 不提供时区信息

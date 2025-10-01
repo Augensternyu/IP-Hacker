@@ -113,7 +113,7 @@ pub struct AS {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Region {
     pub country: Option<String>, // 国家
-    pub region: Option<String>, // 地区/省份
+    pub province: Option<String>, // 地区/省份
     pub city: Option<String>, // 城市
     pub coordinates: Option<Coordinates>, // 坐标
     pub time_zone: Option<String>, // 时区

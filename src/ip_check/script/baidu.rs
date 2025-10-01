@@ -130,7 +130,7 @@ async fn parse_baidu_resp(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.data.country,
-            region: json.data.prov,
+            province: json.data.prov,
             city: json.data.city,
             coordinates: None,
             time_zone: None,

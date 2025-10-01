@@ -218,7 +218,7 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
         }
     });
 
-    let (country, region, city, coordinates) = if let Some(loc) = payload.location {
+    let (country, province, city, coordinates) = if let Some(loc) = payload.location {
         (
             sanitize_string_field(loc.country),
             sanitize_string_field(loc.region),
@@ -278,7 +278,7 @@ async fn parse_abstractapi_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

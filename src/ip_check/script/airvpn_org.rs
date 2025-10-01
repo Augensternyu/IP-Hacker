@@ -154,7 +154,7 @@ async fn parse_airvpn_org_resp(response: Response) -> IpResult {
 
     let geo_data = payload.geo_additional;
 
-    let (autonomous_system, country, region, city, coordinates, time_zone) =
+    let (autonomous_system, country, province, city, coordinates, time_zone) =
         if let Some(geo) = geo_data {
             (
                 match (geo.as_number, sanitize_string_field(geo.isp_name)) {
@@ -191,7 +191,7 @@ async fn parse_airvpn_org_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

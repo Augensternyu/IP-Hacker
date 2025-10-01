@@ -191,7 +191,7 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
     };
 
     let country = payload.country.and_then(|c| sanitize_string_field(c.name));
-    let region = payload.state.and_then(|s| sanitize_string_field(s.name));
+    let province = payload.state.and_then(|s| sanitize_string_field(s.name));
     let city = payload.city.and_then(|c| sanitize_string_field(c.name));
 
     let coordinates = payload
@@ -212,7 +212,7 @@ async fn parse_geoapify_com_resp(response: Response) -> IpResult {
         autonomous_system: None, // API 演示不提供 ASN/ISP
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone: None, // API 演示不提供标准时区 ID
