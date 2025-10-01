@@ -124,7 +124,7 @@ fn get_ipinfo_io(ip: &Value) -> IpResult {
     };
 
     // 解析地区
-    let region = if let Some(region) = ip.get("region") {
+    let province = if let Some(region) = ip.get("region") {
         region.as_str().map(std::string::ToString::to_string)
     } else {
         None
@@ -193,7 +193,7 @@ fn get_ipinfo_io(ip: &Value) -> IpResult {
         }),
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates: Some(Coordinates {
                 latitude: latitude.to_string(),

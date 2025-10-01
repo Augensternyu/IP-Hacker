@@ -191,7 +191,7 @@ pub(crate) fn make_table_row(ip_result: IpResult, config: &Config) -> Option<Row
     let (country, region, city, (lat, lon), time_zone) = if let Some(region) = ip_result.region {
         (
             region.country.unwrap_or(String::new()),
-            region.region.unwrap_or(String::new()),
+            region.province.unwrap_or(String::new()),
             region.city.unwrap_or(String::new()),
             if let Some(coordinates) = region.coordinates {
                 (

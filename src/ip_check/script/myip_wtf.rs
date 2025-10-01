@@ -109,7 +109,7 @@ async fn parse_myip_wtf_resp(response: Response) -> IpResult {
     };
 
     // 从 location 字段中提取地区信息
-    let region = if let Some(location) = json.location {
+    let province = if let Some(location) = json.location {
         let parts: Vec<&str> = location.split(", ").collect();
         // "Nanning, GX, China" -> parts[1] is "GX"
         parts.get(1).map(|s| (*s).to_string())
@@ -131,7 +131,7 @@ async fn parse_myip_wtf_resp(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country,
-            region,
+            province,
             city: json.city,
             coordinates: None, // API不提供坐标信息
             time_zone: None,   // API不提供时区信息

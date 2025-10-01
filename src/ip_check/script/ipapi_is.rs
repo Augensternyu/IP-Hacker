@@ -204,7 +204,7 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
     };
 
     // 解析地理位置信息
-    let (country, region, city, coordinates, time_zone) = if let Some(loc) = payload.location {
+    let (country, province, city, coordinates, time_zone) = if let Some(loc) = payload.location {
         (
             sanitize_string_field(loc.country),
             sanitize_string_field(loc.state),
@@ -251,7 +251,7 @@ async fn parse_ipapi_is_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

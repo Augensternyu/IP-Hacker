@@ -123,7 +123,7 @@ async fn parse_ipwhois_app_resp(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country,
-            region: json.region,
+            province: json.region,
             city: json.city,
             coordinates: {
                 if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {

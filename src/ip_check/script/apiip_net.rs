@@ -219,7 +219,7 @@ async fn parse_apiip_net_resp(response: Response) -> IpResult {
         autonomous_system: None, // 演示不提供 ASN/ISP 信息
         region: Some(Region {
             country,
-            region: region_name,
+            province: region_name,
             city,
             coordinates,
             time_zone: None, // 演示不提供时区

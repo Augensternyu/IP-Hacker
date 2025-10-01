@@ -233,7 +233,7 @@ async fn parse_vvhan_com_resp(response: Response) -> IpResult {
         }),
         region: Some(Region {
             country,
-            region: prov,
+            province: prov,
             city,
             coordinates: None, // API 不提供经纬度
             time_zone: None,   // API 不提供时区

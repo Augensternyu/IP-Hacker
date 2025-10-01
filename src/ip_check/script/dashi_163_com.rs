@@ -180,7 +180,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
 
     // 清理地理位置和 ISP 信息
     let country = sanitize_string_field(data.country.clone());
-    let region = sanitize_string_field(data.province.clone());
+    let province = sanitize_string_field(data.province.clone());
     let city = sanitize_string_field(data.city.clone());
     let isp = sanitize_string_field(data.isp.clone());
     let time_zone = sanitize_string_field(data.timezone.clone());
@@ -205,7 +205,7 @@ async fn parse_dashi_163_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

@@ -163,7 +163,7 @@ async fn parse_maptiler_com_resp(response: Response, is_ipv6_request: bool) -> I
     };
 
     let country = sanitize_string_field(payload.country);
-    let region = sanitize_string_field(payload.region);
+    let province = sanitize_string_field(payload.region);
     let city = sanitize_string_field(payload.city);
     let time_zone = sanitize_string_field(payload.timezone);
 
@@ -184,7 +184,7 @@ async fn parse_maptiler_com_resp(response: Response, is_ipv6_request: bool) -> I
         autonomous_system: None, // API不提供ASN信息
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

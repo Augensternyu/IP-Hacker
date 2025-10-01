@@ -161,7 +161,7 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
     };
 
     let country = sanitize_string_field(payload.country);
-    let region = sanitize_string_field(payload.province);
+    let province = sanitize_string_field(payload.province);
     let city = sanitize_string_field(payload.city);
     let isp = sanitize_string_field(payload.isp);
 
@@ -176,7 +176,7 @@ async fn parse_qq_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates: None, // API不提供坐标信息
             time_zone: None,   // API不提供时区信息

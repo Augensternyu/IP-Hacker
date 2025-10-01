@@ -153,7 +153,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     }
 
     // 获取数据部分
-    let Some(data) = payload.data else {
+    let Some(ref data) = payload.data else {
         return json_parse_error_ip_result(
             PROVIDER_NAME,
             "API success but 'data' field is missing.",
@@ -169,66 +169,15 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
     };
 
     // 清理地理位置信息
-    let country = sanitize_string_field(data.country);
-    let province = sanitize_string_field(data.province);
-    let city = sanitize_string_field(data.city);
+    let country = sanitize_string_field(data.country.clone());
+    let province = sanitize_string_field(data.province.clone());
+    let city = sanitize_string_field(data.city.clone());
 
-    // 清理 ASN 和 ISP 信息
-    let isp_name_opt = sanitize_string_field(data.isp);
-    let company_name_opt = sanitize_string_field(data.company);
-    let asn_label_opt = sanitize_string_field(data.asn);
+    let autonomous_system = parse_autonomous_system(data);
+    let coordinates = parse_coordinates(data);
+    let risk_score = parse_risk_score(data);
+    let risk_tags_vec = parse_risk_tags(data);
 
-    let as_name = isp_name_opt.or(company_name_opt).or(asn_label_opt);
-
-    let autonomous_system = as_name.map(|name| AS {
-        number: 0, // API 不提供 ASN 号码
-        name,
-    });
-
-    // 解析坐标
-    let coordinates = data.locations.and_then(|locs| {
-        locs.first().and_then(|loc| {
-            match (
-                sanitize_string_field(loc.latitude.clone()),
-                sanitize_string_field(loc.longitude.clone()),
-            ) {
-                (Some(latitude), Some(longitude)) => Some(Coordinates { latitude, longitude }),
-                _ => None,
-            }
-        })
-    });
-
-    // 解析风险分数
-    let risk_score = data
-        .score
-        .and_then(|s| s.parse::<u16>().ok())
-        .map(|trust_score| {
-            if trust_score > 100 {
-                100
-            } else {
-                100 - trust_score
-            } // 将信任分数转换为风险分数
-        });
-
-    // 解析风险标签
-    let mut risk_tags_set = HashSet::new();
-    if data.vpn == Some(true) {
-        risk_tags_set.insert(Proxy);
-    }
-    if data.tor == Some(true) {
-        risk_tags_set.insert(Tor);
-    }
-    if data.proxy == Some(true) {
-        risk_tags_set.insert(Proxy);
-    }
-    if data.icloud_private_relay == Some(true) {
-        risk_tags_set.insert(Other("iCloud Relay".to_string()));
-    }
-    if let Some(net_type) = sanitize_string_field(data.net_work_type)
-        && net_type == "数据中心" {
-            risk_tags_set.insert(Hosting);
-        }
-    let risk_tags_vec: Vec<_> = risk_tags_set.into_iter().collect();
 
     // 构建 IpResult
     IpResult {
@@ -239,7 +188,7 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         autonomous_system,
         region: Some(Region {
             country,
-            region: province,
+            province,
             city,
             coordinates,
             time_zone: None, // API 不提供时区
@@ -254,4 +203,66 @@ async fn parse_cz88_net_resp(response: Response, _original_ip: IpAddr) -> IpResu
         }),
         used_time: None,
     }
+}
+
+fn parse_risk_tags(data: &Cz88NetApiDataPayload) -> Vec<crate::ip_check::ip_result::RiskTag> {
+    let mut risk_tags_set = HashSet::new();
+    if data.vpn == Some(true) {
+        risk_tags_set.insert(Proxy);
+    }
+    if data.tor == Some(true) {
+        risk_tags_set.insert(Tor);
+    }
+    if data.proxy == Some(true) {
+        risk_tags_set.insert(Proxy);
+    }
+    if data.icloud_private_relay == Some(true) {
+        risk_tags_set.insert(Other("iCloud Relay".to_string()));
+    }
+    if let Some(net_type) = sanitize_string_field(data.net_work_type.clone())
+        && net_type == "数据中心" {
+            risk_tags_set.insert(Hosting);
+        }
+    risk_tags_set.into_iter().collect()
+}
+
+fn parse_autonomous_system(data: &Cz88NetApiDataPayload) -> Option<AS> {
+    let isp_name_opt = sanitize_string_field(data.isp.clone());
+    let company_name_opt = sanitize_string_field(data.company.clone());
+    let asn_label_opt = sanitize_string_field(data.asn.clone());
+
+    let as_name = isp_name_opt.or(company_name_opt).or(asn_label_opt);
+
+    as_name.map(|name| AS {
+        number: 0, // API 不提供 ASN 号码
+        name,
+    })
+}
+
+fn parse_coordinates(data: &Cz88NetApiDataPayload) -> Option<Coordinates> {
+    data.locations.as_ref().and_then(|locs| {
+        locs.first().and_then(|loc| {
+            match (
+                sanitize_string_field(loc.latitude.clone()),
+                sanitize_string_field(loc.longitude.clone()),
+            ) {
+                (Some(latitude), Some(longitude)) => Some(Coordinates { latitude, longitude }),
+                _ => None,
+            }
+        })
+    })
+}
+
+fn parse_risk_score(data: &Cz88NetApiDataPayload) -> Option<u16> {
+    data
+        .score
+        .as_ref()
+        .and_then(|s| s.parse::<u16>().ok())
+        .map(|trust_score| {
+            if trust_score > 100 {
+                100
+            } else {
+                100 - trust_score
+            } // 将信任分数转换为风险分数
+        })
 }

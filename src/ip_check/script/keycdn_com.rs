@@ -167,7 +167,7 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
     };
 
     let country = sanitize_string_field(geo_data.country_name);
-    let region = sanitize_string_field(geo_data.region_name);
+    let province = sanitize_string_field(geo_data.region_name);
     let city = sanitize_string_field(geo_data.city);
     let time_zone = sanitize_string_field(geo_data.timezone);
 
@@ -188,7 +188,7 @@ async fn parse_keycdn_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

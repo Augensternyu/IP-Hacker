@@ -152,7 +152,7 @@ async fn get_ip_api_com_info(resp: Response) -> IpResult {
         },
         region: Some(Region {
             country: json.country,
-            region: json.region_name,
+            province: json.region_name,
             city: json.city,
             coordinates: {
                 if let (Some(latitude), Some(longitude)) = (json.lat, json.lon) {

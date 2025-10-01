@@ -178,7 +178,7 @@ async fn get_ipcheck_ing_info(ip: IpAddr) -> IpResult {
         },
         region: Some(Region {
             country: json.country_name,
-            region: json.region,
+            province: json.region,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.latitude, json.longitude) {
                 Some(Coordinates {

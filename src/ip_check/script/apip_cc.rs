@@ -178,7 +178,7 @@ async fn parse_apip_cc_resp(response: Response) -> IpResult {
     };
 
     let country = sanitize_string_field(payload.CountryName);
-    let region = sanitize_string_field(payload.RegionName);
+    let province = sanitize_string_field(payload.RegionName);
     let city = sanitize_string_field(payload.City);
     let time_zone = sanitize_string_field(payload.TimeZone);
 
@@ -198,7 +198,7 @@ async fn parse_apip_cc_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

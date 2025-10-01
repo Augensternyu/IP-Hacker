@@ -235,7 +235,7 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
             });
 
     // 解析地理位置信息
-    let (country, region, city, coordinates) = if let Some(loc) = data.location {
+    let (country, province, city, coordinates) = if let Some(loc) = data.location {
         (
             loc.country.and_then(|c| sanitize_string_field(c.name)),
             loc.region.and_then(|r| sanitize_string_field(r.name)),
@@ -294,7 +294,7 @@ async fn parse_ipbase_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates,
             time_zone,

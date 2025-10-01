@@ -148,7 +148,7 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
     };
 
     let country = sanitize_string_field(data.country);
-    let region = sanitize_string_field(data.region);
+    let province = sanitize_string_field(data.region);
     let city = sanitize_string_field(data.city);
     let isp = sanitize_string_field(data.isp);
 
@@ -162,7 +162,7 @@ async fn parse_taobao_com_resp(response: Response) -> IpResult {
         autonomous_system,
         region: Some(Region {
             country,
-            region,
+            province,
             city,
             coordinates: None, // API 不提供坐标信息
             time_zone: None,   // API 不提供时区信息

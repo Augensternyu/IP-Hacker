@@ -119,7 +119,7 @@ async fn parse_ip_lark_com_moon(response: Response) -> IpResult {
         autonomous_system: None,
         region: Some(Region {
             country: json.data.country,
-            region: json.data.province,
+            province: json.data.province,
             city: json.data.city,
             coordinates: if let (Some(lat), Some(lon)) = (json.data.latitude, json.data.longitude) {
                 Some(Coordinates {

@@ -190,7 +190,7 @@ async fn parse_ip234_in_search_resp(response: Response) -> IpResult {
         },
         region: Some(Region {
             country: data.country,
-            region: data.region,
+            province: data.region,
             city: data.city,
             coordinates: if let (Some(lat), Some(lon)) = (lat_str, lon_str) {
                 Some(Coordinates {
@@ -262,7 +262,7 @@ async fn parse_ip234_in_local_resp(response: Response) -> (IpResult, Option<IpAd
         },
         region: Some(Region {
             country: json.country,
-            region: json.region,
+            province: json.region,
             city: json.city,
             coordinates: if let (Some(lat), Some(lon)) = (lat_str, lon_str) {
                 Some(Coordinates {

@@ -100,7 +100,7 @@ async fn parse_myip_la_info(response: Response) -> IpResult {
         autonomous_system: None, // API不提供ASN信息
         region: Some(Region {
             country: json.location.country_name,
-            region: json.location.province,
+            province: json.location.province,
             city: json.location.city,
             coordinates: if let (Some(lat), Some(lon)) =
                 (json.location.latitude, json.location.longitude)
